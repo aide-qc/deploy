@@ -1,0 +1,14 @@
+Package: clang-syntax-handler
+Version: 10.0.0git
+Architecture: amd64
+Maintainer: Alex McCaskey
+Installed-Size: 418977
+Filename: ./LLVM-10.0.0git-Linux.deb
+Size: 72530168
+MD5sum: 8ec14159cb564d2e36b22b4d347ffd7f
+SHA1: b8f714761ae735d63e967b3c4067db4377d2b4be
+SHA256: eb1a75732aa1e6793546d881b601120fa5be7705e3a67bf8df1723820ea42284
+Section: devel
+Priority: optional
+Description: LLVM built using CMake
+
