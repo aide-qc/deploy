@@ -1,0 +1,36 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Date: Thu, 01 Oct 2020 14:57:10 +0000
+MD5Sum:
+ a4f0cc3288be00f0abbc026bd6b7cad3              653 Packages
+ a17225c673bc54f1afec9912e2e91bdf              452 Packages.gz
+ fbb86ecdc7399edd60fabc1cd194e89e               38 Release
+SHA1:
+ f1a9c5d20076e03fa42f814a0c1153b7cae81308              653 Packages
+ d6c94a9d4cf50765f125c8e15840ac666cd10001              452 Packages.gz
+ 14ff10ada53b3ec1c2801d461f7c81a1d8224a50               38 Release
+SHA256:
+ 5d36c0b496deaf30f391d981bd5c20764cdc1807fb33951fb07a307005310cf0              653 Packages
+ ad543213e73d1c48d6376987890f89397925f58c8190f652fdb79dfbe7928dbe              452 Packages.gz
+ 9a3c1efb2aee6ebd686d38b2b757f2ee1eab7aaba4b72fead64d5f1aead13822               38 Release
+SHA512:
+ 8d8f31cddda00944b7d56be991ad5a22361cd50a8a744d472647f14fe9dd8be2db0e0cbe756aad6ad189ba9a2e91c1e4896c75f74feba665679d4c8af2979100              653 Packages
+ 1085a6bc498bb1041a0deca1cd09a0cd0f9a82c647c91755e8c5e293b3ab91cf1f556b8764a906cb79a29c44f468b8a1e5d92e125023c97e33120b1a330e56ff              452 Packages.gz
+ 9580203992a6da16097cc5f27c404abd8483ed5d0a8070dca5a55e59169e19cc61094c4706e3b0461260585bc49873295ec580b6efff947f0fab21c102fbe525               38 Release
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEqed+1SbbcNRUvevDSL3vrt6TgJoFAl917mIACgkQSL3vrt6T
+gJowsQ/+OWy7+x126ODR2TFWR59sr/6xEuc76RomyTcfiBXwu7zIiAqJm3lS10ih
++4gulXOdFV9rNvM7IET211Bp9yo0JF1mZIws/S3EmfreiC2rcnkrB3IliqwNbgbO
+dntU3AebqramnmXUF33qQJ3sIGjqn6DcKo7qBcN8pqQJkEBk02vHbhDJmtIjVMBr
+QmiQACbf+Pq/6WDPvcr/gg/t+wbS9pC0eQs9RHQQ4nakWPSiSyVyS8fzKooX9ORf
+0SCXXCj/ph/MzGspNXb44SVYd9dBDARXBpvUlaMCHnwepGYlxMjgs02BjrTJVZ/O
+fZ5u5f5YQwEAVZoI3GEgnnCFxjzqZWF0g8phLfuD/a3U/vYh8U/FnEZJPveRv6kg
+22TIQkGx/Ov04FkeXAD5oMxZ6U5Txwt8+hY1sruaJQ7mq/0xwtuVMsJUXyXudTpR
+3uLWsqzhc9T6fAZmMrdB299oYoy/ZLaxok+j7/7BI1fApdEDKahw35N0p72wzj5X
+cF6CdO4gMhyizTR5A937NVaM5PooOTWei8cJlm9ekSQGTJUAdfx3vTswtdqugN1W
+y/IrxRa3fUahDnZlo9AloGXXjXx5mxRgp9KKrlJsQOQ6FG7ZOnwj4ryI1lF8abJE
+SRAPeYGVZ14IRIELwOQXauslY8X/Ty2P9VircX8XaX4CPT/IQmY=
+=ah3j
+-----END PGP SIGNATURE-----
