@@ -1,0 +1,9 @@
+stages:
+  - deploy
+
+docker run_docker_deploy_xacc_bionic:
+  stage: deploy
+  only:
+   - schedules
+  script:
+  - cd docker/xacc/debian/bionic && sh build.sh 
