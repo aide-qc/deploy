@@ -3,7 +3,7 @@
 set -x
 
 # Build the deb via Docker
-docker build -t qcor/bionic .
+docker build -t qcor/bionic . --no-cache
 docker run -d -P -it --name bionicqcor qcor/bionic
 id=$(docker ps -aqf "name=bionicqcor") && docker cp $id:/qcor/build/qcor-1.0.0.deb . 
 docker stop bionicqcor 
