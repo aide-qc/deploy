@@ -7,3 +7,10 @@ docker run_docker_deploy_xacc_bionic:
    - schedules
   script:
   - cd docker/xacc/debian/bionic && sh build.sh 
+
+docker run_docker_deploy_xacc_focal:
+  stage: deploy
+  only:
+   - schedules
+  script:
+  - cd docker/xacc/debian/focal && sh build.sh 
