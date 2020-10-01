@@ -14,3 +14,10 @@ docker run_docker_deploy_xacc_focal:
    - schedules
   script:
   - cd docker/xacc/debian/focal && sh build.sh 
+
+docker run_docker_deploy_qcor_bionic:
+  stage: deploy
+  only:
+   - schedules
+  script:
+  - cd docker/qcor/debian/bionic && sh build.sh 

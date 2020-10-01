@@ -5,3 +5,13 @@ $ echo "deb https://aide-qc.github.io/deploy/xacc/debian/bionic ./" > /etc/apt/s
 $ apt-get update
 $ apt-get install xacc
 ```
+
+## when the files change
+```bash 
+  gpg --import xacc-private-key.asc
+  dpkg-scanpackages --multiversion . > Packages
+  gzip -k -f Packages
+  apt-ftparchive release . > Release
+  gpg --default-key 48BDEFAEDE93809A -abs -o - Release > Release.gpg
+  gpg --default-key 48BDEFAEDE93809A --clearsign -o - Release > InRelease
+  ```
