@@ -23,7 +23,7 @@ gpg --default-key 48BDEFAEDE93809A -abs -o - Release > Release.gpg
 gpg --default-key 48BDEFAEDE93809A --clearsign -o - Release > InRelease
 git status
 git add -A 
-git commit -s -m "automated ci build of qcor bionic deb"
+git commit -m "automated ci build of qcor bionic deb"
 git config remote.aideqcdeploy.url >&- || git remote add -t master aideqcdeploy https://amccaskey:$AIDEQC_ACCESS_TOKEN@github.com/aide-qc/deploy
 git push -f aideqcdeploy HEAD:master
 git remote remove aideqcdeploy

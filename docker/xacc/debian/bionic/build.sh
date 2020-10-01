@@ -16,7 +16,7 @@ cd deploy
 cp ../xacc-1.0.0.deb xacc/debian/bionic 
 git status
 git add -A 
-git commit -s -m "automated ci build of xacc bionic deb"
+git commit -m "automated ci build of xacc bionic deb"
 git config remote.aideqcdeploy.url >&- || git remote add -t master aideqcdeploy https://amccaskey:$AIDEQC_ACCESS_TOKEN@github.com/aide-qc/deploy
 git push -f aideqcdeploy HEAD:master
 git remote remove aideqcdeploy
