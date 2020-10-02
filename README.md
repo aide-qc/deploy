@@ -1,4 +1,4 @@
-# AIDE-QC Deploy
+# AIDE-QC Deployment Repository
 This repository contains binaries for the various frameworks, compilers, and libraries 
 provided by the AIDE-QC project. 
 
