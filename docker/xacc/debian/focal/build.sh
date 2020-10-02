@@ -14,7 +14,14 @@ docker rm focalxacc
 # upload the xacc deb file there
 git clone https://github.com/aide-qc/deploy 
 cd deploy
-cp ../xacc-1.0.0.deb xacc/debian/bionic 
+cp ../xacc-1.0.0.deb xacc/debian/focal 
+cd xacc/debian/focal 
+gpg --import xacc-private-key.asc
+dpkg-scanpackages --multiversion . > Packages
+gzip -k -f Packages
+apt-ftparchive release . > Release
+gpg --default-key 48BDEFAEDE93809A -abs -o - Release > Release.gpg
+gpg --default-key 48BDEFAEDE93809A --clearsign -o - Release > InRelease
 git status
 git add -A 
 git commit -m "automated ci build of xacc focal deb"
