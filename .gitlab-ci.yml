@@ -24,3 +24,11 @@ docker run_docker_deploy_qcor_bionic:
   script:
   - cd docker/qcor/debian/bionic && sh build.sh 
   - docker system prune -f 
+
+docker run_docker_deploy_qcor_focal:
+  stage: deploy
+  only:
+   - schedules
+  script:
+  - cd docker/qcor/debian/focal && sh build.sh 
+  - docker system prune -f 
