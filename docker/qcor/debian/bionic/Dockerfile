@@ -6,9 +6,8 @@ run apt-get update && apt-get install -y wget gnupg && wget -qO- https://aide-qc
     && apt-get update && apt-get install -y xacc clang-syntax-handler \
     && ln -sf /usr/local/xacc/llvm/bin/llvm-config /usr/bin/ 
 
-run ls /usr/local/xacc && apt-get install -y git ninja-build && git clone https://github.com/ornl-qci/qcor 
-add CMakeLists.txt /qcor/
-run cd qcor && mkdir build && cd build \
+run apt-get install -y git ninja-build && git clone https://github.com/ornl-qci/qcor \
+   && cd qcor && mkdir build && cd build \
    && /root/.local/bin/cmake .. -G Ninja -DQCOR_CPACK_DEB_PLATFORM=bionic -DXACC_DIR=/usr/local/xacc -DCMAKE_INSTALL_PREFIX=/usr/local/xacc \
    && /root/.local/bin/cmake  --build . --target install \ 
    && /root/.local/bin/cpack 
