@@ -23,7 +23,7 @@ All installs will be in the `/usr/local/xacc` directory.
 For any Ubuntu 20.04 packages, run the following to enable downloads from the AIDE-QC apt repository:
 ```bash
 $ wget -qO- https://aide-qc.github.io/deploy/aide_qc/debian/focal/PUBLIC-KEY.gpg | apt-key add -
-$ wget -qO- "https://aide-qc.github.io/deploy/aide_qc/debian/focal/aide-qc-bionic.list" > /etc/apt/sources.list.d/aide-qc-focal.list
+$ wget -qO- "https://aide-qc.github.io/deploy/aide_qc/debian/focal/aide-qc-focal.list" > /etc/apt/sources.list.d/aide-qc-focal.list
 $ apt-get update
 ```
 Next, one can install XACC on its own: 
