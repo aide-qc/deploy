@@ -2,8 +2,8 @@ from ubuntu:20.04
 
 workdir /home/dev
 
-run apt-get update && apt-get install -y git gcc-9 g++-9 libblas-dev \ 
-            liblapack-dev gfortran-9 python3 python3-pip libpython3-dev \
+run apt-get update && apt-get install -y git gcc-10 g++-10 libblas-dev \ 
+            liblapack-dev gfortran-10 python3 python3-pip libpython3-dev \
             libcurl4-openssl-dev libssl-dev
 run python3 -m pip install cmake 
 
