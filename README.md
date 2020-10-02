@@ -3,19 +3,39 @@ This repository contains binaries for the various frameworks, compilers, and lib
 provided by the AIDE-QC project. 
 
 # Ubuntu 18.04
-
-## Install XACC
+For any Ubuntu 18.04 packages, add the public gpg key to your apt install
 ```bash
 $ wget -qO- https://aide-qc.github.io/deploy/xacc/debian/bionic/PUBLIC-KEY.gpg | apt-key add -
-$ echo "deb https://aide-qc.github.io/deploy/xacc/debian/bionic ./" > /etc/apt/sources.list.d/xacc-bionic.list
-$ apt-get update && apt-get install -y xacc
+```
+then add the AIDE-QC apt-get repository
+```bash
+$ wget -qO- "https://aide-qc.github.io/deploy/xacc/debian/bionic/xacc-bionic.list" > /etc/apt/sources.list.d/xacc-bionic.list
+$ apt-get update
+```
+## Install QCOR (installs qcor+xacc)
+```bash
+$ apt-get install -y qcor
+```
+## Install XACC (on its own)
+```bash
+$ apt-get install xacc
 ```
 
 # Ubuntu 20.04
-
-## Install XACC
+For any Ubuntu 20.04 packages, add the public gpg key to your apt install
 ```bash
 $ wget -qO- https://aide-qc.github.io/deploy/xacc/debian/focal/PUBLIC-KEY.gpg | apt-key add -
-$ echo "deb https://aide-qc.github.io/deploy/xacc/debian/focal ./" > /etc/apt/sources.list.d/xacc-focal.list
-$ apt-get update && apt-get install -y xacc
+```
+then add the AIDE-QC apt-get repository
+```bash
+$ wget -qO- "https://aide-qc.github.io/deploy/xacc/debian/focal/xacc-focal.list" > /etc/apt/sources.list.d/xacc-focal.list
+$ apt-get update
+```
+## Install QCOR (installs qcor+xacc)
+```bash
+$ apt-get install -y qcor
+```
+## Install XACC (on its own)
+```bash
+$ apt-get install xacc
 ```
