@@ -13,7 +13,7 @@ Next, one can install XACC on its own:
 ```bash
 $ apt-get install xacc
 ```
-or QCOR, which will give you XACC, a custom Clang/LLVM with SyntaxHandler capabilities:
+or QCOR, which will give you XACC plus a custom Clang/LLVM install with SyntaxHandler capabilities:
 ```bash
 $ apt-get install -y qcor
 ```
@@ -30,7 +30,7 @@ Next, one can install XACC on its own:
 ```bash
 $ apt-get install xacc
 ```
-or QCOR, which will give you XACC, a custom Clang/LLVM with SyntaxHandler capabilities:
+or QCOR, which will give you XACC plus a custom Clang/LLVM install with SyntaxHandler capabilities:
 ```bash
 $ apt-get install -y qcor
 ```
