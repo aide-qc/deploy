@@ -1,0 +1,3 @@
+deb https://aide-qc.github.io/deploy/xacc/debian/focal ./
+deb https://aide-qc.github.io/deploy/qcor/debian/focal ./
+deb https://aide-qc.github.io/deploy/clang_syntax_handler/debian/focal ./
