@@ -1,0 +1,3 @@
+deb https://aide-qc.github.io/deploy/xacc/debian/bionic ./
+deb https://aide-qc.github.io/deploy/qcor/debian/bionic ./
+deb https://aide-qc.github.io/deploy/clang_syntax_handler/debian/bionic ./
