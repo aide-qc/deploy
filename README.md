@@ -16,6 +16,18 @@ $ apt-get install xacc
 or QCOR, which will give you XACC plus a custom Clang/LLVM install with SyntaxHandler capabilities:
 ```bash
 $ apt-get install qcor
+
+// Test out qcor, copy and paste below text into terminal!
+$ printf "__qpu__ void f(qreg q) {
+  H(q[0]);
+  Measure(q[0]);
+}
+int main() {
+  auto q = qalloc(1);
+  f(q);
+  q.print();
+}  " | qcor -qpu qpp -shots 1024 -x c++ -
+$ ./a.out
 ```
 All installs will be in the `/usr/local/xacc` directory.
 
@@ -33,5 +45,17 @@ $ apt-get install xacc
 or QCOR, which will give you XACC plus a custom Clang/LLVM install with SyntaxHandler capabilities:
 ```bash
 $ apt-get install qcor
+
+// Test out qcor, copy and paste below text into terminal!
+$ printf "__qpu__ void f(qreg q) {
+  H(q[0]);
+  Measure(q[0]);
+}
+int main() {
+  auto q = qalloc(1);
+  f(q);
+  q.print();
+}  " | qcor -qpu qpp -shots 1024 -x c++ -
+$ ./a.out
 ```
 All installs will be in the `/usr/local/xacc` directory.
