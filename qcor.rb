@@ -15,6 +15,7 @@ class Qcor < Formula
   depends_on "gcc@10" => :build
 
   bottle do
+    root_url "https://dl.bintray.com/amccaskey/qci-homebrew-bintray"
     sha256 "692550ca239f36ffbf06956cd8e573b94b498a5b5c3d7f0557474dcefdc50141" => :mojave
   end
 
