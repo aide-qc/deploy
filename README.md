@@ -34,7 +34,9 @@ wget -qO- https://aide-qc.github.io/deploy/aide_qc/debian/PUBLIC-KEY.gpg | sudo 
 sudo wget -qO- "https://aide-qc.github.io/deploy/aide_qc/debian/$(lsb_release -cs)/aide-qc.list" > /etc/apt/sources.list.d/aide-qc.list
 apt-get update
 ```
-Next, one can install XACC on its own: 
+Note that the above requires you have `lsb_release` installed (usually is, if not, `apt-get install lsb-release`).
+
+Now one can install XACC on its own: 
 ```bash
 apt-get install xacc
 ```
