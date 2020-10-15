@@ -3,8 +3,8 @@ This repository contains binaries for the various frameworks, compilers, and lib
 provided by the AIDE-QC project. 
 
 ## Mac OS X and Linux x86_64
-For Mac OS X and most Linux distributions, we leverage (LINK Homebrew) to install the AIDE-QC stack. 
-Therefore, to install AIDE-QC, you must first install Hombebrew (simple instructions on Homebrew homepage). 
+For Mac OS X and most Linux distributions, we leverage [Homebrew](https://brew.sh/) to install the AIDE-QC stack. 
+Therefore you must first install Hombebrew (simple instructions on Homebrew [homepage](https://brew.sh/)). 
 
 Once Homebrew is installed, run the following command from your terminal 
 ```bash 
@@ -12,23 +12,10 @@ Once Homebrew is installed, run the following command from your terminal
 ```
 This will install the AIDE-QC stack, including XACC and QCOR. 
 
-## Ubuntu Bionic (18.04)
-For any Ubuntu 18.04 packages, run the following to enable downloads from the AIDE-QC apt repository (note you will require `sudo`):
+Test it out your install by trying to compile the code below with qcor
 ```bash
-$ wget -qO- https://aide-qc.github.io/deploy/aide_qc/debian/bionic/PUBLIC-KEY.gpg | apt-key add -
-$ wget -qO- "https://aide-qc.github.io/deploy/aide_qc/debian/bionic/aide-qc-bionic.list" > /etc/apt/sources.list.d/aide-qc-bionic.list
-$ apt-get update
-```
-Next, one can install XACC on its own: 
-```bash
-$ apt-get install xacc
-```
-or QCOR, which will give you XACC plus a custom Clang/LLVM install with SyntaxHandler capabilities:
-```bash
-$ apt-get install qcor
-
 // Test out qcor, copy and paste below text into terminal!
-$ printf "__qpu__ void f(qreg q) {
+printf "__qpu__ void f(qreg q) {
   H(q[0]);
   Measure(q[0]);
 }
@@ -37,27 +24,28 @@ int main() {
   f(q);
   q.print();
 }  " | qcor -qpu qpp -shots 1024 -x c++ -
-$ ./a.out
+./a.out
 ```
-All installs will be in the `/usr/local/xacc` directory.
 
-## Ubuntu Focal (20.04)
-For any Ubuntu 20.04 packages, run the following to enable downloads from the AIDE-QC apt repository (note you will require `sudo`):
+## Ubuntu Bionic (18.04) and Focal (20.04)
+To install on Ubuntu using `apt-get` debian packages, run the following to enable downloads from the AIDE-QC apt repository:
 ```bash
-$ wget -qO- https://aide-qc.github.io/deploy/aide_qc/debian/focal/PUBLIC-KEY.gpg | apt-key add -
-$ wget -qO- "https://aide-qc.github.io/deploy/aide_qc/debian/focal/aide-qc-focal.list" > /etc/apt/sources.list.d/aide-qc-focal.list
-$ apt-get update
+wget -qO- https://aide-qc.github.io/deploy/aide_qc/debian/PUBLIC-KEY.gpg | sudo apt-key add -
+sudo wget -qO- "https://aide-qc.github.io/deploy/aide_qc/debian/$(lsb_release -cs)/aide-qc.list" > /etc/apt/sources.list.d/aide-qc.list
+apt-get update
 ```
 Next, one can install XACC on its own: 
 ```bash
-$ apt-get install xacc
+apt-get install xacc
 ```
 or QCOR, which will give you XACC plus a custom Clang/LLVM install with SyntaxHandler capabilities:
 ```bash
-$ apt-get install qcor
-
+apt-get install qcor
+``
+Test it out by trying to compile the code below with qcor
+```bash
 // Test out qcor, copy and paste below text into terminal!
-$ printf "__qpu__ void f(qreg q) {
+printf "__qpu__ void f(qreg q) {
   H(q[0]);
   Measure(q[0]);
 }
@@ -66,6 +54,6 @@ int main() {
   f(q);
   q.print();
 }  " | qcor -qpu qpp -shots 1024 -x c++ -
-$ ./a.out
+./a.out
 ```
 All installs will be in the `/usr/local/xacc` directory.
