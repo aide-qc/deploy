@@ -2,6 +2,16 @@
 This repository contains binaries for the various frameworks, compilers, and libraries 
 provided by the AIDE-QC project. 
 
+## Mac OS X and Linux x86_64
+For Mac OS X and most Linux distributions, we leverage (LINK Homebrew) to install the AIDE-QC stack. 
+Therefore, to install AIDE-QC, you must first install Hombebrew (simple instructions on Homebrew homepage). 
+
+Once Homebrew is installed, run the following command from your terminal 
+```bash 
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/aide-qc/deploy/master/aide_qc/homebrew/install.sh)"
+```
+This will install the AIDE-QC stack, including XACC and QCOR. 
+
 ## Ubuntu Bionic (18.04)
 For any Ubuntu 18.04 packages, run the following to enable downloads from the AIDE-QC apt repository (note you will require `sudo`):
 ```bash
