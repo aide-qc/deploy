@@ -43,7 +43,7 @@ apt-get install xacc
 or QCOR, which will give you XACC plus a custom Clang/LLVM install with SyntaxHandler capabilities:
 ```bash
 apt-get install qcor
-``
+```
 Test it out by trying to compile the code below with qcor
 ```bash
 // Test out qcor, copy and paste below text into terminal!
