@@ -22,5 +22,5 @@ if [ "$DISTRO" == "Ubuntu" ]; then
     sudo apt-get update -y && sudo apt-get install -y liblapack-dev
 elif [[ $DISTRO == "fedora"* ]]; then
     brew uninstall gcc
-    sudo dnf update -y && sudo dnf install gcc gcc-c++ lapack-devel
+    sudo dnf update -y && sudo dnf install -y gcc gcc-c++ lapack-devel
 fi
