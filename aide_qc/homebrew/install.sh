@@ -20,4 +20,6 @@ unset UNAME
 # if Ubuntu, install lapack
 if [ "$DISTRO" == "Ubuntu" ]; then
     sudo apt-get update -y && sudo apt-get install -y liblapack-dev
+elif [[ $DISTRO == "fedora"* ]]; then
+    sudo dnf update -y && sudo dnf install gcc gcc-c++ lapack-devel
 fi
