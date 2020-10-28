@@ -9,7 +9,7 @@ deploy build_site:
     script:
     - cd website && hugo --minify -d ../public
     - git config remote.aideqcdeploy.url >&- || git remote add -t master aideqcdeploy https://amccaskey:$AIDEQC_ACCESS_TOKEN@github.com/aide-qc/deploy
-    - git checkout --orphan gh-pages
+    - cd .. && git checkout gh-pages
     - cp -r public/* . && rm -rf public 
     - git add *
     - git commit -m "updating aide-qc software docs page"
