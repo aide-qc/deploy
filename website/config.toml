@@ -62,7 +62,7 @@ disablePathToLower = true
 [[menu.main]]
     name = "Project Page"
     weight = 20
-    url = "https://aide-qc.org"
+    url = "http://aide-qc.org"
 
 [[menu.main]]
     name = "Community"
