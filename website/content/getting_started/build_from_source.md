@@ -22,20 +22,20 @@ Ubuntu 18.04
 
 ```bash
 # Add ubuntu-toolchain-r/test to get GCC 9
-apt-get update && apt-get install -y software-properties-common 
-add-apt-repository ppa:ubuntu-toolchain-r/test -y && apt-get update 
+sudo apt-get update && sudo apt-get install -y software-properties-common 
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y && sudo apt-get update 
 # Install deps
-apt-get install -y gcc-9 g++-9 gfortran-9 python3.8 libpython3.8-dev python3-pip libcurl4-openssl-dev libssl-dev liblapack-dev libblas-dev ninja-build lsb-release
+sudo apt-get install -y gcc-9 g++-9 gfortran-9 python3.8 libpython3.8-dev python3-pip libcurl4-openssl-dev libssl-dev liblapack-dev libblas-dev ninja-build lsb-release
 python3 -m pip install cmake --user 
 # We'll skip building LLVM/Clang with SyntaxHandler and install binary
 wget -qO- https://aide-qc.github.io/deploy/aide_qc/debian/PUBLIC-KEY.gpg | sudo apt-key add -
 sudo wget -qO- "https://aide-qc.github.io/deploy/aide_qc/debian/$(lsb_release -cs)/aide-qc.list" > /etc/apt/sources.list.d/aide-qc.list
-apt-get update
-apt-get install -y clang-syntax-handler
+sudo apt-get update
+sudo apt-get install -y clang-syntax-handler
 # Point defaults to GCC 9
-update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 50
-update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 50
-update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-9 50
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 50
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 50
+sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-9 50
 ``` 
 </td>
 </tr>
@@ -49,14 +49,14 @@ Ubuntu 20.04
 
 ```bash
 # Install deps
-apt-get update
-apt-get install -y gcc g++ gfortran python3 libpython3-dev python3-pip libcurl4-openssl-dev libssl-dev liblapack-dev libblas-dev ninja-build lsb-release
+sudo apt-get update
+sudo apt-get install -y gcc g++ gfortran python3 libpython3-dev python3-pip libcurl4-openssl-dev libssl-dev liblapack-dev libblas-dev ninja-build lsb-release
 python3 -m pip install cmake --user 
 # We'll skip building LLVM/Clang with SyntaxHandler and install binary
 wget -qO- https://aide-qc.github.io/deploy/aide_qc/debian/PUBLIC-KEY.gpg | sudo apt-key add -
 sudo wget -qO- "https://aide-qc.github.io/deploy/aide_qc/debian/$(lsb_release -cs)/aide-qc.list" > /etc/apt/sources.list.d/aide-qc.list
-apt-get update
-apt-get install -y clang-syntax-handler
+sudo apt-get update
+sudo apt-get install -y clang-syntax-handler
 ``` 
 </td>
 </tr>
@@ -75,7 +75,7 @@ Linux x86_64 (not Ubuntu)
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 
 # If on Fedora, do this first!
-dnf update -y && dnf install gcc gcc-c++ lapack-devel
+sudo dnf update -y && sudo dnf install gcc gcc-c++ lapack-devel
 
 # Install deps, turn off dependents check
 export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=false

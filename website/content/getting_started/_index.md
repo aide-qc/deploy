@@ -18,13 +18,13 @@ To install on Ubuntu using `apt-get` debian packages, run the following to enabl
 ```sh
 wget -qO- https://aide-qc.github.io/deploy/aide_qc/debian/PUBLIC-KEY.gpg | sudo apt-key add -
 sudo wget -qO- "https://aide-qc.github.io/deploy/aide_qc/debian/$(lsb_release -cs)/aide-qc.list" > /etc/apt/sources.list.d/aide-qc.list
-apt-get update
+sudo apt-get update
 ```
-Note that the above requires you have `lsb_release` installed (usually is, if not, `apt-get install lsb-release`).
+Note that the above requires you have `lsb_release` installed (usually is, if not, `sudo apt-get install lsb-release`).
 
 Now one can install `qcor` which will give you the entire AIDE-QC stack:
 ```sh
-apt-get install qcor
+sudo apt-get install qcor
 ```
 Test out your install by compiling and executing the following simple `qcor` code:
 ```sh
