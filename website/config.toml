@@ -1,0 +1,121 @@
+baseURL = "https://localhost:3000"
+languageCode = "en-us"
+title = "AIDE-QC"
+theme = "aide-qc"
+
+hasCJKLanguage = true
+metaDataFormat = "yaml"
+
+pygmentsCodeFences = true
+pygmentsUseClasses = true
+
+defaultContentLanguage = "en"
+defaultContentLanguageInSubdir= false
+enableMissingTranslationPlaceholders = false
+
+disablePathToLower = true
+
+[Params]
+
+    # Souce Code repository section
+    description = "Advancing Integrated Development Environments for Quantum Computing"
+    # Update menubar link too.
+    # TODO(jpienaar): Find a way that doesn't duplicate it or
+    # require redirect.
+    github_repository = "https://github.com/aide-qc"
+    version = ""
+
+    # Documentation repository section
+    # documentation repository (set edit link to documentation repository)
+    github_doc_repository = "https://github.com/aide-qc/deploy/"
+
+    # Analytic section
+    google_analytics_id = "" # Your Google Analytics tracking id
+    tag_manager_container_id = "" # Your Google Tag Manager container id
+    google_site_verification = "" # Your Google Site Verification for Search Console
+
+    # Theme settings section
+    # Theme color
+    custom_font_color = ""
+    custom_background_color = ""
+
+    # Documentation Menu section
+    # Menu style settings
+    menu_style = "slide-menu" # "open-menu" or "slide-menu"
+
+    # Date format
+    dateformat = "" # default "2 Jan 2006"
+    # See the format reference https://gohugo.io/functions/format/#hugo-date-and-time-templating-reference
+
+    # path name excluded from documentation menu
+    menu_exclusion = [
+        "archives",
+        "archive",
+        "blog",
+        "entry",
+        "post",
+        "posts"
+    ]
+
+# Global menu section
+
+[[menu.main]]
+    name = "Project Page"
+    weight = 20
+    url = "https://aide-qc.org"
+
+[[menu.main]]
+    name = "Community"
+    weight = 3
+
+[[menu.main]]
+    name = "AIDE-QC Slack"
+    parent = "Community"
+    url = "https://aideqc.slack.com"
+    weight = 3
+
+[[menu.main]]
+    name = "XACC/QCOR Slack"
+    parent = "Community"
+    url = "https://xacc-dev.slack.com"
+    weight = 3
+
+[[menu.main]]
+    name = "Source"
+    weight = 10
+    url = "https://github.com/aide-qc"
+
+[[menu.main]]
+    name = "XACC"
+    parent = "Source"
+    weight = 2
+    url = "https://github.com/aide-qc/xacc"
+
+[[menu.main]]
+    name = "QCOR"
+    parent = "Source"
+    weight = 2
+    url = "https://github.com/aide-qc/qcor"
+
+[[menu.main]]
+    name = "XACC Doxygen"
+    parent = "Source"
+    weight = 1
+    url = "https://ornl-qci.github.io/xacc-api-docs/"
+
+[[menu.main]]
+    name = "QCOR Doxygen"
+    parent = "Source"
+    weight = 1
+    url = "https://ornl-qci.github.io/qcor-api-docs/"
+
+[[menu.main]]
+    name = "Bugs"
+    weight = 20
+    url = "https://github.com/aide-qc/aide-qc/issues"
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      hardWraps = false
+      unsafe = true

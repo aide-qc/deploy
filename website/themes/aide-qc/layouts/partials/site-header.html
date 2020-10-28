@@ -1,0 +1,12 @@
+<header>
+  <h1><div>
+    <img src="{{ .Site.BaseURL }}/aide_qc_logo_v3.png" width=40px align="absmiddle" />
+{{ .Site.Title }}
+  </div></h1>
+{{ with .Site.Params.version }}
+ <span class="version">Version {{ . }}</span>
+{{end}}
+{{ with .Site.Params.description }}
+<p class="description">{{ . }}</p>
+{{end}}
+</header>
