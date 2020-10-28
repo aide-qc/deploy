@@ -201,3 +201,21 @@ int main() {
 }  " | qcor -qpu qpp -shots 1024 -x c++ -
 ./a.out
 ```
+
+## Build the LLVM-CSP Fork
+> **_NOTE:_** This is a long build and not recommended for most users. We have binaries built and distributed with `apt-get` and Homebrew, these should be your first choice. The following is mainly for book-keeping and due diligence.
+
+If you would like to build a custom install of our LLVM fork containing the Clang `SyntaxHandler`, run the following:
+```sh
+git clone https://github.com/hfinkel/llvm-project-csp llvm
+cd llvm && mkdir build && cd build
+cmake ../llvm -G Ninja -DBUILD_SHARED_LIBS=ON \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DLLVM_TARGETS_TO_BUILD=X86 \
+      -DLLVM_ENABLE_DUMP=ON \
+      -DLLVM_ENABLE_PROJECTS=clang \
+      -DCMAKE_CXX_COMPILER=g++-10 \
+      -DCMAKE_C_COMPILER=gcc-10 \
+      -DCMAKE_INSTALL_PREFIX=$HOME/.llvm
+cmake --build . --target install
+```
