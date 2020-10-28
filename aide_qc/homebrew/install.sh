@@ -1,8 +1,6 @@
 #!/bin/bash
 set +x 
 export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=false
-brew tap aide-qc/deploy
-brew install qcor
 UNAME=$(uname | tr "[:upper:]" "[:lower:]")
 # If Linux, try to determine specific distribution
 if [ "$UNAME" == "linux" ]; then
@@ -21,6 +19,8 @@ unset UNAME
 if [ "$DISTRO" == "Ubuntu" ]; then
     sudo apt-get update -y && sudo apt-get install -y liblapack-dev
 elif [[ $DISTRO == "fedora"* ]]; then
-    brew uninstall gcc
     sudo dnf update -y && sudo dnf install -y gcc gcc-c++ lapack-devel
 fi
+
+brew tap aide-qc/deploy
+brew install qcor
