@@ -1,4 +1,4 @@
-baseURL = "https://localhost:3000"
+baseURL = "https://aide-qc.github.io/deploy"
 languageCode = "en-us"
 title = "AIDE-QC"
 theme = "aide-qc"
