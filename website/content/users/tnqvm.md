@@ -21,6 +21,8 @@ Depending on the way XACC was installed, e.g. compiling from source or using `ap
 
 For example, if installed from source, XACC can be found at `$HOME/.xacc` by default. 
 
+On the other hand, if the AIDE-QC Software Stack was installed with `apt-get install qcor`, XACC can be found at `/usr/local/xacc`.
+
 ### *(Optional)* Clone and build ExaTN library
 
 If ExaTN backends are required, we need to clone and build the ExaTN library before compiling TNQVM.
@@ -60,7 +62,7 @@ cmake .. -DXACC_DIR=<XACC_DIR> -DTNQVM_BUILD_TESTS=TRUE
 make install
 ```
 
-`<XACC_DIR>` is the XACC install directory that we have located in the first [step](#locate-xacc-install-directory), e.g. `$HOME/.xacc` if installed from source.
+`<XACC_DIR>` is the XACC install directory that we have located in the first [step](#locate-xacc-install-directory), e.g. `$HOME/.xacc` if installed from source or `/usr/local/xacc` if using `apt-get`.
 
 `-DTNQVM_BUILD_TESTS=TRUE` is optional but *highly-recommended* to validate the TNQVM installation. 
 If set, we can test the installation by running the `ctest` command after `make install`.
