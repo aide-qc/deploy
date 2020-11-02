@@ -96,3 +96,154 @@ make install
 
 ## Using TNQVM 
 Show with xacc alone, show with qcor at c++ and python jit level
+
+The TNQVM Accelerator can be requested in the XACC framework by
+
+```cpp
+auto qpu = xacc::getAccelerator("tnqvm", {{"tnqvm-visitor", "exatn"}});
+```
+
+The `tnqvm-visitor` key can refer to one of the following options:
+
+|   `tnqvm-visitor`  |                  Description                                           |    
+|--------------------|------------------------------------------------------------------------|
+|    `itensor-mps`   | MPS simulator based on itensor library.                                | 
+|    `exatn`         | Full tensor contraction simulator based on ExaTN library.              |    
+|    `exatn-mps`     | MPS simulator based on ExaTN library.                                  |    
+|    `exatn-pmps`    | Purified-MPS (density matrix) simulator based on ExaTN library.        |   
+
+**Note**: If TNQVM was built without ExaTN, only the `itensor-mps` visitor will be available.
+
+Let's look at a typical Bell-state quantum circuit simulation:
+
+<table>
+<tr>
+<th>Bell Experiment - C++</th>
+<th>Bell Experiment - Python</th>
+</tr>
+<tr>
+<td>
+
+```cpp
+#include "xacc.hpp"
+int main(int argc, char **argv) {
+  xacc::Initialize(argc, argv);
+  // Get reference to the TNQVM Accelerator
+  auto accelerator = xacc::getAccelerator(
+      "tnqvm", {{"tnqvm-visitor", "exatn"}, {"shots", 1024}});
+
+  // Allocate some qubits
+  auto buffer = xacc::qalloc(2);
+  auto xasmCompiler = xacc::getCompiler("xasm");
+  auto ir = xasmCompiler->compile(R"(__qpu__ void bell(qbit q) {
+      H(q[0]);
+      CX(q[0], q[1]);
+      Measure(q[0]);
+      Measure(q[1]);
+  })", accelerator);
+
+  accelerator->execute(buffer, ir->getComposites()[0]);
+  buffer->print();
+  xacc::Finalize();
+  return 0;
+}
+```
+</td>
+<td>
+
+```python
+import xacc
+qpu = xacc.getAccelerator('tnqvm', { 'tnqvm-visitor': 'exatn', 'shots': 1024 })
+
+# Define the quantum kernel in standard Python
+@xacc.qpu(accelerator=qpu)
+def bell(q):
+    H(q[0])
+    CX(q[0],q[1])
+    Measure(q[0])
+    Measure(q[1])
+
+# Allocate 2 qubits
+q = xacc.qalloc(2)
+
+# run the bell state computation
+bell(q)
+
+print(q)
+```
+</td>
+</tr>
+</table>
+
+Similarly, TNQVM can be used with the QCOR compiler. 
+Rather than explicitly requesting the TNQVM accelerator, one just need to pass `tnqvm` to the `-qpu` command-line argument when compiling with QCOR.
+
+
+<table>
+<tr>
+<th>Bell Experiment - C++</th>
+<th>Bell Experiment - Python</th>
+</tr>
+<tr>
+<td>
+Compile and run with
+
+```bash
+qcor -qpu tnqvm[tnqvm-visitor:exatn] -shots 1024 bell.cpp
+./a.out
+```
+</td>
+<td>
+
+Run with
+
+```bash
+python3 bell.py -qpu tnqvm[tnqvm-visitor:exatn] -shots 1024
+```
+</td>
+</tr>
+<tr>
+<td>
+
+```cpp
+__qpu__ void bell(qreg q) {
+  H(q[0]);
+  CX(q[0], q[1]);
+  for (int i = 0; i < q.size(); i++) {
+    Measure(q[i]);
+  }
+}
+
+int main() {
+  auto q = qalloc(2);
+  // Run the quantum kernel
+  bell(q);
+  q.print();
+}
+```
+</td>
+<td>
+
+```python
+from qcor import qjit, qalloc, qreg
+
+# Define a Bell kernel
+@qjit
+def bell(q : qreg):
+    H(q[0])
+    CX(q[0], q[1])
+    for i in range(q.size()):
+        Measure(q[i])
+
+# Allocate 2 qubits
+q = qalloc(2)
+
+# Run the bell experiment
+bell(q)
+
+# Print the results
+q.print()
+```
+</td>
+</tr>
+</table>
