@@ -5,9 +5,9 @@ draft: false
 weight: 10
 ---
 
-[Hello World](hello_world)
+[Hello World - Simple GHZ State](hello_world)
 
-[Quantum Kernels](quantum_kernels)
+[Quantum Kernels - Language Extensibility](quantum_kernels)
 
 [Remote QPU Credentials](remote_qpu_creds)
 * [IBM API Credentials](remote_qpu_creds/#ibm)
@@ -23,3 +23,5 @@ weight: 10
 * [Installing TNQVM](tnqvm/#installation)
 
 [Pass Manager](pass_manager)
+
+[Quantum JIT](qjit)
