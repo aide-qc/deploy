@@ -5,6 +5,13 @@ draft: false
 weight: 10
 ---
 
+[Hello World](hello_world)
+
+[Quantum Kernels](quantum_kernels)
+
+[Remote QPU Credentials](remote_qpu_creds)
+* [IBM API Credentials](remote_qpu_creds/#ibm)
+
 [Using an Optimizer](using_optimizer)
 * [Create an Optimizer](using_optimizer/#create-optimizer)
 * [Optimize a Custom Function](using_optimizer/#optimize-function)
@@ -14,3 +21,5 @@ weight: 10
 
 [Tensor Network Quantum Virtual Machine](tnqvm)
 * [Installing TNQVM](tnqvm/#installation)
+
+[Pass Manager](pass_manager)

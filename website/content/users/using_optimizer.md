@@ -108,7 +108,6 @@ def objective_function(x : List[float]):
     q = qalloc(H.nBits())
     # Observe the ansatz at the given arguments
     energy = ansatz.observe(H, q, x[0])
-    print(energy)
     # We want to see how far we are from the target
     return abs(target_energy - energy)
 
