@@ -5,7 +5,13 @@ draft: false
 weight: 15
 ---
 
-## Background
+### Table of Contents
+* [Background](#background)
+* [Create a Custom L-BFGS Optimizer](#create-optimizer)
+* [Test the Custom L-BFGS Optimizer](#test-my-lbfgs)
+* [Custom Optimizer Options](#custom-lbfgs-options)
+
+## <a id="background"></a> Background
 The AIDE-QC software stack provides an extension point for classical, multi-variate function optimization. This provides the means 
 to experiment with multiple optimization strategies pertinent to variational quantum computing algorithms (e.g. VQE). 
 
@@ -45,7 +51,7 @@ Finally, `Optimizers` expose an `optimize` method that is designed to be impleme
 
 Note, all `Optimizers` are `Identifiable`, therefore, sub-types must implement `name()` and `description()` providing a unique name for the `Optimizer` sub-type and corresponding description. 
 
-## Create an Optimizer Sub-Type
+## <a id="create-optimizer"></a> Create a New Optimizer
 
 For the purposes of this tutorial, let's try to create a new AIDE-QC `Optimizer` that delegates to the [LBFGS++](https://github.com/yixuan/LBFGSpp) header-only C++ library providing an implementation of the [L-BFGS](https://en.wikipedia.org/wiki/Limited-memory_BFGS) gradient-based optimization algorithm that leverages the [Eigen](https://eigen.tuxfamily.org) matrix library. To start, create a new project directory and add the library as a submodule 
 ```sh
@@ -250,7 +256,7 @@ cmake --build . --target install
 ```
 You're now ready to test out the new `Optimizer`.
 
-## Test the my-lbfgs Optimizer
+## <a id="test-my-lbfgs"></a> Test the my-lbfgs Optimizer
 We can demonstrate the utility of our custom `Optimizer` in both C++ and Python:
 <table>
 <tr>
@@ -431,3 +437,59 @@ python3 vqe_mylbfgs.py
 </td>
 </tr>
 </table>
+
+## <a id="custom-lbfgs-options"></a> Custom Optimizer Options
+`Optimizers` also support the injection of custom options, structured as a map of strings (keys) to any type (values). 
+This is useful for customizing the `Optimizer` workflow strategy. Let's demonstrate this with the `MyLBFGSOptimizer`, and specifically, 
+let's make it so that the programmer can modify a `max-iterations` parameter. 
+
+Every `Optimizer` has access to a protected class member called `options`. This is a `HeterogeneousMap` instance that maps string keys to 
+any type (using the [`std::any`](https://en.cppreference.com/w/cpp/utility/any) template type, or in Python, just a `dict`). This options 
+map is injected into the `Optimizer` at creation, and is available for implementations of `Optimizer::optimize()` to use. Let's modify 
+the `MyLBFGSOptimizer::optimize()` implementation to support a `max-iterations` key:
+
+```cpp
+OptResult MyLBFGSOptimizer::optimize(OptFunction &function) {
+  
+  ... rest of the code from above ... 
+
+  int max_iters = 100;
+  if (options.keyExists<int>("max-iterations")) {
+    max_iters = options.get<int>("max-iterations");
+  }
+
+  // Set up LBFGS++ parameters
+  LBFGSParam<double> param;
+  param.epsilon = 1e-6;
+  param.max_iterations = max_iters;
+
+  ... rest of the code from above ...
+
+}
+```
+`HeterogeneousMap` exposes a `keyExists<T>(key:string) : bool` to indicate if a given key exists in the map with the correct template type. `Optimizer` developers should always check first to see if the key exists, as programmers may or may not provide the given optional parameter. If the key does exists with the given type, then developers can leverage the `get<T>(key:string):T` method on the map to get the value of the input parameter, and use it to influence the rest of the `Optimizer::optimize` workflow. 
+
+Users of the `Optimizer` can provide custom options via the `createOptimizer` function in the following manner (shown in both C++ and Python):
+<table>
+<tr>
+<th>Custom Optimizer Options - C++</th>
+<th>Custom Optimizer Options - Python</th>
+</tr>
+<tr>
+<td>
+
+```cpp
+  // Create the Optimizer.
+  auto optimizer = createOptimizer("my-lbfgs", {{"max-iterations", 50}});
+```
+</td>
+<td>
+
+```python
+# Create the Optimizer.
+optimizer = createOptimizer("my-lbfgs", {'max-iterations':50})
+```
+</td>
+</tr>
+</table>
+
