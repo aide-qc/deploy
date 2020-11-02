@@ -5,7 +5,7 @@ draft: false
 weight: 15
 ---
 
-## Install the TNQVM 
+## <a id="installation"></a> Install the TNQVM 
 Show installation with and without exatn. note XACC_DIR is different based on brew, apt-get, and custom installs. Show how to set a XACC_DIR environment variable first and pass to cmake
 
 ## Using TNQVM 
