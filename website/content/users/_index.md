@@ -16,6 +16,8 @@ weight: 10
 [Operators](operators)
 * [Spin](operators/#spin)
 * [Fermion](operators/#fermion)
+* [Chemistry](operators/#chemistry)
+* [OpenFermion](operators/#openfermion)
 
 [Remote QPU Credentials](remote_qpu_creds)
 * [IBM API Credentials](remote_qpu_creds/#ibm)
