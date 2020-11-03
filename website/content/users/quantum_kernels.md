@@ -162,12 +162,308 @@ n_inst = kernel.n_instructions(q, 2.2)
 </tr>
 </table>
 
-Now we will...
+Now we turn our attention to the different ways one might write quantum kernel function bodies, i.e. the current set of low-level and high-level quantum DSLs that we support in the AIDE-QC programming stack. 
 
-## XASM
+## <a id="xasm"></a> XASM
+The default language in C++ for quantum kernels is based on the XACC XASM quantum assembly language. This language provides a source-level representation of the internal XACC quantum intermediate representation (IR). Out of all the quantum languages supported by AIDE-QC, the XASM language supports the most classical C++ control flow mechanisms (`for`, `if`, etc.). It also allows mixing certain classical statements that help in constructing the quantum kernel most efficiently, such as simple variable assignment and use. This language supports most one and two qubit gate instructions, and rotation gates can be parameterized by incoming kernel arguments. 
 
-## OpenQasm
+Let's turn our attention to some examples. First we look at an IBM-style [hardware efficient ansatz](https://www.nature.com/articles/nature23879) to demonstrate the utility of existing C++ control flow intermixed with quantum instructions.
+```cpp
+__qpu__ void hwe(qreg q, std::vector<double> x, const int layers,
+                 std::vector<std::pair<int, int>> cnot_coupling) {
+  // Get the number of qubits
+  auto n_qubits = q.size();
+  // Loop over layers
+  for (auto layer : range(layers)) {
+    // Create first Rx Rz layer
+    for (auto i : range(n_qubits)) {
+      // Shift the x vector idx based on the layer we are in
+      auto rx_xidx = layer * n_qubits * 5 + i;
+      auto rz_xidx = layer * n_qubits * 5 + i + q.size();
+      Rx(q[i], x[rx_xidx]);
+      Rz(q[i], x[rz_xidx]);
+    }
 
-## Unitary Matrix
+    // Next set of angle indices will be shifted
+    auto shift = n_qubits * 2;
 
-## Python
+    // Apply the CNOTs
+    for (auto [i, j] : cnot_coupling) {
+      CX(q[i], q[j]);
+    }
+
+    // Add the final layer of rotation gates
+    for (auto i : range(n_qubits)) {
+      // Shift the idx based on the layer we are in
+      auto rx1_xidx = layer * n_qubits * 5 + shift + i;
+      auto rz_xidx = layer * n_qubits * 5 + shift + i + n_qubits;
+      auto rx2_xidx = layer * n_qubits * 5 + shift + i + 2 * n_qubits;
+      Rx(q[i], x[rx1_xidx]);
+      Rz(q[i], x[rz_xidx]);
+      Rx(q[i], x[rx2_xidx]);
+    }
+  }
+}
+```
+In the above example, one can see the breadth of programming expressions that can be leveraged to construct 
+common quantum circuits. This example takes a number of non-trivial function arguments, and leverages them 
+to construct a general hardware efficient circuit, parameterized on a vector of angles `x`. The use of 
+nested for loops and C++-17 structured bindings provide an expressive kernel DSL for programming general 
+parameterized quantum kernels. This example applies layers of rotation + entangling + rotation patterns using C++ for loops, variable assignment on the stack, and quantum instruction calls. These instructions are not imported or included from an external library, they are part of the language extension itself. One can now use this kernel or print it to a QASM-like string in the following way 
+```cpp
+... with the above kernel definition ...
+int main() {
+  // Lets use 2 layers, 4 qubits, and nearest-neighbor coupling
+  int layers = 2;
+  auto q = qalloc(4);
+  auto x_init = random_vector(-1., 1., q.size() * layers * 5);
+  std::vector<std::pair<int, int>> coupling{{0, 1}, {1,2}, {2,3}};
+
+  // Print the kernel to see it!
+  hwe::print_kernel(std::cout, q, x_init, layers, coupling);
+}
+```
+
+A more complicated example may be a kernel that generates a QAOA circuit based on 
+a general cost Hamiltonian. Let's see how one might program that:
+```cpp
+__qpu__ void qaoa_ansatz(qreg q, int n_steps, std::vector<double> gamma,
+                         std::vector<double> beta, PauliOperator& cost_ham) {
+
+  // Local Declarations
+  auto nQubits = q.size();
+  int gamma_counter = 0;
+  int beta_counter = 0;
+
+  // Start off in the uniform superposition
+  for (int i : range(nQubits)) {
+    H(q[i]);
+  }
+
+  // Get all non-identity hamiltonian terms
+  // for the following exp(H_i) trotterization
+  auto cost_terms = cost_ham.getNonIdentitySubTerms();
+
+  // Loop over qaoa steps
+  for (int step : range(n_steps)) {
+
+    // Loop over cost hamiltonian terms
+    for (int i : range(cost_terms.size())) {
+
+      // for xasm we have to allocate the variables
+      auto cost_term = cost_terms[i];
+      auto m_gamma = gamma[gamma_counter];
+
+      // trotterize
+      exp_i_theta(q, m_gamma, cost_term);
+
+      gamma_counter++;
+    }
+
+    // Add the reference hamiltonian term
+    // H_ref = SUM_i X(i)
+    for (int i : range(nQubits)) {
+      auto ref_ham_term = X(i);
+      auto m_beta = beta[beta_counter];
+      exp_i_theta(q, m_beta, ref_ham_term);
+      beta_counter++;
+    }
+  }
+}
+```
+Here one can see the usual use of C++ control flow to build up the QAOA circuit. The interesting part is the 
+the non-trivial argument structure, whereby we are able to parameterize the kernel construction on the 
+number of QAOA steps, gamma and beta parameter vectors, and the cost Hamiltonian itself, passed as a [PauliOperator](operators). 
+
+## <a id="openqasm"></a> OpenQasm
+The next quantum kernel language that the AIDE-QC stack supports is IBM's [OpenQasm](https://en.wikipedia.org/wiki/OpenQASM). Programmers can leverage this dialect by starting off the kernel with the `using qcor::openqasm` statement. Here is a simple example
+```cpp
+__qpu__ void bell(qreg q) {
+    using qcor::openqasm;
+    h q[0];
+    cx q[0], q[1];
+    creg c[2];
+    measure q -> c;
+}
+```
+
+There are a lot of quantum circuit benchmarking activities that leverage pre-generated OpenQasm source files. External OpenQasm files can be integrated with quantum kernels through the usual C++ preprocessor:
+```cpp
+__qpu__ void grover_5(qreg q) {
+  using qcor::openqasm;
+#include "grover_5.qasm"
+}
+```
+This assumes a `grover_5.qasm` file is in the header search path. 
+
+One can also mix XASM and OpenQasm languages (actually you can mix any available language):
+```cpp
+__qpu__ void bell_multi(qreg q, qreg r) {
+  H(q[0]);
+  CX(q[0], q[1]);
+
+  using qcor::openqasm;
+
+  h r[0];
+  cx r[0], r[1];
+
+  using qcor::xasm;
+  
+  for (int i = 0; i < q.size(); i++) {
+    Measure(q[i]);
+    Measure(r[i]);
+  }
+}
+```
+Since XASM is the default language, you don't have to specify `using qcor::xasm` to start off, but if you do switch to another language, you will need to specify `using qcor::xasm` if you switch back to XASM. 
+
+## <a id="matrix"></a> Unitary Matrix
+The AIDE-QC quantum kernel programming model also supports novel circuit synthesis strategies that 
+take as input a general unitary matrix describing the desired quantum operation. We have defined 
+another kernel language extension that allows one to program at the unitary matrix level and indicate 
+to the compiler that this is intended for decomposition into one and two qubit gates based on some 
+internal synthesis strategy. Let's demonstrate this by defining a Toffoli gate as a unitary matrix: 
+```cpp
+__qpu__ void ccnot(qreg q) {
+
+  // set initial state to 111
+  for (int i : range(q.size())) {
+    X(q[i]);
+  }
+
+  // To program at the unitary matrix level,
+  // invoke the decompose call, indicating which 
+  // buffer to target, can optionally provide decomposition 
+  // algorithm name and an optimizer. 
+  decompose {
+    // Create the unitary matrix
+    UnitaryMatrix ccnot_mat = UnitaryMatrix::Identity(8, 8);
+    ccnot_mat(6, 6) = 0.0;
+    ccnot_mat(7, 7) = 0.0;
+    ccnot_mat(6, 7) = 1.0;
+    ccnot_mat(7, 6) = 1.0;
+  }
+  (q);
+
+  // Add some measures
+  for (int i = 0; i < q.size(); i++) {
+    Measure(q[i]);
+  }
+}
+int main() {
+  // allocate 3 qubits
+  auto q = qalloc(3);
+
+  // By default this uses qfast with adam optimizer,
+  // print what the unitary decomp was
+  ccnot::print_kernel(std::cout, q);
+
+  // Run the unitary evolution.
+  ccnot(q);
+
+  // should see 011 (msb) for toffoli input 111
+  q.print();
+}
+```
+
+Here we see that programmers declare a `decompose` scope, and inside define a unitary matrix using a provided 
+`UnitaryMatrix` data structure (a `typedef` for `Eigen::MatrixXcd`). Once the matrix is defined, users close the `decompose` scope and provide at least the `qreg` to operate on. Programmers can also provide the circuit synthesis algorithm name (`QFAST` is the default) and a classical `Optimizer` to use for the decomposition strategy. 
+
+## <a id="pyxasm"></a> Pythonic XASM
+We have also defined a Pythonic version of the XASM language that provides quantum instructions alongside Pythonic control flow statements. This language was developed for our Python JIT compiler infrastructure, but can also be leveraged from C++ quantum kernel functions
+
+<table>
+<tr>
+<th>PyXASM Language - C++</th>
+<th>PyXASM Language - Python</th>
+</tr>
+<tr>
+<td>
+
+```cpp
+__qpu__ void ghz(qreg q) {
+    using qcor::pyxasm;
+    H(q[0])
+    for i in range(q.size()-1):
+        CX(q[i], q[i+1])
+    for i in range(q.size()):
+        Measure(q[i])
+}
+```
+</td>
+<td>
+
+```python
+@qjit
+def ghz(q : qreg):
+    H(q[0])
+    for i in range(q.size()-1):
+        CX(q[i], q[i+1])
+    for i in range(q.size()):
+        Measure(q[i])
+```
+</td>
+</tr>
+</table>
+
+One should be able to use this Pythonic XASM language in the same ways that the C++ dialect is used. Below we demonstrate a Pythonic quantum phase estimation kernel that makes use of kernel composition and `ctrl` versions of dependent kernels:
+```python
+@qjit
+def iqft(q : qreg, startIdx : int, nbQubits : int):
+    """
+    Define an inverse quantum fourier transform kernel
+    """
+    for i in range(nbQubits/2):
+        Swap(q[startIdx + i], q[startIdx + nbQubits - i - 1])
+            
+    for i in range(nbQubits-1):
+        H(q[startIdx+i])
+        j = i +1
+        for y in range(i, -1, -1):
+            theta = -MY_PI / 2**(j-y)
+            CPhase(q[startIdx+j], q[startIdx + y], theta)
+            
+    H(q[startIdx+nbQubits-1])
+
+@qjit
+def oracle(q : qreg):
+    """
+    Define the oracle for our phase estimation algorithm,
+    a T gate on the last qubit
+    """
+    bit = q.size()-1
+    T(q[bit])
+
+@qjit
+def qpe(q : qreg):
+    """
+    Run the quantum phase estimation kernel using the 
+    ctrl of the oracle kernel and the pre-defined inverse 
+    fourier transform. 
+    """
+    nq = q.size()
+    X(q[nq - 1])
+    for i in range(q.size()-1):
+        H(q[i])
+            
+    bitPrecision = nq-1
+    for i in range(bitPrecision):
+        nbCalls = 2**i
+        for j in range(nbCalls):
+            ctrl_bit = i
+            oracle.ctrl(ctrl_bit, q)
+            
+    # Inverse QFT on the counting qubits
+    iqft(q, 0, bitPrecision)
+            
+    for i in range(bitPrecision):
+        Measure(q[i])
+
+q = qalloc(4)
+qpe(q)
+print(q.counts())
+assert(q.counts()['100'] == 1024)
+```
+```sh
+python3 qpe.py -shots 100
+```
