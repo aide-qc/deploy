@@ -53,6 +53,35 @@ H = createOperator('pyscf', {'geometry':geom_str, 'basis':'sto-3g'})
 ```
 
 ## <a id="openfermion"></a> OpenFermion Integration
-Coming to a theater near you...
+The AIDE-QC Python API is fully interoperable with [OpenFermion](https://openfermion.org). Programmers can provide a `FermionOperator` or a `QubitOperator` anywhere in the API where a QCOR `Operator` is an input argument. See the example below
 
-## <a id="optransforms"></a> Operator Transformations
+```python
+from qcor import *
+from openfermion.ops import FermionOperator as FOp
+
+# Create Operator as an OpenFermion FermionOperator
+H = FOp('', 0.0002899) + FOp('0^ 0', -.43658) + \
+    FOp('1 0^', 4.2866) + FOp('1^ 0', -4.2866) + FOp('1^ 1', 12.25) 
+
+# Could also have used Qubit Operator, or transform result
+# H = jordan_wigner(...FermionOp...) 
+# H = QOp('', 5.907) + QOp('Y0 Y1', -2.1433) + \
+#      QOp('X0 X1', -2.1433) + QOp('Z0', .21829) + QOp('Z1', -6.125) 
+
+# Define the quantum kernel              
+@qjit
+def ansatz(q: qreg, theta: float):
+      X(q[0])
+      Ry(q[1], theta)
+      CX(q[1], q[0])
+
+# Create the ObjectiveFunction, providing the FermionOperator as the Observable
+n_params = 1
+obj = createObjectiveFunction(ansatz, H, 
+            n_params, {'gradient-strategy':'parameter-shift'})
+
+# Optimize!
+optimizer = createOptimizer('nlopt', {'nlopt-optimizer':'l-bfgs'})
+results = optimizer.optimize(obj)
+```
+
