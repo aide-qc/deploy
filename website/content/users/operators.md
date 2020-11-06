@@ -114,3 +114,32 @@ Original:
 Tapered:
  (-0.780646,0) Z0 + (-0.335686,0) + (0.181625,0) X0
 ```
+
+And of course we can leverage this new tapered Hamiltonian in any of the existing algorithms we support:
+```python
+from qcor import *
+
+# Create the Hamiltonian using the PySCF Operator plugin
+# and reduce it with qubit-tapering
+H = createOperator('pyscf', {'basis': 'sto-3g', 'geometry': 'H  0.000000   0.0      0.0\nH   0.0        0.0  .7474'})
+H_tapered = operatorTransform('qubit-tapering', H)
+
+# Define a 1-qubit ansatz, just move around the bloch sphere
+@qjit
+def ansatz(q : qreg, x : List[float]):
+    Rx(q[0], x[0])
+    Ry(q[0], x[1])
+
+# Create the problem model, provide the state 
+# prep circuit, Hamiltonian and note how many variational parameters 
+num_params = 2
+problemModel = qsim.ModelBuilder.createModel(ansatz, H_tapered, num_params)
+
+# Create the VQE workflow
+workflow = qsim.getWorkflow('vqe')
+
+# Execute and print the result
+result = workflow.execute(problemModel)
+energy = result['energy']
+print('VQE Energy = ', energy)
+```
