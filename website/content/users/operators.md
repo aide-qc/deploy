@@ -85,7 +85,7 @@ optimizer = createOptimizer('nlopt', {'nlopt-optimizer':'l-bfgs'})
 results = optimizer.optimize(obj)
 ```
 
-## <a id="op-transforms"></a> Operator Transformations
+## <a id="transforms"></a> Operator Transformations
 The AIDE-QC stack defines an extension point for injecting general transformations on `Operators`. We leverage this for 
 ubiquitous lowering operators (e.g. Fermion to Pauli/Spin), but also for transformations that reduce or 
 simplify `Operators` in some iso-morphic way. Using these transformations is straightforward - here we demonstrate 
