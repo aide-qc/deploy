@@ -85,3 +85,32 @@ optimizer = createOptimizer('nlopt', {'nlopt-optimizer':'l-bfgs'})
 results = optimizer.optimize(obj)
 ```
 
+## <a id="op-transforms"></a> Operator Transformations
+The AIDE-QC stack defines an extension point for injecting general transformations on `Operators`. We leverage this for 
+ubiquitous lowering operators (e.g. Fermion to Pauli/Spin), but also for transformations that reduce or 
+simplify `Operators` in some iso-morphic way. Using these transformations is straightforward - here we demonstrate 
+how to transform an `Operator` representing the 4-qubit molecular hydrogen Hamiltonian to a simpler 1-qubit form 
+through the application of discrete `Z_2` symmetries (from this [paper](https://arxiv.org/abs/1701.08213)).
+
+```python
+from qcor import *
+
+# Create the Hamiltonian using the PySCF Operator plugin
+H = createOperator('pyscf', {'basis': 'sto-3g', 'geometry': 'H  0.000000   0.0      0.0\nH   0.0        0.0  .7474'})
+print('\nOriginal:\n', H.toString())
+
+# Transform it with the qubit-tapering Operator Transform
+H_tapered = operatorTransform('qubit-tapering', H)
+
+# See the result
+print('\nTapered:\n', H_tapered)
+```
+```sh
+python3 test_op_transforms.py
+
+Original:
+ (0.0454063,0) 2^ 0^ 1 3 + (0.0454063,0) 1^ 2^ 3 0 + (0.168336,0) 2^ 0^ 0 2 + (0.1202,0) 1^ 0^ 0 1 + (0.174073,0) 1^ 3^ 3 1 + (-0.174073,-0) 1^ 3^ 1 3 + (-0.0454063,-0) 3^ 0^ 2 1 + (-0.0454063,-0) 2^ 0^ 3 1 + (-0.0454063,-0) 1^ 2^ 0 3 + (-0.168336,-0) 2^ 0^ 2 0 + (-0.1202,-0) 2^ 3^ 2 3 + (-0.0454063,-0) 3^ 1^ 2 0 + (-0.165607,-0) 1^ 2^ 1 2 + (0.165607,0) 0^ 3^ 3 0 + (-0.1202,-0) 0^ 1^ 0 1 + (0.0454063,0) 3^ 1^ 0 2 + (0.165607,0) 1^ 2^ 2 1 + (0.165607,0) 2^ 1^ 1 2 + (0.0454063,0) 1^ 3^ 2 0 + (-0.0454063,-0) 0^ 3^ 1 2 + (-0.1202,-0) 3^ 2^ 3 2 + (-0.0454063,-0) 2^ 1^ 3 0 + (-0.174073,-0) 3^ 1^ 3 1 + (0.1202,0) 2^ 3^ 3 2 + (0.0454063,0) 3^ 0^ 1 2 + (-0.165607,-0) 3^ 0^ 3 0 + (0.165607,0) 3^ 0^ 0 3 + (0.174073,0) 3^ 1^ 1 3 + (0.1202,0) 3^ 2^ 2 3 + (0.0454063,0) 0^ 2^ 3 1 + (0.168336,0) 0^ 2^ 2 0 + (0.1202,0) 0^ 1^ 1 0 + (-0.0454063,-0) 0^ 2^ 1 3 + (-0.165607,-0) 2^ 1^ 2 1 + (-0.165607,-0) 0^ 3^ 0 3 + (-0.1202,-0) 1^ 0^ 1 0 + (-0.168336,-0) 0^ 2^ 0 2 + (0.0454063,0) 2^ 1^ 0 3 + (-0.479678,-0) 3^ 3 + (-1.24885,-0) 0^ 0 + (-0.479678,-0) 1^ 1 + (0.708024,0) + (0.0454063,0) 0^ 3^ 2 1 + (-0.0454063,-0) 1^ 3^ 0 2 + (-1.24885,-0) 2^ 2
+
+Tapered:
+ (-0.780646,0) Z0 + (-0.335686,0) + (0.181625,0) X0
+```
