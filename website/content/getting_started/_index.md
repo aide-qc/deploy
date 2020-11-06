@@ -40,6 +40,11 @@ int main() {
 ./a.out
 ```
 
+If you are going to use the Python API, you'll need to export your `PYTHONPATH`
+```sh
+export PYTHONPATH=/usr/local/xacc:$PYTHONPATH
+```
+
 ### Linux x86_64 and Mac OS X 10.14 and 10.15
 First install [Homebrew](https://brew.sh). The Homebrew homepage provides a single command to do this, it is extremely straightforward. Next. run the following command from your local terminal:
 ```sh
@@ -63,6 +68,11 @@ int main() {
   q.print();
 }  " | qcor -qpu qpp -shots 1024 -x c++ -
 ./a.out
+```
+
+If you are going to use the Python API, you'll need to export your `PYTHONPATH`
+```sh
+export PYTHONPATH=$(brew --prefix qcor):$(brew --prefix xacc):$PYTHONPATH
 ```
 
 If the above binary installs do not work for your system, checkout how to [build from source](getting_started/build_from_source.md).
