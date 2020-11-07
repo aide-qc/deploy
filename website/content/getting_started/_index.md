@@ -26,60 +26,12 @@ Now one can install `qcor` which will give you the entire AIDE-QC stack:
 ```sh
 sudo apt-get install qcor
 ```
-Test out your install by compiling and executing the following simple `qcor` code:
-```sh
-printf "__qpu__ void f(qreg q) {
-  H(q[0]);
-  Measure(q[0]);
-}
-int main() {
-  auto q = qalloc(1);
-  f(q);
-  q.print();
-}  " | qcor -qpu qpp -shots 1024 -x c++ -
-./a.out
-```
 
 If you are going to use the Python API, you'll need to export your `PYTHONPATH`
 ```sh
 export PYTHONPATH=/usr/local/xacc:$PYTHONPATH
 ```
-Test out the Python API by putting the following script in a `bell.py` file:
-```python
-from qcor import qjit, qalloc, qreg
-
-# Define a Bell kernel
-@qjit
-def bell(q : qreg):
-    H(q[0])
-    CX(q[0], q[1])
-    for i in range(q.size()):
-        Measure(q[i])
-
-# Allocate 2 qubits
-q = qalloc(2)
-
-# Run the bell experiment
-bell(q)
-
-# Print the results
-q.print()
-```
-Run with 
-```sh
-python3 bell.py -qpu qpp -shots 1024
-{
-    "AcceleratorBuffer": {
-        "name": "qrg_nWlrB",
-        "size": 2,
-        "Information": {},
-        "Measurements": {
-            "00": 517,
-            "11": 507
-        }
-    }
-}
-```
+We recommend you add this to your `.bashrc` or `.bash_profile`. 
 
 ### Linux x86_64 and Mac OS X 10.14 and 10.15
 First install [Homebrew](https://brew.sh). The Homebrew homepage provides a single command to do this, it is extremely straightforward. Next. run the following command from your local terminal:
@@ -92,6 +44,13 @@ brew --prefix qcor
 brew --prefix xacc
 ```
 
+If you are going to use the Python API, you'll need to export your `PYTHONPATH`
+```sh
+export PYTHONPATH=$(brew --prefix qcor):$(brew --prefix xacc):$PYTHONPATH
+```
+We recommend you add this to your `.bashrc` or `.bash_profile`. 
+
+## Test out your install
 Test out your install by compiling and executing the following simple `qcor` code:
 ```sh
 printf "__qpu__ void f(qreg q) {
@@ -106,11 +65,7 @@ int main() {
 ./a.out
 ```
 
-If you are going to use the Python API, you'll need to export your `PYTHONPATH`
-```sh
-export PYTHONPATH=$(brew --prefix qcor):$(brew --prefix xacc):$PYTHONPATH
-```
-Test out the Python API by putting the following script in a `bell.py` file:
+You can also test out the Python API by putting the following script in a `bell.py` file:
 ```python
 from qcor import qjit, qalloc, qreg
 
@@ -131,7 +86,7 @@ bell(q)
 # Print the results
 q.print()
 ```
-Run with 
+and run it with 
 ```sh
 python3 bell.py -qpu qpp -shots 1024
 {
