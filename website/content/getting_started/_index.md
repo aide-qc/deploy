@@ -33,6 +33,8 @@ export PYTHONPATH=/usr/local/xacc:$PYTHONPATH
 ```
 We recommend you add this to your `.bashrc` or `.bash_profile`. 
 
+Now, [test out your install](#test).
+
 ### Linux x86_64 and Mac OS X 10.14 and 10.15
 First install [Homebrew](https://brew.sh). The Homebrew homepage provides a single command to do this, it is extremely straightforward. Next. run the following command from your local terminal:
 ```sh
@@ -50,7 +52,9 @@ export PYTHONPATH=$(brew --prefix qcor):$(brew --prefix xacc):$PYTHONPATH
 ```
 We recommend you add this to your `.bashrc` or `.bash_profile`. 
 
-## Test out your install
+Now, test out your install (next section). 
+
+## <a id="test"></a> Test out your install
 Test out your install by compiling and executing the following simple `qcor` code:
 ```sh
 printf "__qpu__ void f(qreg q) {
