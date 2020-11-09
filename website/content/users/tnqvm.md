@@ -114,6 +114,8 @@ The `tnqvm-visitor` key can refer to one of the following options:
 
 **Note**: If TNQVM was built without ExaTN, only the `itensor-mps` visitor will be available.
 
+### Full tensor contraction simulation
+
 Let's look at a typical Bell-state quantum circuit simulation:
 
 <table>
@@ -247,3 +249,132 @@ q.print()
 </td>
 </tr>
 </table>
+
+### Approximate simulation with MPS
+
+To use the MPS-bases simulator, one needs to pass the name `exatn-mps` to the `tnqvm-visitor` option as shown in the below C++ example.
+
+```cpp
+#include "xacc.hpp"
+
+int main (int argc, char** argv) {
+    // Initialize the XACC Framework
+    xacc::Initialize(argc, argv);
+    xacc::set_verbose(true);
+    auto qpu = xacc::getAccelerator("tnqvm", {
+        {"tnqvm-visitor", "exatn-mps"},
+        {"shots", 10},
+    });
+
+    // Allocate a register of 40 qubits
+    auto qubitReg = xacc::qalloc(40);
+
+    // Create a Program
+    auto xasmCompiler = xacc::getCompiler("xasm");
+    auto ir = xasmCompiler->compile(R"(__qpu__ void ghz(qbit q) {
+        H(q[0]);
+        for (int i = 0; i < 39; i++) {
+            CX(q[i], q[i+1]);
+        }
+        // Measure two random qubits
+        // should only get entangled bitstrings:
+        // i.e. 00 or 11
+        Measure(q[2]);
+        Measure(q[37]);
+    })", qpu);
+
+    // Request the quantum kernel representing
+    // the above source code
+    auto program = ir->getComposite("ghz");
+    // Execute!
+    qpu->execute(qubitReg, program);
+    qubitReg->print();
+
+    // Finalize the XACC Framework
+    xacc::Finalize();
+    return 0;
+}
+```
+
+In this example, we simulate a simple cat-state experiment with a rather large number of qubits (40). Since this is an MPS-based simulator, the amount of memory required depends on the amount of entanglement, which is not much in this case. Hence, we can easily run this simulation on our laptops.
+
+
+### Noisy simulation with locally-purified MPS simulator
+
+TNQVM is experimentally supporting noisy circuit simulation using the locally-purified MPS method. The `tnqvm-visitor` name for this method is `exatn-pmps`.
+
+In this mode, users need to either provide the device/backend model in JSON format (using configuration key `backend-json`) or specify an IBMQ backend that they want to emulate (using the `backend` option). The latter is demonstrated in the below example.
+
+```cpp
+#include "xacc.hpp"
+
+int main(int argc, char **argv) {
+
+  // Initialize the XACC Framework
+  xacc::Initialize(argc, argv);
+
+  // Using the purified-mps backend with noise model from
+  // "ibmq_5_yorktown - ibmqx2" device.
+  auto qpu = xacc::getAccelerator(
+      "tnqvm", {{"tnqvm-visitor", "exatn-pmps"}, {"backend", "ibmqx2"}});
+
+  // Allocate a register of 2 qubits
+  auto qubitReg = xacc::qalloc(2);
+
+  // Create a Program: simple Bell test
+  auto xasmCompiler = xacc::getCompiler("xasm");
+  auto ir = xasmCompiler->compile(R"(__qpu__ void bell(qbit q, double theta) {
+    H(q[0]);
+    CX(q[0],q[1]);
+    Measure(q[0]);
+    Measure(q[1]);
+    })", qpu);
+
+  // Request the quantum kernel representing
+  // the above source code
+  auto program = ir->getComposite("bell");
+
+  // Execute!
+  qpu->execute(qubitReg, program);
+  // Print the result (measurement count distribution) in the buffer.
+  qubitReg->print();
+
+  // Finalize the XACC Framework
+  xacc::Finalize();
+
+  return 0;
+}
+```
+
+It's worth noting that the `exatn-pmps` visitor can only simulate localized (single-qubit) noise processes and hence doesn't take into account correlated noise operations.
+
+
+Lastly, below is the list of all available configuration options for each visitor type. 
+
+Some of the options are custom for specific simulation scenarios. Users are encouraged to submit questions on the TNQVM repository for programming supports.
+
+For the `exatn` simulator, there are additional options that users can set during initialization:
+
+|  Initialization Parameter   |                  Parameter Description                                 |    type     |         default          |
+|-----------------------------|------------------------------------------------------------------------|-------------|--------------------------|
+| exatn-buffer-size-gb        | ExaTN's host memory buffer size (in GB)                                |    int      | 8 (GB)                   |
+| exatn-contract-seq-optimizer| ExaTN's contraction sequence optimizer to use.                         |    string   | metis                    |
+| calc-contract-cost-flops    | Estimate the Flops and Memory requirements only (no tensor contraction)<br>If true, the following info will be added to the AcceleratorBuffer: <br>  - `contract-flops`: Flops count. <br>  - `max-node-bytes`: Max intermediate tensor size in memory.<br>  - `optimizer-elapsed-time-ms`: optimization walltime.<br>  |    bool     | false                    |
+| bitstring                   | If provided, the output amplitude/partial state vector associated with that `bitstring` will be computed.<br>The length of the input `bitstring` must match the number of qubits.<br>Non-projected bits (partial state vector) are indicated by `-1` values.<br>Returned values in the AcceleratorBuffer:<br>  - `amplitude-real`/`amplitude-real-vec`: Real part of the result.<br>  - `amplitude-imag`/`amplitude-imag-vec`: Imaginary part of the result.| vector<int> | `<unused>`                 |
+| contract-with-conjugate     | If true, we append the conjugate of the input circuit.<br>This is used to validate internal tensor contraction.<br>`contract-with-conjugate-result` key in the AcceleratorBuffer will be set to `true` if the validation is successful.|    bool     | false                    |
+| mpi-communicator            | The MPI communicator to initialize ExaTN runtime with.<br>If not provided, by default, ExaTN will use `MPI_COMM_WORLD`.                  |    void*    | `<unused>`                 |
+
+For the `exatn-mps` simulator, there are additional options that users can set during initialization:
+
+|  Initialization Parameter   |                  Parameter Description                                 |    type     |         default          |
+|-----------------------------|------------------------------------------------------------------------|-------------|--------------------------|
+| svd-cutoff                  | SVD cut-off limit.                                                     |    double   | numeric_limits::min      |
+| max-bond-dim                | Max bond dimension to keep.                                            |    int      | no limit                 |
+| mpi-communicator            | The MPI communicator to initialize ExaTN runtime with.<br>If not provided, by default, ExaTN will use `MPI_COMM_WORLD`.                  |    void*    | `<unused>`                 |
+
+For the `exatn-pmps` simulator, there are additional options that users can set during initialization:
+
+|  Initialization Parameter   |                  Parameter Description                                 |    type     |         default          |
+|-----------------------------|------------------------------------------------------------------------|-------------|--------------------------|
+| backend-json                | Backend configuration JSON to estimate the noise model from.           |    string   | None                     |
+| backend                     | Name of the IBMQ backend to query the backend configuration.           |    string   | None                     |
