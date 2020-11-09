@@ -95,7 +95,6 @@ make install
 
 
 ## <a id="usage"></a> Using TNQVM 
-Show with xacc alone, show with qcor at c++ and python jit level
 
 The TNQVM Accelerator can be requested in the XACC framework by
 
