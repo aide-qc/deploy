@@ -32,6 +32,7 @@ weight: 10
 
 [Tensor Network Quantum Virtual Machine](tnqvm)
 * [Installing TNQVM](tnqvm/#installation)
+* [Using TNQVM](tnqvm/#usage)
 
 [Pass Manager](pass_manager)
 
