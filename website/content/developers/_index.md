@@ -10,3 +10,5 @@ weight: 10
 * [Create a Custom L-BFGS Optimizer](implement_optimizer/#create-optimizer)
 * [Test the Custom L-BFGS Optimizer](implement_optimizer/#test-my-lbfgs)
 * [Custom Optimizer Options](implement_optimizer/#custom-lbfgs-options)
+
+[QCOR Clang Syntax Handler](clang_syntax)
