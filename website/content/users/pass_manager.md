@@ -70,3 +70,151 @@ For example, `-qubit-map 2,1,4,3,0` dictates the following mapping 0->2, 1->1, 2
 It is important to note that no further placement is performed after the -qubit-map based mapping. Hence, users need to make sure that the mapping is appropriate for the target hardware backend.
 
 ### Examples
+
+#### Circuit Optimization
+
+In this example, we just compile a simple circuit using the QCOR compiler.
+The circuit contains a pair of mergeable rotation gates. 
+
+```cpp
+__qpu__ void test_circ(qreg q) {
+  H(q[0]);
+  Rx(q[0], 0.123);
+  Rx(q[0], 0.456);
+}
+
+int main() {
+  // Create a qubit register
+  auto q = qalloc(1);
+  // Run the quantum kernel
+  test_circ(q);
+  q.print();
+}
+```
+
+We compile with above source file with QCOR using optimization level 1 and request optimization statistics.
+
+```sh
+qcor -opt 1 -print-opt-stats simple_circuit.cpp 
+./a.out
+```
+
+When the executable is executed, we can see the optimization data printed out, which confirm that the two `Rx` rotation gates
+have been merged into one.
+
+```
+ - Number of Gates Before: 3
+ - Number of Gates After: 2
+--------------------------------
+| GATE     |BEFORE   |AFTER    |
+--------------------------------
+| Rx       |2        |1        |
+| H        |1        |1        |
+--------------------------------
+```
+
+#### Placement
+
+Let's take a look at an example where qubit placement is required for target hardware backends.
+
+```cpp
+// Create a GHZ state
+__qpu__ void create_ghz(qreg q) {
+  H(q[0]);
+  CX(q[0], q[1]);
+  CX(q[0], q[2]);
+  for (int i = 0; i < q.size(); i++) {
+    Measure(q[i]);
+  }
+}
+
+int main() {
+  // Print out the kernel for submission
+  auto q = qalloc(3);
+  create_ghz::print_kernel(std::cout, q);
+}
+```
+
+It's a simple experiment to create a 3-qubit entangle state. Albeit its simplicity, not all quantum devices can execute this circuit as is since it requires triangular connectivity between qubit 0, 1, and 2.
+
+Let's compile and execute the above source code targeting two different hardware backends:
+
+<table>
+<tr>
+<th>ibmq_ourense</th>
+<th>ibmqx2</th>
+</tr>
+<tr>
+<td>
+
+```
+0 -- 1 -- 2 
+     |      
+     3       
+     |       
+     4  
+```
+</td>
+<td>
+
+```
+      1
+    / | 
+   /  |
+  /   |
+ /    |
+0 --  2  --  3
+      |     /
+      |    /
+      |   / 
+      |  /
+      4
+```
+</td>
+</tr>
+<tr>
+<td>
+
+```sh
+qcor -qpu ibm:ibmq_ourense simplePlacement.cpp 
+./a.out
+```
+</td>
+<td>
+
+```sh
+qcor -qpu ibm:ibmqx2 simplePlacement.cpp 
+./a.out
+```
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+```
+H q0
+CNOT q1,q0
+CNOT q0,q1
+CNOT q1,q2
+Measure q1
+Measure q0
+Measure q2
+```
+</td>
+<td>
+
+```
+H q0
+CNOT q0,q1
+CNOT q0,q2
+Measure q0
+Measure q1
+Measure q2
+```
+</td>
+</tr>
+</table>
+
+As we can see, due to the limited connectivity of the `ourense` backend, an additional CNOT gate is required (plus the remapping of qubits) after placement. The `qx2` backend has triangular connectivity groups (0-1-2 and 2-3-4), and thus it can map the GHZ state-preparation circuit to its qubits directly.
