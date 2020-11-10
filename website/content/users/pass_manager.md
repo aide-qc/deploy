@@ -64,10 +64,10 @@ in which, users provide an ordered (comma-separated) list of passes to be execut
 This can be used in conjunction with the `-print-opt-stats` option to collect the statistics if required.
 
 
-Manual qubit mapping can be used instead of topology-based placement by providing the -qubit-map option followed by the list of qubit indices specifying the mapping. 
+Manual qubit mapping can be used instead of topology-based placement by providing the `-qubit-map` option followed by the list of qubit indices specifying the mapping. 
 
 For example, `-qubit-map 2,1,4,3,0` dictates the following mapping 0->2, 1->1, 2->4, 3->3, 4->0.
-It is important to note that no further placement is performed after the -qubit-map based mapping. Hence, users need to make sure that the mapping is appropriate for the target hardware backend.
+It is important to note that no further placement is performed after the `-qubit-map` based mapping. Hence, users need to make sure that the mapping is appropriate for the target hardware backend.
 
 ### Examples
 
