@@ -76,6 +76,14 @@ It is important to note that no further placement is performed after the -qubit-
 In this example, we just compile a simple circuit using the QCOR compiler.
 The circuit contains a pair of mergeable rotation gates. 
 
+<table>
+<tr>
+<th>C++</th>
+<th>Python</th>
+</tr>
+<tr>
+<td>
+
 ```cpp
 __qpu__ void test_circ(qreg q) {
   H(q[0]);
@@ -91,13 +99,43 @@ int main() {
   q.print();
 }
 ```
+</td>
+<td>
 
-We compile with above source file with QCOR using optimization level 1 and request optimization statistics.
+```Python
+@qjit
+def test_circ(q : qreg):
+  H(q[0])
+  Rx(q[0], 0.123)
+  Rx(q[0], 0.456)
+
+
+# Create a qubit register
+q = qalloc(1)
+# Run the quantum kernel
+test_circ(q)
+q.print()
+```
+</td>
+</tr>
+<tr>
+<td>
 
 ```sh
 qcor -opt 1 -print-opt-stats simple_circuit.cpp 
 ./a.out
 ```
+</td>
+<td>
+
+```sh
+python3 simple_circuit.py -opt 1 -print-opt-stats
+```
+</td>
+</tr>
+</table>
+
+We compiled the above QCOR kernel source using optimization level 1 and request optimization statistics.
 
 When the executable is executed, we can see the optimization data printed out, which confirm that the two `Rx` rotation gates
 have been merged into one.
