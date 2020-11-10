@@ -22,5 +22,7 @@ elif [[ $DISTRO == "fedora"* ]]; then
     sudo dnf update -y && sudo dnf install -y gcc gcc-c++ lapack-devel
 fi
 
+python3 -m pip install --user ipopo
+
 brew tap aide-qc/deploy
 brew install qcor

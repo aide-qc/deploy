@@ -23,7 +23,9 @@ docker run_docker_deploy_xacc_bionic:
    - schedules
   script:
   - cd docker/xacc/debian/bionic && sh build.sh 
-  - docker system prune -f 
+  - docker rm $(docker ps -a -f status=exited -q)
+  - docker rmi $(docker images -f dangling=true)
+  - docker rmi -f xacc/bionic 
 
 docker run_docker_deploy_xacc_focal:
   stage: deploy
@@ -31,7 +33,9 @@ docker run_docker_deploy_xacc_focal:
    - schedules
   script:
   - cd docker/xacc/debian/focal && sh build.sh
-  - docker system prune -f  
+  - docker rm $(docker ps -a -f status=exited -q)
+  - docker rmi $(docker images -f dangling=true)
+  - docker rmi -f xacc/focal 
 
 docker run_docker_deploy_qcor_bionic:
   stage: deploy
@@ -39,7 +43,9 @@ docker run_docker_deploy_qcor_bionic:
    - schedules
   script:
   - cd docker/qcor/debian/bionic && sh build.sh 
-  - docker system prune -f 
+  - docker rm $(docker ps -a -f status=exited -q)
+  - docker rmi $(docker images -f dangling=true)
+  - docker rmi -f qcor/bionic 
 
 docker run_docker_deploy_qcor_focal:
   stage: deploy
@@ -47,4 +53,6 @@ docker run_docker_deploy_qcor_focal:
    - schedules
   script:
   - cd docker/qcor/debian/focal && sh build.sh 
-  - docker system prune -f 
+  - docker rm $(docker ps -a -f status=exited -q)
+  - docker rmi $(docker images -f dangling=true)
+  - docker rmi -f qcor/bionic 
