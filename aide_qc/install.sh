@@ -69,11 +69,11 @@ if ! command -v brew &> /dev/null
 then
    if [ "$UNAME" == "darwin" ]; then 
       echo "Could not find brew in PATH, setting up environment for Mac OS X."
-      echo 'eval $(/usr/local/bin/brew shellenv)' >> $HOME/.profile
+      echo 'eval $(/usr/local/bin/brew shellenv)' >> $HOME/.bash_profile
       eval $(/usr/local/bin/brew shellenv)
    else 
       echo "Could not find brew in PATH, setting up homebrew environment for Linux."
-      echo 'eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)' >> $HOME/.profile
+      echo 'eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)' >> $HOME/.bashrc
       eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
    fi
 fi 
@@ -87,7 +87,6 @@ fi
 
 brew tap aide-qc/deploy
 brew install qcor
-brew uninstall gcc
 python3 -m pip install --user ipopo
 echo "AIDE-QC installed via Homebrew."
 echo ""

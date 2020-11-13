@@ -15,7 +15,9 @@ The second way to get AIDE-QC on your system is to install directly from source.
 To install AIDE-QC, run the following command from your local terminal (will require `sudo` credentials):
 ```sh
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/aide-qc/deploy/master/aide_qc/install.sh)"
-``` 
+```
+> **_NOTE:_** You may need to evaluate your $HOME/.bashrc (or .bash_profile on MacOS) in order to configure your install. If `brew list` fails, run `source ~/.bashrc` or `source ~/.bash_profile`.
+
 This will install the AIDE-QC software stack. You will have the `qcor` compiler, the underlying `xacc` framework, as well as pertinent Python bindings. If you are going to use the Python API, you'll need to export your `PYTHONPATH`
 ```sh
 export PYTHONPATH=$(qcor -qcor-install):$(qcor -xacc-install):$PYTHONPATH
