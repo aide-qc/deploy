@@ -17,7 +17,7 @@ if [ "$UNAME" == "linux" ]; then
         export DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v "lsb" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1)
     fi
 fi
-echo "$UNAME"
+
 # For everything else (or if above failed), just use generic identifier
 [ "$DISTRO" == "" ] && export DISTRO=$UNAME
 
