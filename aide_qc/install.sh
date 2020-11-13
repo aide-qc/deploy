@@ -23,7 +23,7 @@ echo "$UNAME"
 
 # if Ubuntu, install lapack
 if [ "$DISTRO" == "Ubuntu" ]; then
-    sudo apt-get update -y && sudo apt-get install -y wget gnupg lsb-release curl liblapack-dev git
+    sudo apt-get update -y && sudo apt-get install -y wget gnupg lsb-release curl liblapack-dev git gcc g++
     if [ "$use_brew" == "false" ]; then
        wget -qO- https://aide-qc.github.io/deploy/aide_qc/debian/PUBLIC-KEY.gpg | sudo apt-key add -
        if [ ! -e "/etc/apt/sources.list.d/aide-qc.list" ]; then
@@ -87,6 +87,7 @@ fi
 
 brew tap aide-qc/deploy
 brew install qcor
+brew uninstall gcc
 python3 -m pip install --user ipopo
 echo "AIDE-QC installed via Homebrew."
 echo ""
