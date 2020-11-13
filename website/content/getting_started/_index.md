@@ -24,7 +24,7 @@ We recommend you add this to your `.bashrc` or `.bash_profile`.
 
 Note: On Ubuntu, the installation script will attempt to use `apt-get` over our custom [Homebrew](https://brew.sh) installer. If you would rather use Homebrew instead of `apt-get`, run the following 
 ```sh
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/aide-qc/deploy/master/aide_qc/homebrew/install.sh) '$1'" bash --use-brew
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/aide-qc/deploy/master/aide_qc/install.sh) '$1'" bash --use-brew
 ```
 
 Now, test out your install (next section). 
