@@ -23,6 +23,11 @@ For example, if installed from source, XACC can be found at `$HOME/.xacc` by def
 
 On the other hand, if the AIDE-QC Software Stack was installed with `apt-get install qcor`, XACC can be found at `/usr/local/xacc`.
 
+You can always locate where XACC is installed with 
+```sh
+qcor -xacc-install
+```
+
 ### *(Optional)* Clone and build ExaTN library
 
 If ExaTN backends are required, we need to clone and build the ExaTN library before compiling TNQVM.

@@ -164,13 +164,8 @@ The above CMake code is pretty much ubiquitous across all XACC plugin builds. Th
 To build this we run (from the top-level of the project directory)
 ```sh 
 mkdir build && cd build 
-cmake .. -G Ninja -DXACC_DIR=$HOME/.xacc
+cmake .. -G Ninja -DXACC_DIR=$(qcor -xacc-install)
 cmake --build . --target install
-
-# Note - if you installed the AIDE-QC stack via `apt-get` or Homebrew installers, you should use 
-
--DXACC_DIR=/usr/local/xacc (apt-get)
--DXACC_DIR=$(brew --prefix xacc) (homebrew)
 ```
 
 Now a quick and easy way to test that your `Optimizer` is installed and available (even though we haven't implemented `optimize()` yet) is start the interactive Python interpreter and run the following commands to see the name `my-lbfgs` printed. 

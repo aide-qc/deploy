@@ -29,7 +29,7 @@ sudo apt-get install -y gcc-9 g++-9 gfortran-9 python3.8 libpython3.8-dev python
 python3 -m pip install cmake --user 
 # We'll skip building LLVM/Clang with SyntaxHandler and install binary
 wget -qO- https://aide-qc.github.io/deploy/aide_qc/debian/PUBLIC-KEY.gpg | sudo apt-key add -
-sudo wget -qO- "https://aide-qc.github.io/deploy/aide_qc/debian/$(lsb_release -cs)/aide-qc.list" > /etc/apt/sources.list.d/aide-qc.list
+wget -qO- "https://aide-qc.github.io/deploy/aide_qc/debian/$(lsb_release -cs)/aide-qc.list" | sudo tee -a /etc/apt/sources.list.d/aide-qc.list
 sudo apt-get update
 sudo apt-get install -y clang-syntax-handler
 # Point defaults to GCC 9
@@ -54,7 +54,7 @@ sudo apt-get install -y gcc g++ gfortran python3 libpython3-dev python3-pip libc
 python3 -m pip install cmake --user 
 # We'll skip building LLVM/Clang with SyntaxHandler and install binary
 wget -qO- https://aide-qc.github.io/deploy/aide_qc/debian/PUBLIC-KEY.gpg | sudo apt-key add -
-sudo wget -qO- "https://aide-qc.github.io/deploy/aide_qc/debian/$(lsb_release -cs)/aide-qc.list" > /etc/apt/sources.list.d/aide-qc.list
+wget -qO- "https://aide-qc.github.io/deploy/aide_qc/debian/$(lsb_release -cs)/aide-qc.list" | sudo tee -a /etc/apt/sources.list.d/aide-qc.list
 sudo apt-get update
 sudo apt-get install -y clang-syntax-handler
 ``` 
