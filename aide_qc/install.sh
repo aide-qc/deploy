@@ -17,9 +17,10 @@ if [ "$UNAME" == "linux" ]; then
         export DISTRO=$(ls -d /etc/[A-Za-z]*[_-][rv]e[lr]* | grep -v "lsb" | cut -d'/' -f3 | cut -d'-' -f1 | cut -d'_' -f1)
     fi
 fi
+echo "$UNAME"
 # For everything else (or if above failed), just use generic identifier
 [ "$DISTRO" == "" ] && export DISTRO=$UNAME
-unset UNAME
+
 # if Ubuntu, install lapack
 if [ "$DISTRO" == "Ubuntu" ]; then
     sudo apt-get update -y && sudo apt-get install -y wget gnupg lsb-release curl liblapack-dev git
@@ -61,6 +62,27 @@ if ! command -v brew &> /dev/null
 then
     echo "Homebrew not found. Installing it now..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+fi
+
+# May be possible that brew is not in PATH after install
+if ! command -v brew &> /dev/null
+then
+   if [ "$UNAME" == "darwin" ]; then 
+      echo "Could not find brew in PATH, setting up environment for Mac OS X."
+      echo 'eval $(/usr/local/bin/brew shellenv)' >> $HOME/.profile
+      eval $(/usr/local/bin/brew shellenv)
+   else 
+      echo "Could not find brew in PATH, setting up homebrew environment for Linux."
+      echo 'eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)' >> $HOME/.profile
+      eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
+   fi
+fi 
+
+# If we still can't find brew, then we should fail
+if ! command -v brew &> /dev/null
+then 
+   echo "Still unable to locate Homebrew. Install manually, instructions at https://brew.sh"
+   exit 1
 fi
 
 brew tap aide-qc/deploy
