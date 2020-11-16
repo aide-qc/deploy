@@ -467,3 +467,78 @@ assert(q.counts()['100'] == 1024)
 ```sh
 python3 qpe.py -shots 100
 ```
+
+## <a id="pyxasm_unitary"></a> Pythonic Unitary Matrix
+We have exposed a mechanism in Python (similar to the above C++ [decompose unitary](#unitary)) for circuit synthesis from a user provided unitary matrix. This mechanism builds off the Python 
+`with EXPRESSION as VAR` syntax in order to allow programmers to specify a scope or block of code that 
+describes or builds up a unitary matrix with the intent of letting the AIDE-QC compiler stack decompose or synthesize it into appropriate one and two qubit gates. 
+
+Programmers can program the quantum co-processor at the unitary matrix level in Python in the following manner (here we demonstrate the matrix definition of a controlled CNOT gate):
+```python
+from qcor import *
+
+@qjit
+def ccnot_kernel(q : qreg):
+    # create 111
+    for i in range(q.size()):
+        X(q[i])
+            
+    with decompose(q) as ccnot:
+        ccnot = np.eye(8)
+        ccnot[6,6] = 0.0
+        ccnot[7,7] = 0.0
+        ccnot[6,7] = 1.0
+        ccnot[7,6] = 1.0
+    
+    # CCNOT should produce 110 (lsb)
+    for i in range(q.size()):
+        Measure(q[i])
+
+# Execute the above CCNOT kernel
+q = qalloc(3)
+ccnot_kernel(q)
+# should see 110
+print(q.counts())
+```
+
+We start out by defining a Pythonic quantum kernel in the usual way, annotated with `@qjit` to indicate just-in-time compilation of the python kernel function. Programmers start the unitary matrix definition block by writing `with decompose(q) as ccnot`, following the general structure `with decompose(Args...) as MatrixVariableName`. `decompose` takes as its first argument the `qreg` to operate on. The second argument is the name of the circuit synthesis algorithm to leverage. Here we let the compiler decide which to use by not specifying it. Currently we support `QFAST` for general unitaries, `kak` for 2 qubit unitaries, and `z-y-z` for 1 qubit unitaries. The body of this `with` statement should contain any code necessary to build up the unitary matrix as a [Numpy](https://numpy.org/) `matrix` or `array` of shape `(N,N)` (you do not have to import `Numpy`, it is implicit in the compiler). The matrix variable name must be the same as what is specified after the `as` keyword. Note that this segment of code can be used interchangeably with PyXASM, here we have started by adding an `X` gate on all 3 qubits, and finished by applying `Measures`. 
+
+Programmers are free to use `Numpy` fully within the scope of the `with decompose` statement. See here an example leveraging `np.kron()` to apply an `X` gate on all qubits
+```python
+@qjit
+def all_x(q : qreg):
+    with decompose(q) as x_kron:
+        sx = np.array([[0, 1],[1, 0]])
+        x_kron = np.kron(np.kron(sx,sx),sx)
+            
+    for i in range(q.size()):
+        Measure(q[i])
+```
+
+Moreover, one can program unitary decomposition blocks that are dependent on kernel arguments. Here we demonstrate leveraging [SciPy](https://scipy.org) and [OpenFermion](https://openfermion.org) to define a unitary rotation `exp(.5i * x * (X0 Y1 - Y0 X1))` that we can leverage in a variational algorithm
+```python
+from qcor import *
+@qjit
+def ansatz(q : qreg, x : List[float]):
+    X(q[0])
+    with decompose(q, kak) as u:
+        from scipy.sparse.linalg import expm
+        from openfermion.ops import QubitOperator
+        from openfermion.transforms import get_sparse_operator
+        qop = QubitOperator('X0 Y1') - QubitOperator('Y0 X1')
+        qubit_sparse = get_sparse_operator(qop)
+        u = expm(0.5j * x[0] * qubit_sparse).todense()
+
+# Run VQE with the above ansatz.
+H = -2.1433 * X(0) * X(1) - 2.1433 * \
+    Y(0) * Y(1) + .21829 * Z(0) - 6.125 * Z(1) + 5.907
+q = qalloc(2)
+objective = createObjectiveFunction(ansatz, H, 1)
+optimizer = createOptimizer('nlopt', {'initial-parameters':[.5]})
+results = optimizer.optimize(objective)
+print(results)
+```
+Notice that since we know this is a two-qubit problem, we specify that `decompose` should leverage the `kak` synthesis algorithm. We are free to import modules within the scope and use those external modules to build up a `numpy` unitary matrix representation. Here we leverage OpenFermion, which gives one the ability to map `QubitOperators` to sparse matrices. Since we require `numpy.matrix` for the decomposition, we simply map from sparse to dense with `todense()`. The remainder of the above example demonstrates that one can use this quantum kernel with the rest of the AIDE-QC software stack, specifically for algorithm expression and execution. It is illuminating to compare the quantum kernel above with the [paper](https://arxiv.org/pdf/1801.03897.pdf) (Equation 7) it came from, and to note how efficient it is to map mathematical representations to compile-able quantum code. 
+
+
+

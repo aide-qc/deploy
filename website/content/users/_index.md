@@ -11,7 +11,8 @@ weight: 10
 * [XASM](quantum_kernels/#xasm)
 * [OpenQasm](quantum_kernels/#openqasm)
 * [Unitary Matrix](quantum_kernels/#matrix)
-* [Python](quantum_kernels/#pyxasm)
+* [Python XASM](quantum_kernels/#pyxasm)
+* [Python Unitary Matrix](quantum_kernels/#pyxasm_unitary)
 
 [Operators](operators)
 * [Spin](operators/#spin)
