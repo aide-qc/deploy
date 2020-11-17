@@ -16,7 +16,7 @@ Placement plugins act as the final router to map or embed the circuit into the b
 These reentrant transpiler plugins are executed as passes over the circuit IR tree. The sequence of these passes is determined by the QCOR's **pass manager**. The pass manager will execute circuit optimization passes depending on the optimization level or manual command-line settings, then a single placement pass (selectable) taking into account the target qpu topology.
  
 
-### Basic usage
+### <a id="pmusage"></a> Basic usage
 
 There are 3 levels of optimization that have been pre-defined in QCOR:
 
@@ -51,7 +51,7 @@ The list of available placement services is shown in the following.
 | `enfield`    | Wrapper of [enfield](https://github.com/ysiraichi/enfield) allocators. This needs to be installed manually from the XACC [fork](https://github.com/ORNL-QCI/enfield/tree/xacc)|    
 
 
-### Advanced usage 
+### <a id="pmadvancedusage"></a> Advanced usage 
 
 Custom sequences of optimization passes can be specified using the following compile option:
 
@@ -69,7 +69,7 @@ Manual qubit mapping can be used instead of topology-based placement by providin
 For example, `-qubit-map 2,1,4,3,0` dictates the following mapping 0->2, 1->1, 2->4, 3->3, 4->0.
 It is important to note that no further placement is performed after the `-qubit-map` based mapping. Hence, users need to make sure that the mapping is appropriate for the target hardware backend.
 
-### Examples
+### <a id="pmexamples"></a> Examples
 
 #### Circuit Optimization
 

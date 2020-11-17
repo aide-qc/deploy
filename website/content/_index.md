@@ -24,7 +24,7 @@ Below we give a quick demonstration of how a simple quantum-classical Hello Worl
 __qpu__ void bell(qreg q) {
     H(q[0]);
     CX(q[0], q[1]);
-    for (int i = 0; i < q.size(); i++) {
+    for (int i : range(q.size())) {
         Measure(q[0]);
     }
 }
@@ -33,8 +33,7 @@ int main() {
     bell(q);
     auto counts = q.counts();
     for (auto [bits, count] : counts) {
-        std::cout << bits << ": " 
-                  << count << "\n";
+        print(bits, ":", count);
     }
 }
 ```

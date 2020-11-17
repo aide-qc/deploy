@@ -4,8 +4,11 @@ date: 2019-11-29T15:26:15Z
 draft: false
 weight: 10
 ---
+Welcome to the AIDE-QC User Guide. Here we document how to use the various aspects of the AIDE-QC quantum programming, compilation, and execution software stack. The links below detail the various mechanics of the stack, how to define quantum code, build certain plugins, leverage the ahead-of-time and just-in-time compilers, and express quantum-classical algorithms. 
 
-[Hello World - Simple GHZ State](hello_world)
+The user guide pages are listed below, with pertinent sub-sections called out for quick access to specific information. 
+
+[Hello World - Simple GHZ State](hello_world) 
 
 [Quantum Kernels - Language Extensibility](quantum_kernels)
 * [XASM](quantum_kernels/#xasm)
@@ -14,7 +17,7 @@ weight: 10
 * [Python XASM](quantum_kernels/#pyxasm)
 * [Python Unitary Matrix](quantum_kernels/#pyxasm_unitary)
 
-[Operators](operators)
+[Operators - Hamiltonian Expression](operators)
 * [Spin](operators/#spin)
 * [Fermion](operators/#fermion)
 * [Chemistry](operators/#chemistry)
@@ -35,6 +38,12 @@ weight: 10
 * [Installing TNQVM](tnqvm/#installation)
 * [Using TNQVM](tnqvm/#usage)
 
-[Pass Manager](pass_manager)
+[Pass Manager - Optimizing Circuits and Qubit Placement](pass_manager)
+* [Basic Usage](pass_manager/#pmusage)
+* [Advanced Usage](pass_manager/#pmadvancedusage)
+* [Examples](pass_manager/#pmexamples)
 
-[Quantum JIT](qjit)
+[Quantum JIT - Just-In-Time Compilation of Quantum Kernels](qjit)
+* [Use in C++](qjit)
+* [Pythonic QJIT](qjit/#pyqjit)
+    * [Advanced Variational Argument Translation](qjit/#pyqjit_translate)
