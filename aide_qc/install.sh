@@ -61,7 +61,7 @@ fi
 if ! command -v brew &> /dev/null
 then
     echo "Homebrew not found. Installing it now..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+    CI=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 fi
 
 # May be possible that brew is not in PATH after install
