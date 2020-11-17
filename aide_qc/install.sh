@@ -1,5 +1,5 @@
 #!/bin/bash
-set +x 
+set -ex 
 export use_brew=false
 if [ "$1" == "--use-brew" ]; then
    export use_brew=true
