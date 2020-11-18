@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+set -e
 
 echo $USER
 # Build the deb via Docker

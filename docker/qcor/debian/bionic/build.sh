@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+set -e
 
 # Build the deb via Docker
 docker build -t qcor/bionic . --no-cache
