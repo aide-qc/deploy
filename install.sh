@@ -58,7 +58,7 @@ if [ "$DISTRO" == "Ubuntu" ]; then
        if [ $? == 0 ]; then
            sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 04EE7237B7D453EC 648ACFD622F3D138
            echo "deb http://ftp.us.debian.org/debian testing main contrib non-free" >> sudo tee -a /etc/apt/sources.list 
-           sudo apt-get update && apt-get install -y build-essential || true
+           sudo apt-get update && sudo apt-get install -y build-essential || true
        fi
     fi
 
