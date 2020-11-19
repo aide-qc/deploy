@@ -1,0 +1,128 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Hello World - AIDE-QC</title><meta name=description content="Advancing Integrated Development Environments for Quantum Computing"><meta name=generator content="Hugo 0.78.2"><link href=https://aide-qc.github.io/deployindex.xml rel=alternate type=application/rss+xml><link rel=canonical href=https://aide-qc.github.io/deploy/users/hello_world/><link rel=stylesheet href=https://aide-qc.github.io/deploy/css/theme.css><script src=https://use.fontawesome.com/releases/v5.0.6/js/all.js></script><link rel=stylesheet href=https://aide-qc.github.io/deploy/css/chroma.min.css><script src=https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js></script><script src=https://cdn.jsdelivr.net/npm/jquery.easing@1.4.1/jquery.easing.min.js></script><script src=https://aide-qc.github.io/deploy/js/bundle.js></script><style>:root{}</style></head><body><div class=container><header><h1><div><img src=https://aide-qc.github.io/deploy/aide_qc_logo_v3.png width=40px align=absmiddle>
+AIDE-QC</div></h1><p class=description>Advancing Integrated Development Environments for Quantum Computing</p></header><div class=global-menu><nav><ul><li class=parent><a href>Community<i class="fas fa-angle-right"></i></a><ul class=sub-menu><li class=child><a href=https://aideqc.slack.com>AIDE-QC Slack</a></li><li class=child><a href=https://xacc-dev.slack.com>XACC/QCOR Slack</a></li></ul></li><li class=parent><a href=https://github.com/aide-qc>Source<i class="fas fa-angle-right"></i></a><ul class=sub-menu><li class=child><a href=https://ornl-qci.github.io/qcor-api-docs/>QCOR Doxygen</a></li><li class=child><a href=https://ornl-qci.github.io/xacc-api-docs/>XACC Doxygen</a></li><li class=child><a href=https://github.com/aide-qc/qcor>QCOR</a></li><li class=child><a href=https://github.com/aide-qc/xacc>XACC</a></li></ul></li><li><a href=https://github.com/aide-qc/aide-qc/issues>Bugs</a></li><li><a href=http://aide-qc.org>Project Page</a></li></ul></nav></div><div class=content-container><main><h1>Hello World</h1><p>The AIDE-QC software stack promotes a hardware-agnostic, single-source programming model for efficient
+and extensible heterogeneous quantum-classical computing. Here we want to provide a small hello world
+example that attempts to demonstrate that model. Specifically, we will show how to program
+a simple GHZ state quantum kernel that can run on any of the available QPUs that are integrated
+with the AIDE-QC stack.</p><p>Let&rsquo;s start of in C++. We start by describing a quantum kernel - a C++ function, annotated with <code>__qpu__</code> whose
+function body contains some quantum code.</p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=n>__qpu__</span> <span class=kt>void</span> <span class=nf>ghz</span><span class=p>(</span><span class=n>qreg</span> <span class=n>q</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>H</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>]);</span>
+    <span class=k>for</span> <span class=p>(</span><span class=kt>int</span> <span class=nl>i</span> <span class=p>:</span> <span class=n>range</span><span class=p>(</span><span class=n>q</span><span class=p>.</span><span class=n>size</span><span class=p>()</span><span class=o>-</span><span class=mi>1</span><span class=p>))</span> <span class=p>{</span>
+        <span class=n>CX</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=p>],</span> <span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=o>+</span><span class=mi>1</span><span class=p>]);</span>
+    <span class=p>}</span>
+    <span class=k>for</span> <span class=p>(</span><span class=k>auto</span> <span class=nl>i</span> <span class=p>:</span> <span class=n>range</span><span class=p>(</span><span class=n>q</span><span class=p>.</span><span class=n>size</span><span class=p>()))</span> <span class=p>{</span>
+        <span class=n>Measure</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=p>]);</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+<span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+    <span class=c1>// Allocate some qubits
+</span><span class=c1></span>    <span class=k>auto</span> <span class=n>q</span> <span class=o>=</span> <span class=n>qalloc</span><span class=p>(</span><span class=mi>5</span><span class=p>);</span>
+    <span class=c1>// Run the 5 qubit GHZ code
+</span><span class=c1></span>    <span class=n>ghz</span><span class=p>(</span><span class=n>q</span><span class=p>);</span>
+    <span class=c1>// Show the resultant counts
+</span><span class=c1></span>    <span class=k>for</span> <span class=p>(</span><span class=k>auto</span> <span class=p>[</span><span class=n>bits</span><span class=p>,</span> <span class=n>counts</span><span class=p>]</span> <span class=o>:</span> <span class=n>q</span><span class=p>.</span><span class=n>counts</span><span class=p>())</span> <span class=p>{</span>
+        <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=n>bits</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>counts</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>;</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>qcor -qpu qpp -shots <span class=m>1024</span> -o ghz.x ghz.cpp
+<span class=c1># One could also compile-only and link in a separate step</span>
+qcor -qpu qpp -shots <span class=m>1024</span> -o ghz.o -c ghz.cpp
+qcor ghz.o -o ghz.x
+<span class=c1># Run</span>
+./ghz.x
+00000: <span class=m>530</span>
+11111: <span class=m>494</span>
+</code></pre></div><p>To run this on an actual QPU (make sure your
+<a href=/deploy/users/remote_qpu_creds/#ibm>credentials</a>
+are set):</p><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>qcor -qpu ibm:ibmq_vigo -shots <span class=m>1024</span> -o ghz_ibm.x ghz.cpp
+./ghz_ibm.x
+IBM Job 5fa04ee1d3b8d80013995877 Status: COMPLETED.                    
+00000: <span class=m>427</span>
+00001: <span class=m>11</span>
+00011: <span class=m>5</span>
+00100: <span class=m>6</span>
+00110: <span class=m>3</span>
+00111: <span class=m>4</span>
+01000: <span class=m>8</span>
+01101: <span class=m>2</span>
+01110: <span class=m>3</span>
+01111: <span class=m>10</span>
+10000: <span class=m>5</span>
+10010: <span class=m>1</span>
+10110: <span class=m>5</span>
+10111: <span class=m>16</span>
+11000: <span class=m>17</span>
+11010: <span class=m>2</span>
+11011: <span class=m>6</span>
+11100: <span class=m>4</span>
+11101: <span class=m>12</span>
+11110: <span class=m>75</span>
+11111: <span class=m>402</span>
+</code></pre></div><p>We should note that the logical connectivity of the GHZ state on 5 qubits does not directly map one-to-one on the IBM Vigo backend. <code>qcor</code> is able to automatically provide this connectivity mapping (we call it qubit placement, more details at
+<a href=/deploy/users/pass_manager/>pass manager</a>
+).</p><p>We could also run this via the AIDE-QC Python JIT quantum kernel compiler.</p><div class=highlight><pre class=chroma><code class=language-python data-lang=python><span class=kn>from</span> <span class=nn>qcor</span> <span class=kn>import</span> <span class=n>qjit</span><span class=p>,</span> <span class=n>qalloc</span><span class=p>,</span> <span class=n>qreg</span>
+
+<span class=c1># one can set the qpu programmatically </span>
+<span class=c1># set_qpu(&#39;qpp&#39;, {&#39;shots&#39;: 2048})</span>
+
+<span class=nd>@qjit</span>
+<span class=k>def</span> <span class=nf>ghz</span><span class=p>(</span><span class=n>q</span> <span class=p>:</span> <span class=n>qreg</span><span class=p>):</span>
+    <span class=n>H</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>])</span>
+    <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=n>q</span><span class=o>.</span><span class=n>size</span><span class=p>()</span><span class=o>-</span><span class=mi>1</span><span class=p>):</span>
+        <span class=n>CX</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=p>],</span> <span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=o>+</span><span class=mi>1</span><span class=p>])</span>
+    <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=n>q</span><span class=o>.</span><span class=n>size</span><span class=p>()):</span>
+        <span class=n>Measure</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=p>])</span>
+
+<span class=n>q</span> <span class=o>=</span> <span class=n>qalloc</span><span class=p>(</span><span class=mi>5</span><span class=p>)</span>
+<span class=n>ghz</span><span class=p>(</span><span class=n>q</span><span class=p>)</span>
+<span class=k>for</span> <span class=n>bits</span><span class=p>,</span> <span class=n>counts</span> <span class=ow>in</span> <span class=n>q</span><span class=o>.</span><span class=n>counts</span><span class=p>()</span><span class=o>.</span><span class=n>items</span><span class=p>():</span>
+    <span class=k>print</span><span class=p>(</span><span class=n>bits</span><span class=p>,</span> <span class=s1>&#39;:&#39;</span><span class=p>,</span> <span class=n>counts</span><span class=p>)</span>
+</code></pre></div><p>To run this on the Aer quantum circuit simulator, here we show perfect and noisy simulation, and physical execution:</p><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh><span class=c1># Simulated, no noise</span>
+python3 ghz.py -qpu aer -shots <span class=m>1024</span>
+<span class=m>00000</span> : <span class=m>550</span>
+<span class=m>11111</span> : <span class=m>474</span>
+
+<span class=c1># Simulated with IBM Vigo noise model</span>
+python3 ghz.py -qpu aer:ibmq_vigo -shots <span class=m>1024</span>
+<span class=m>00000</span> : <span class=m>488</span>
+<span class=m>00001</span> : <span class=m>7</span>
+<span class=m>00010</span> : <span class=m>2</span>
+<span class=m>00100</span> : <span class=m>4</span>
+<span class=m>01000</span> : <span class=m>9</span>
+<span class=m>01110</span> : <span class=m>1</span>
+<span class=m>01111</span> : <span class=m>13</span>
+<span class=m>10000</span> : <span class=m>10</span>
+<span class=m>10110</span> : <span class=m>1</span>
+<span class=m>10111</span> : <span class=m>15</span>
+<span class=m>11011</span> : <span class=m>5</span>
+<span class=m>11100</span> : <span class=m>1</span>
+<span class=m>11101</span> : <span class=m>4</span>
+<span class=m>11110</span> : <span class=m>99</span>
+<span class=m>11111</span> : <span class=m>365</span>
+
+<span class=c1># Physical IBM Vigo execution</span>
+python3 ghz.py -qpu ibm:ibmq_vigo -shots <span class=m>1024</span>
+IBM Job 5fa050bba19c1900139f2951 Status: COMPLETED....                   
+<span class=m>00000</span> : <span class=m>488</span>
+<span class=m>00001</span> : <span class=m>14</span>
+<span class=m>00010</span> : <span class=m>6</span>
+<span class=m>00011</span> : <span class=m>2</span>
+<span class=m>00100</span> : <span class=m>6</span>
+<span class=m>00101</span> : <span class=m>1</span>
+<span class=m>00110</span> : <span class=m>1</span>
+<span class=m>00111</span> : <span class=m>2</span>
+<span class=m>01000</span> : <span class=m>3</span>
+<span class=m>01110</span> : <span class=m>2</span>
+<span class=m>01111</span> : <span class=m>14</span>
+<span class=m>10000</span> : <span class=m>3</span>
+<span class=m>10110</span> : <span class=m>3</span>
+<span class=m>10111</span> : <span class=m>10</span>
+<span class=m>11000</span> : <span class=m>9</span>
+<span class=m>11001</span> : <span class=m>1</span>
+<span class=m>11010</span> : <span class=m>6</span>
+<span class=m>11011</span> : <span class=m>6</span>
+<span class=m>11100</span> : <span class=m>8</span>
+<span class=m>11101</span> : <span class=m>12</span>
+<span class=m>11110</span> : <span class=m>51</span>
+<span class=m>11111</span> : <span class=m>376</span>
+</code></pre></div><div class=edit-meta><br><a href=https://github.com/aide-qc/deploy//edit/master/website/content/users/hello_world.md class=edit-page><i class="fas fa-pen-square"></i>Edit on GitHub</a></div><nav class=pagination><a class="nav nav-prev" href=/deploy/users/ title="User Guide"><i class="fas fa-arrow-left" aria-hidden=true></i>Prev - User Guide</a>
+<a class="nav nav-next" href=/deploy/users/operators/ title=Operators>Next - Operators <i class="fas fa-arrow-right" aria-hidden=true></i></a></nav><footer><p class=powered>Powered by <a href=https://gohugo.io>Hugo</a>. Theme by <a href=https://themes.gohugo.io/hugo-theme-techdoc/>TechDoc</a>. Designed by <a href=https://github.com/thingsym/hugo-theme-techdoc>Thingsym</a>.</p></footer></main><div class=sidebar><nav class=slide-menu><ul><li><a href=https://aide-qc.github.io/deploy>Home</a></li><li class=has-sub-menu><a href=/deploy/background/>Background<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=/deploy/background/qcor/>QCOR C++ Compiler and JIT Engine</a></li><li><a href=/deploy/background/xacc/>XACC Quantum Programming Framework</a></li><li><a href=/deploy/background/project/></a></li></ul></li><li class=has-sub-menu><a href=/deploy/developers/>Developer Guide<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=/deploy/developers/implement_optimizer/>Implement a new Optimizer</a></li><li><a href=/deploy/developers/clang_syntax/>QCOR Clang Syntax Handler</a></li></ul></li><li class=has-sub-menu><a href=/deploy/getting_started/>Getting Started<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=/deploy/getting_started/Faq/>Frequently Asked Questions</a></li><li><a href=/deploy/getting_started/build_from_source/>Build Everything from Source</a></li></ul></li><li class="parent has-sub-menu"><a href=/deploy/users/>User Guide<span class="mark opened">-</span></a><ul class=sub-menu><li class=active><a href=/deploy/users/hello_world/>Hello World</a></li><li><a href=/deploy/users/operators/>Operators</a></li><li><a href=/deploy/users/pass_manager/>Pass Manager</a></li><li><a href=/deploy/users/qjit/>Quantum JIT (QJIT)</a></li><li><a href=/deploy/users/quantum_kernels/>Quantum Kernels</a></li><li><a href=/deploy/users/remote_qpu_creds/>Remote QPU Credentials</a></li><li><a href=/deploy/users/tnqvm/>Tensor Network Quantum Virtual Machine</a></li><li><a href=/deploy/users/using_optimizer/>Using an Optimizer</a></li><li><a href=/deploy/users/variational/>Variational Algorithms</a></li></ul></li></ul></nav><div class=sidebar-footer></div></div></div><a href=# id=backtothetop-fixed class=backtothetop data-backtothetop-duration=600 data-backtothetop-easing=easeOutQuart data-backtothetop-fixed-fadein=1000 data-backtothetop-fixed-fadeout=1000 data-backtothetop-fixed-bottom=10 data-backtothetop-fixed-right=20><span class="fa-layers fa-fw"><i class="fas fa-circle"></i><i class="fas fa-arrow-circle-up"></i></span></a></div></body></html>

@@ -1,0 +1,120 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Build Everything from Source - AIDE-QC</title><meta name=description content="Advancing Integrated Development Environments for Quantum Computing"><meta name=generator content="Hugo 0.78.2"><link href=https://aide-qc.github.io/deployindex.xml rel=alternate type=application/rss+xml><link rel=canonical href=https://aide-qc.github.io/deploy/getting_started/build_from_source/><link rel=stylesheet href=https://aide-qc.github.io/deploy/css/theme.css><script src=https://use.fontawesome.com/releases/v5.0.6/js/all.js></script><link rel=stylesheet href=https://aide-qc.github.io/deploy/css/chroma.min.css><script src=https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js></script><script src=https://cdn.jsdelivr.net/npm/jquery.easing@1.4.1/jquery.easing.min.js></script><script src=https://aide-qc.github.io/deploy/js/bundle.js></script><style>:root{}</style></head><body><div class=container><header><h1><div><img src=https://aide-qc.github.io/deploy/aide_qc_logo_v3.png width=40px align=absmiddle>
+AIDE-QC</div></h1><p class=description>Advancing Integrated Development Environments for Quantum Computing</p></header><div class=global-menu><nav><ul><li class=parent><a href>Community<i class="fas fa-angle-right"></i></a><ul class=sub-menu><li class=child><a href=https://aideqc.slack.com>AIDE-QC Slack</a></li><li class=child><a href=https://xacc-dev.slack.com>XACC/QCOR Slack</a></li></ul></li><li class=parent><a href=https://github.com/aide-qc>Source<i class="fas fa-angle-right"></i></a><ul class=sub-menu><li class=child><a href=https://ornl-qci.github.io/qcor-api-docs/>QCOR Doxygen</a></li><li class=child><a href=https://ornl-qci.github.io/xacc-api-docs/>XACC Doxygen</a></li><li class=child><a href=https://github.com/aide-qc/qcor>QCOR</a></li><li class=child><a href=https://github.com/aide-qc/xacc>XACC</a></li></ul></li><li><a href=https://github.com/aide-qc/aide-qc/issues>Bugs</a></li><li><a href=http://aide-qc.org>Project Page</a></li></ul></nav></div><div class=content-container><main><h1>Build Everything from Source</h1><p>For the adventurous out there, or if your system does not support the above prebuilt binary instructions, you can build the AIDE-QC components from source. First, run the package installer commands for your system to get all requisite dependencies:</p><table><tr><th>OS</th><th>Command</th></tr><tr><td><b>Ubuntu 18.04</b></td><td><div class=highlight><pre class=chroma><code class=language-bash data-lang=bash><span class=c1># Add ubuntu-toolchain-r/test to get GCC 9</span>
+sudo apt-get update <span class=o>&amp;&amp;</span> sudo apt-get install -y software-properties-common 
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y <span class=o>&amp;&amp;</span> sudo apt-get update 
+<span class=c1># Install deps</span>
+sudo apt-get install -y gcc-9 g++-9 gfortran-9 python3.8 libpython3.8-dev python3-pip libcurl4-openssl-dev libssl-dev liblapack-dev libblas-dev ninja-build lsb-release
+python3 -m pip install cmake --user 
+<span class=c1># We&#39;ll skip building LLVM/Clang with SyntaxHandler and install binary</span>
+wget -qO- https://aide-qc.github.io/deploy/aide_qc/debian/PUBLIC-KEY.gpg <span class=p>|</span> sudo apt-key add -
+wget -qO- <span class=s2>&#34;https://aide-qc.github.io/deploy/aide_qc/debian/</span><span class=k>$(</span>lsb_release -cs<span class=k>)</span><span class=s2>/aide-qc.list&#34;</span> <span class=p>|</span> sudo tee -a /etc/apt/sources.list.d/aide-qc.list
+sudo apt-get update
+sudo apt-get install -y clang-syntax-handler
+<span class=c1># Point defaults to GCC 9</span>
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 <span class=m>50</span>
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 <span class=m>50</span>
+sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-9 <span class=m>50</span>
+</code></pre></div></td></tr><tr><td><b>Ubuntu 20.04</b></td><td><div class=highlight><pre class=chroma><code class=language-bash data-lang=bash><span class=c1># Install deps</span>
+sudo apt-get update
+sudo apt-get install -y gcc g++ gfortran python3 libpython3-dev python3-pip libcurl4-openssl-dev libssl-dev liblapack-dev libblas-dev ninja-build lsb-release
+python3 -m pip install cmake --user 
+<span class=c1># We&#39;ll skip building LLVM/Clang with SyntaxHandler and install binary</span>
+wget -qO- https://aide-qc.github.io/deploy/aide_qc/debian/PUBLIC-KEY.gpg <span class=p>|</span> sudo apt-key add -
+wget -qO- <span class=s2>&#34;https://aide-qc.github.io/deploy/aide_qc/debian/</span><span class=k>$(</span>lsb_release -cs<span class=k>)</span><span class=s2>/aide-qc.list&#34;</span> <span class=p>|</span> sudo tee -a /etc/apt/sources.list.d/aide-qc.list
+sudo apt-get update
+sudo apt-get install -y clang-syntax-handler
+</code></pre></div></td></tr><tr><td><b>Mac OS X<p>Linux x86_64 (not Ubuntu)</b></p></td><td><div class=highlight><pre class=chroma><code class=language-bash data-lang=bash><span class=c1># Install Homebrew</span>
+/bin/bash -c <span class=s2>&#34;</span><span class=k>$(</span>curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh<span class=k>)</span><span class=s2>&#34;</span>
+
+<span class=c1># If on Fedora, do this first!</span>
+sudo dnf update -y <span class=o>&amp;&amp;</span> sudo dnf install gcc gcc-c++ lapack-devel
+
+<span class=c1># Install deps, turn off dependents check</span>
+<span class=nb>export</span> <span class=nv>HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK</span><span class=o>=</span><span class=nb>false</span>
+brew tap aide-qc/deploy
+brew install gcc@10 python3 cmake openssl curl ninja llvm-csp
+
+</code></pre></div></td></tr></table><p>The following instructions assume that you have run the above commands for your OS to ensure all requisite dependencies are available.</p><h3 id=xacc-and-qcor-on-ubuntu>XACC and QCOR on Ubuntu&nbsp;<a class=headline-hash href=#xacc-and-qcor-on-ubuntu>¶</a></h3><p>To build and install <code>xacc</code>, run the following:</p><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>git clone --recursive https://github.com/aide-qc/xacc 
+<span class=nb>cd</span> xacc <span class=o>&amp;&amp;</span> mkdir build <span class=o>&amp;&amp;</span> <span class=nb>cd</span> build
+cmake .. -G Ninja 
+   <span class=c1># Optional flags</span>
+   -DXACC_BUILD_TESTS<span class=o>=</span>TRUE
+   -DCMAKE_INSTALL_PREFIX<span class=o>=</span>/desired/path/to/install
+   -DXACC_BUILD_EXAMPLES<span class=o>=</span>TRUE
+
+<span class=c1># Build and install to $HOME/.xacc (if CMAKE_INSTALL_PREFIX not specified)</span>
+cmake --build . --target install
+</code></pre></div><p>This will install <code>xacc</code> to <code>$HOME/.xacc</code> (by default, will be your specified <code>CMAKE_INSTALL_PREFIX</code> if provided) with Python bindings for your <code>python3</code> installation (from the above <code>apt-get</code> dependencies install). You will need to set your <code>PYTHONPATH</code> to the <code>xacc</code> install directory in order to use the <code>xacc</code> python bindings</p><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh><span class=nb>export</span> <span class=nv>PYTHONPATH</span><span class=o>=</span><span class=nv>$PYTHONPATH</span>:<span class=nv>$HOME</span>/.xacc
+</code></pre></div><p>It is usually a good idea to add this to your <code>.bashrc</code> file.</p><p>Next, build and install <code>qcor</code>:</p><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh><span class=o>(</span><span class=k>if</span> in xacc/build<span class=o>)</span> <span class=nb>cd</span> ../../
+git clone https://github.com/aide-qc/qcor
+<span class=nb>cd</span> qcor <span class=o>&amp;&amp;</span> mkdir build <span class=o>&amp;&amp;</span> <span class=nb>cd</span> build
+cmake .. -G Ninja -DLLVM_ROOT<span class=o>=</span>/usr/local/xacc/llvm 
+    <span class=c1># Optional flags</span>
+    -DQCOR_BUILD_TESTS<span class=o>=</span>TRUE
+    -DCMAKE_INSTALL_PREFIX<span class=o>=</span>/desired/path/to/install
+    -DXACC_DIR<span class=o>=</span>/path/to/xacc/install <span class=o>(</span><span class=k>if</span> not <span class=nv>$HOME</span>/.xacc<span class=o>)</span>
+
+<span class=c1># Build and install to $HOME/.xacc (if CMAKE_INSTALL_PREFIX not specified)</span>
+cmake --build . --target install
+</code></pre></div><p>This will install <code>qcor</code> to <code>$HOME/.xacc</code> (by default, will be your specified <code>CMAKE_INSTALL_PREFIX</code> if provided) with Python bindings for your <code>python3</code> installation. Update your <code>PYTHONPATH</code> if you did not install to <code>$HOME/.xacc</code>. You will also want to update your <code>PATH</code> variable to point to <code>$HOME/.xacc/bin</code> or <code>CMAKE_INSTALL_PREFIX/bin</code></p><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh><span class=nb>export</span> <span class=nv>PATH</span><span class=o>=</span><span class=nv>$PATH</span>:<span class=nv>$HOME</span>/.xacc/bin
+</code></pre></div><p>It is usually a good idea to add this command to your <code>.bashrc</code> file.</p><p>Test out your install by compiling and executing the following simple <code>qcor</code> code:</p><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh><span class=nb>printf</span> <span class=s2>&#34;__qpu__ void f(qreg q) {
+</span><span class=s2>  H(q[0]);
+</span><span class=s2>  Measure(q[0]);
+</span><span class=s2>}
+</span><span class=s2>int main() {
+</span><span class=s2>  auto q = qalloc(1);
+</span><span class=s2>  f(q);
+</span><span class=s2>  q.print();
+</span><span class=s2>}  &#34;</span> <span class=p>|</span> qcor -qpu qpp -shots <span class=m>1024</span> -x c++ -
+./a.out
+</code></pre></div><h3 id=xacc-and-qcor-on-mac-os-x-and-linux-x86_64-with-homebrew-not-ubuntu>XACC and QCOR on Mac OS X and Linux x86_64 with Homebrew (not Ubuntu)&nbsp;<a class=headline-hash href=#xacc-and-qcor-on-mac-os-x-and-linux-x86_64-with-homebrew-not-ubuntu>¶</a></h3><p>Make sure that you use <code>g++-10</code>, <code>gcc-10</code> explicitly in your <code>cmake</code> calls (they can be found with <code>brew --prefix gcc@10</code>). To build <code>xacc</code></p><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>git clone --recursive https://github.com/aide-qc/xacc
+<span class=nb>cd</span> xacc <span class=o>&amp;&amp;</span> mkdir build <span class=o>&amp;&amp;</span> <span class=nb>cd</span> build 
+<span class=c1># Need to point build to Homebrew installed OpenSSL and Curl libs</span>
+cmake .. -DCMAKE_CXX_COMPILER<span class=o>=</span>g++-10 -DCMAKE_C_COMPILER<span class=o>=</span>gcc-10 -DOPENSSL_ROOT_DIR<span class=o>=</span><span class=k>$(</span>brew --prefix openssl<span class=k>)</span> -DCMAKE_PREFIX_PATH<span class=o>=</span><span class=k>$(</span>brew --prefix curl<span class=k>)</span> -G Ninja
+   <span class=c1># Optional flags</span>
+   -DXACC_BUILD_TESTS<span class=o>=</span>TRUE
+   -DCMAKE_INSTALL_PREFIX<span class=o>=</span>/desired/path/to/install
+   -DXACC_BUILD_EXAMPLES<span class=o>=</span>TRUE
+
+<span class=c1># Build and install to $HOME/.xacc (if CMAKE_INSTALL_PREFIX not specified)</span>
+cmake --build . --target install
+</code></pre></div><p>This will install XACC to <code>$HOME/.xacc</code> with Python bindings for your <code>python3</code> installation (from the above <code>brew</code> dependencies install, located in <code>$(brew --prefix python3)</code>). You will need to set your <code>PYTHONPATH</code> in order to use the XACC python bindings</p><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh><span class=nb>export</span> <span class=nv>PYTHONPATH</span><span class=o>=</span><span class=nv>$PYTHONPATH</span>:<span class=nv>$HOME</span>/.xacc
+</code></pre></div><p>It is usually a good idea to add this to your <code>.bash_profile</code> file.</p><p>Next, build and install <code>qcor</code>:</p><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh><span class=o>(</span><span class=k>if</span> in xacc/build<span class=o>)</span> <span class=nb>cd</span> ../../
+git clone https://github.com/aide-qc/qcor
+<span class=nb>cd</span> qcor <span class=o>&amp;&amp;</span> mkdir build <span class=o>&amp;&amp;</span> <span class=nb>cd</span> build
+cmake .. -G Ninja -DCMAKE_CXX_COMPILER<span class=o>=</span>g++-10 -DCMAKE_C_COMPILER<span class=o>=</span>gcc-10 <span class=se>\
+</span><span class=se></span>         -DLLVM_ROOT<span class=o>=</span><span class=k>$(</span>brew --prefix llvm-csp<span class=k>)</span> <span class=se>\
+</span><span class=se></span>         <span class=c1># Pass the next 2 flags on Mac OS X only</span>
+         -DQCOR_EXTRA_HEADERS<span class=o>=</span><span class=s2>&#34;</span><span class=k>$(</span>brew --prefix<span class=k>)</span><span class=s2>/opt/gcc@10/include/c++/10.2.0;</span><span class=k>$(</span>brew --prefix<span class=k>)</span><span class=s2>/opt/gcc@10/include/c++/10.2.0/</span><span class=k>$(</span>gcc-10 -dumpmachine<span class=k>)</span><span class=s2>&#34;</span> <span class=se>\
+</span><span class=se></span>         -DGCC_STDCXX_PATH<span class=o>=</span><span class=k>$(</span>brew --prefix<span class=k>)</span>/opt/gcc@10/lib/gcc/10
+    <span class=c1># Optional flags</span>
+    -DQCOR_BUILD_TESTS<span class=o>=</span>TRUE
+    -DCMAKE_INSTALL_PREFIX<span class=o>=</span>/desired/path/to/install
+    -DXACC_DIR<span class=o>=</span>/path/to/xacc/install <span class=o>(</span><span class=k>if</span> not <span class=nv>$HOME</span>/.xacc<span class=o>)</span>
+
+<span class=c1># Build and install to $HOME/.xacc (if CMAKE_INSTALL_PREFIX not specified)</span>
+cmake --build . --target install
+</code></pre></div><p>This will install <code>qcor</code> to <code>$HOME/.xacc</code>, or <code>CMAKE_INSTALL_PREFIX</code> if specified, with Python bindings for your <code>python3</code> installation. Update your <code>PYTHONPATH</code> if you did not install to <code>$HOME/.xacc</code>. You will also want to update your <code>PATH</code> variable to point to <code>$HOME/.xacc/bin</code> or <code>CMAKE_INSTALL_PREFIX/bin</code></p><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh><span class=nb>export</span> <span class=nv>PATH</span><span class=o>=</span><span class=nv>$PATH</span>:<span class=nv>$HOME</span>/.xacc/bin
+</code></pre></div><p>It is usually a good idea to add this command to your <code>.bash_profile</code> file.</p><p>Test out your install by compiling and executing the following simple <code>qcor</code> code:</p><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh><span class=nb>printf</span> <span class=s2>&#34;__qpu__ void f(qreg q) {
+</span><span class=s2>  H(q[0]);
+</span><span class=s2>  Measure(q[0]);
+</span><span class=s2>}
+</span><span class=s2>int main() {
+</span><span class=s2>  auto q = qalloc(1);
+</span><span class=s2>  f(q);
+</span><span class=s2>  q.print();
+</span><span class=s2>}  &#34;</span> <span class=p>|</span> qcor -qpu qpp -shots <span class=m>1024</span> -x c++ -
+./a.out
+</code></pre></div><h2 id=build-the-llvm-csp-fork>Build the LLVM-CSP Fork&nbsp;<a class=headline-hash href=#build-the-llvm-csp-fork>¶</a></h2><blockquote><p><strong><em>NOTE:</em></strong> This is a long build and not recommended for most users. We have binaries built and distributed with <code>apt-get</code> and Homebrew, these should be your first choice. The following is mainly for book-keeping and due diligence.</p></blockquote><p>If you would like to build a custom install of our LLVM fork containing the Clang <code>SyntaxHandler</code>, run the following:</p><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>git clone https://github.com/hfinkel/llvm-project-csp llvm
+<span class=nb>cd</span> llvm <span class=o>&amp;&amp;</span> mkdir build <span class=o>&amp;&amp;</span> <span class=nb>cd</span> build
+cmake ../llvm -G Ninja -DBUILD_SHARED_LIBS<span class=o>=</span>ON <span class=se>\
+</span><span class=se></span>      -DCMAKE_BUILD_TYPE<span class=o>=</span>Release <span class=se>\
+</span><span class=se></span>      -DLLVM_TARGETS_TO_BUILD<span class=o>=</span>X86 <span class=se>\
+</span><span class=se></span>      -DLLVM_ENABLE_DUMP<span class=o>=</span>ON <span class=se>\
+</span><span class=se></span>      -DLLVM_ENABLE_PROJECTS<span class=o>=</span>clang <span class=se>\
+</span><span class=se></span>      -DCMAKE_CXX_COMPILER<span class=o>=</span>g++-10 <span class=se>\
+</span><span class=se></span>      -DCMAKE_C_COMPILER<span class=o>=</span>gcc-10 <span class=se>\
+</span><span class=se></span>      -DCMAKE_INSTALL_PREFIX<span class=o>=</span><span class=nv>$HOME</span>/.llvm
+cmake --build . --target install
+</code></pre></div><div class=edit-meta><br><a href=https://github.com/aide-qc/deploy//edit/master/website/content/getting_started/build_from_source.md class=edit-page><i class="fas fa-pen-square"></i>Edit on GitHub</a></div><nav class=pagination><a class="nav nav-prev" href=/deploy/getting_started/Faq/ title="Frequently Asked Questions"><i class="fas fa-arrow-left" aria-hidden=true></i>Prev - Frequently Asked Questions</a>
+<a class="nav nav-next" href=/deploy/users/ title="User Guide">Next - User Guide <i class="fas fa-arrow-right" aria-hidden=true></i></a></nav><footer><p class=powered>Powered by <a href=https://gohugo.io>Hugo</a>. Theme by <a href=https://themes.gohugo.io/hugo-theme-techdoc/>TechDoc</a>. Designed by <a href=https://github.com/thingsym/hugo-theme-techdoc>Thingsym</a>.</p></footer></main><div class=sidebar><nav class=slide-menu><ul><li><a href=https://aide-qc.github.io/deploy>Home</a></li><li class=has-sub-menu><a href=/deploy/background/>Background<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=/deploy/background/qcor/>QCOR C++ Compiler and JIT Engine</a></li><li><a href=/deploy/background/xacc/>XACC Quantum Programming Framework</a></li><li><a href=/deploy/background/project/></a></li></ul></li><li class=has-sub-menu><a href=/deploy/developers/>Developer Guide<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=/deploy/developers/implement_optimizer/>Implement a new Optimizer</a></li><li><a href=/deploy/developers/clang_syntax/>QCOR Clang Syntax Handler</a></li></ul></li><li class="parent has-sub-menu"><a href=/deploy/getting_started/>Getting Started<span class="mark opened">-</span></a><ul class=sub-menu><li><a href=/deploy/getting_started/Faq/>Frequently Asked Questions</a></li><li class=active><a href=/deploy/getting_started/build_from_source/>Build Everything from Source</a></li></ul></li><li class=has-sub-menu><a href=/deploy/users/>User Guide<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=/deploy/users/hello_world/>Hello World</a></li><li><a href=/deploy/users/operators/>Operators</a></li><li><a href=/deploy/users/pass_manager/>Pass Manager</a></li><li><a href=/deploy/users/qjit/>Quantum JIT (QJIT)</a></li><li><a href=/deploy/users/quantum_kernels/>Quantum Kernels</a></li><li><a href=/deploy/users/remote_qpu_creds/>Remote QPU Credentials</a></li><li><a href=/deploy/users/tnqvm/>Tensor Network Quantum Virtual Machine</a></li><li><a href=/deploy/users/using_optimizer/>Using an Optimizer</a></li><li><a href=/deploy/users/variational/>Variational Algorithms</a></li></ul></li></ul></nav><div class=sidebar-footer></div></div></div><a href=# id=backtothetop-fixed class=backtothetop data-backtothetop-duration=600 data-backtothetop-easing=easeOutQuart data-backtothetop-fixed-fadein=1000 data-backtothetop-fixed-fadeout=1000 data-backtothetop-fixed-bottom=10 data-backtothetop-fixed-right=20><span class="fa-layers fa-fw"><i class="fas fa-circle"></i><i class="fas fa-arrow-circle-up"></i></span></a></div></body></html>

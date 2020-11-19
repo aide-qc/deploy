@@ -1,0 +1,103 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Pass Manager - AIDE-QC</title><meta name=description content="Advancing Integrated Development Environments for Quantum Computing"><meta name=generator content="Hugo 0.78.2"><link href=https://aide-qc.github.io/deployindex.xml rel=alternate type=application/rss+xml><link rel=canonical href=https://aide-qc.github.io/deploy/users/pass_manager/><link rel=stylesheet href=https://aide-qc.github.io/deploy/css/theme.css><script src=https://use.fontawesome.com/releases/v5.0.6/js/all.js></script><link rel=stylesheet href=https://aide-qc.github.io/deploy/css/chroma.min.css><script src=https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js></script><script src=https://cdn.jsdelivr.net/npm/jquery.easing@1.4.1/jquery.easing.min.js></script><script src=https://aide-qc.github.io/deploy/js/bundle.js></script><style>:root{}</style></head><body><div class=container><header><h1><div><img src=https://aide-qc.github.io/deploy/aide_qc_logo_v3.png width=40px align=absmiddle>
+AIDE-QC</div></h1><p class=description>Advancing Integrated Development Environments for Quantum Computing</p></header><div class=global-menu><nav><ul><li class=parent><a href>Community<i class="fas fa-angle-right"></i></a><ul class=sub-menu><li class=child><a href=https://aideqc.slack.com>AIDE-QC Slack</a></li><li class=child><a href=https://xacc-dev.slack.com>XACC/QCOR Slack</a></li></ul></li><li class=parent><a href=https://github.com/aide-qc>Source<i class="fas fa-angle-right"></i></a><ul class=sub-menu><li class=child><a href=https://ornl-qci.github.io/qcor-api-docs/>QCOR Doxygen</a></li><li class=child><a href=https://ornl-qci.github.io/xacc-api-docs/>XACC Doxygen</a></li><li class=child><a href=https://github.com/aide-qc/qcor>QCOR</a></li><li class=child><a href=https://github.com/aide-qc/xacc>XACC</a></li></ul></li><li><a href=https://github.com/aide-qc/aide-qc/issues>Bugs</a></li><li><a href=http://aide-qc.org>Project Page</a></li></ul></nav></div><div class=content-container><main><h1>Pass Manager</h1><p>The QCOR infrastructure has a wide variety of quantum circuit transformation plugins, which are often referred to as <em>transpilers</em> in the literature.</p><p>There are two categories of transpilers: <em>circuit optimization</em> and <em>placement</em>.</p><p>Circuit optimizers are plugins that can rewrite the input circuits into a more optimal form (fewer gates) while reserving the intended transformation (e.g. in terms of the overall unitary matrix).</p><p>Placement plugins act as the final router to map or embed the circuit into the backend hardware topology. This placement action is not relevant for simulation but is very important for NISQ hardware execution due to limited connectivity.</p><p>These reentrant transpiler plugins are executed as passes over the circuit IR tree. The sequence of these passes is determined by the QCOR&rsquo;s <strong>pass manager</strong>. The pass manager will execute circuit optimization passes depending on the optimization level or manual command-line settings, then a single placement pass (selectable) taking into account the target qpu topology.</p><h3 id=a-idpmusagea-basic-usage><a id=pmusage></a>Basic usage&nbsp;<a class=headline-hash href=#a-idpmusagea-basic-usage>¶</a></h3><p>There are 3 levels of optimization that have been pre-defined in QCOR:</p><ul><li><p>Level 0: no optimization.</p></li><li><p>Level 1: <code>rotation-folding</code>, <code>single-qubit-gate-merging</code>, and <code>circuit-optimizer</code></p></li><li><p>Level 2: level 1 passes + <code>two-qubit-block-merging</code></p></li></ul><p>The descriptions of those optimization passes are shown below.</p><table><thead><tr><th>Pass name</th><th>Description</th></tr></thead><tbody><tr><td><code>circuit-optimizer</code></td><td>A collection of simple pattern-matching-based circuit optimization routines.</td></tr><tr><td><code>single-qubit-gate-merging</code></td><td>Combines adjacent single-qubit gates and finds a shorter equivalent sequence if possible.</td></tr><tr><td><code>two-qubit-block-merging</code></td><td>Combines a sequence of adjacent one and two-qubit gates operating on a pair of qubits and tries to find a more optimal gate sequence via Cartan decomposition if possible.</td></tr><tr><td><code>rotation-folding</code></td><td>A wrapper of the
+<a href=https://github.com/softwareQinc/staq>Staq</a>
+&rsquo;s <code>RotationOptimizer</code> which implemented the rotation gate merging algorithm.</td></tr><tr><td><code>voqc</code></td><td>A wrapper of the
+<a href=https://github.com/inQWIRE/SQIR>VOQC</a>
+(Verified Optimizer for Quantum Circuits) OCaml library, which implements generic gate propagation and cancellation optimization strategy.</td></tr></tbody></table><p>The optimization level can be specified by <code>-opt [0,1,2]</code> the QCOR command-line option.</p><p>The pass manager also collected detailed statistics about each optimization pass that it executed. This information can be printed out by providing the <code>-print-opt-stats</code> option to the QCOR compiler when compiling your source code.</p><p>For backend placement, by default, QCOR will perform the <code>swap-shortest-path</code> placement if the backend has topology (connectivity) information.
+Different placement strategies can be specified using the <code>-placement</code> command-line option.</p><p>The list of available placement services is shown in the following.</p><table><thead><tr><th>Placement name</th><th>Description</th></tr></thead><tbody><tr><td><code>swap-shortest-path</code></td><td>Wrapper of the
+<a href=https://github.com/softwareQinc/staq>Staq</a>
+&rsquo;s <code>SwapMapper</code></td></tr><tr><td><code>triQ</code></td><td>Noise adaptive layout based on
+<a href=https://github.com/prakashmurali/TriQ>TriQ</a>
+library.</td></tr><tr><td><code>enfield</code></td><td>Wrapper of
+<a href=https://github.com/ysiraichi/enfield>enfield</a>
+allocators. This needs to be installed manually from the XACC
+<a href=https://github.com/ORNL-QCI/enfield/tree/xacc>fork</a></td></tr></tbody></table><h3 id=a-idpmadvancedusagea-advanced-usage><a id=pmadvancedusage></a>Advanced usage&nbsp;<a class=headline-hash href=#a-idpmadvancedusagea-advanced-usage>¶</a></h3><p>Custom sequences of optimization passes can be specified using the following compile option:</p><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>qcor -qpu qpp -opt-pass pass1<span class=o>[</span>,pass2<span class=o>]</span> source.cpp
+</code></pre></div><p>in which, users provide an ordered (comma-separated) list of passes to be executed using the <code>-opt-pass</code> key.</p><p>This can be used in conjunction with the <code>-print-opt-stats</code> option to collect the statistics if required.</p><p>Manual qubit mapping can be used instead of topology-based placement by providing the <code>-qubit-map</code> option followed by the list of qubit indices specifying the mapping.</p><p>For example, <code>-qubit-map 2,1,4,3,0</code> dictates the following mapping 0->2, 1->1, 2->4, 3->3, 4->0.
+It is important to note that no further placement is performed after the <code>-qubit-map</code> based mapping. Hence, users need to make sure that the mapping is appropriate for the target hardware backend.</p><h3 id=a-idpmexamplesa-examples><a id=pmexamples></a>Examples&nbsp;<a class=headline-hash href=#a-idpmexamplesa-examples>¶</a></h3><h4 id=circuit-optimization>Circuit Optimization&nbsp;<a class=headline-hash href=#circuit-optimization>¶</a></h4><p>In this example, we just compile a simple circuit using the QCOR compiler.
+The circuit contains a pair of mergeable rotation gates.</p><table><tr><th>C++</th><th>Python</th></tr><tr><td><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=n>__qpu__</span> <span class=kt>void</span> <span class=nf>test_circ</span><span class=p>(</span><span class=n>qreg</span> <span class=n>q</span><span class=p>)</span> <span class=p>{</span>
+  <span class=n>H</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>]);</span>
+  <span class=n>Rx</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>],</span> <span class=mf>0.123</span><span class=p>);</span>
+  <span class=n>Rx</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>],</span> <span class=mf>0.456</span><span class=p>);</span>
+<span class=p>}</span>
+
+<span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+  <span class=c1>// Create a qubit register
+</span><span class=c1></span>  <span class=k>auto</span> <span class=n>q</span> <span class=o>=</span> <span class=n>qalloc</span><span class=p>(</span><span class=mi>1</span><span class=p>);</span>
+  <span class=c1>// Run the quantum kernel
+</span><span class=c1></span>  <span class=n>test_circ</span><span class=p>(</span><span class=n>q</span><span class=p>);</span>
+  <span class=n>q</span><span class=p>.</span><span class=n>print</span><span class=p>();</span>
+<span class=p>}</span>
+</code></pre></div></td><td><div class=highlight><pre class=chroma><code class=language-Python data-lang=Python><span class=nd>@qjit</span>
+<span class=k>def</span> <span class=nf>test_circ</span><span class=p>(</span><span class=n>q</span> <span class=p>:</span> <span class=n>qreg</span><span class=p>):</span>
+  <span class=n>H</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>])</span>
+  <span class=n>Rx</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>],</span> <span class=mf>0.123</span><span class=p>)</span>
+  <span class=n>Rx</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>],</span> <span class=mf>0.456</span><span class=p>)</span>
+
+
+<span class=c1># Create a qubit register</span>
+<span class=n>q</span> <span class=o>=</span> <span class=n>qalloc</span><span class=p>(</span><span class=mi>1</span><span class=p>)</span>
+<span class=c1># Run the quantum kernel</span>
+<span class=n>test_circ</span><span class=p>(</span><span class=n>q</span><span class=p>)</span>
+<span class=n>q</span><span class=o>.</span><span class=k>print</span><span class=p>()</span>
+</code></pre></div></td></tr><tr><td><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>qcor -opt <span class=m>1</span> -print-opt-stats simple_circuit.cpp 
+./a.out
+</code></pre></div></td><td><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>python3 simple_circuit.py -opt <span class=m>1</span> -print-opt-stats
+</code></pre></div></td></tr></table><p>We compiled the above QCOR kernel source using optimization level 1 and request optimization statistics.</p><p>When the executable is executed, we can see the optimization data printed out, which confirm that the two <code>Rx</code> rotation gates
+have been merged into one.</p><pre><code> - Number of Gates Before: 3
+ - Number of Gates After: 2
+--------------------------------
+| GATE     |BEFORE   |AFTER    |
+--------------------------------
+| Rx       |2        |1        |
+| H        |1        |1        |
+--------------------------------
+</code></pre><h4 id=placement>Placement&nbsp;<a class=headline-hash href=#placement>¶</a></h4><p>Let&rsquo;s take a look at an example where qubit placement is required for target hardware backends.</p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=c1>// Create a GHZ state
+</span><span class=c1></span><span class=n>__qpu__</span> <span class=kt>void</span> <span class=nf>create_ghz</span><span class=p>(</span><span class=n>qreg</span> <span class=n>q</span><span class=p>)</span> <span class=p>{</span>
+  <span class=n>H</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>]);</span>
+  <span class=n>CX</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>],</span> <span class=n>q</span><span class=p>[</span><span class=mi>1</span><span class=p>]);</span>
+  <span class=n>CX</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>],</span> <span class=n>q</span><span class=p>[</span><span class=mi>2</span><span class=p>]);</span>
+  <span class=k>for</span> <span class=p>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>q</span><span class=p>.</span><span class=n>size</span><span class=p>();</span> <span class=n>i</span><span class=o>++</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>Measure</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=p>]);</span>
+  <span class=p>}</span>
+<span class=p>}</span>
+
+<span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+  <span class=c1>// Print out the kernel for submission
+</span><span class=c1></span>  <span class=k>auto</span> <span class=n>q</span> <span class=o>=</span> <span class=n>qalloc</span><span class=p>(</span><span class=mi>3</span><span class=p>);</span>
+  <span class=n>create_ghz</span><span class=o>::</span><span class=n>print_kernel</span><span class=p>(</span><span class=n>std</span><span class=o>::</span><span class=n>cout</span><span class=p>,</span> <span class=n>q</span><span class=p>);</span>
+<span class=p>}</span>
+</code></pre></div><p>It&rsquo;s a simple experiment to create a 3-qubit entangle state. Albeit its simplicity, not all quantum devices can execute this circuit as is since it requires triangular connectivity between qubit 0, 1, and 2.</p><p>Let&rsquo;s compile and execute the above source code targeting two different hardware backends:</p><table><tr><th>ibmq_ourense</th><th>ibmqx2</th></tr><tr><td><pre><code>0 -- 1 -- 2 
+     |      
+     3       
+     |       
+     4  
+</code></pre></td><td><pre><code>      1
+    / | 
+   /  |
+  /   |
+ /    |
+0 --  2  --  3
+      |     /
+      |    /
+      |   / 
+      |  /
+      4
+</code></pre></td></tr><tr><td><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>qcor -qpu ibm:ibmq_ourense simplePlacement.cpp 
+./a.out
+</code></pre></div></td><td><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>qcor -qpu ibm:ibmqx2 simplePlacement.cpp 
+./a.out
+</code></pre></div></td></tr><tr><td><pre><code>H q0
+CNOT q1,q0
+CNOT q0,q1
+CNOT q1,q2
+Measure q1
+Measure q0
+Measure q2
+</code></pre></td><td><pre><code>H q0
+CNOT q0,q1
+CNOT q0,q2
+Measure q0
+Measure q1
+Measure q2
+</code></pre></td></tr></table><p>As we can see, due to the limited connectivity of the <code>ourense</code> backend, an additional CNOT gate is required (plus the remapping of qubits) after placement. The <code>qx2</code> backend has triangular connectivity groups (0-1-2 and 2-3-4), and thus it can map the GHZ state-preparation circuit to its qubits directly.</p><div class=edit-meta><br><a href=https://github.com/aide-qc/deploy//edit/master/website/content/users/pass_manager.md class=edit-page><i class="fas fa-pen-square"></i>Edit on GitHub</a></div><nav class=pagination><a class="nav nav-prev" href=/deploy/users/operators/ title=Operators><i class="fas fa-arrow-left" aria-hidden=true></i>Prev - Operators</a>
+<a class="nav nav-next" href=/deploy/users/qjit/ title="Quantum JIT (QJIT)">Next - Quantum JIT (QJIT) <i class="fas fa-arrow-right" aria-hidden=true></i></a></nav><footer><p class=powered>Powered by <a href=https://gohugo.io>Hugo</a>. Theme by <a href=https://themes.gohugo.io/hugo-theme-techdoc/>TechDoc</a>. Designed by <a href=https://github.com/thingsym/hugo-theme-techdoc>Thingsym</a>.</p></footer></main><div class=sidebar><nav class=slide-menu><ul><li><a href=https://aide-qc.github.io/deploy>Home</a></li><li class=has-sub-menu><a href=/deploy/background/>Background<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=/deploy/background/qcor/>QCOR C++ Compiler and JIT Engine</a></li><li><a href=/deploy/background/xacc/>XACC Quantum Programming Framework</a></li><li><a href=/deploy/background/project/></a></li></ul></li><li class=has-sub-menu><a href=/deploy/developers/>Developer Guide<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=/deploy/developers/implement_optimizer/>Implement a new Optimizer</a></li><li><a href=/deploy/developers/clang_syntax/>QCOR Clang Syntax Handler</a></li></ul></li><li class=has-sub-menu><a href=/deploy/getting_started/>Getting Started<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=/deploy/getting_started/Faq/>Frequently Asked Questions</a></li><li><a href=/deploy/getting_started/build_from_source/>Build Everything from Source</a></li></ul></li><li class="parent has-sub-menu"><a href=/deploy/users/>User Guide<span class="mark opened">-</span></a><ul class=sub-menu><li><a href=/deploy/users/hello_world/>Hello World</a></li><li><a href=/deploy/users/operators/>Operators</a></li><li class=active><a href=/deploy/users/pass_manager/>Pass Manager</a></li><li><a href=/deploy/users/qjit/>Quantum JIT (QJIT)</a></li><li><a href=/deploy/users/quantum_kernels/>Quantum Kernels</a></li><li><a href=/deploy/users/remote_qpu_creds/>Remote QPU Credentials</a></li><li><a href=/deploy/users/tnqvm/>Tensor Network Quantum Virtual Machine</a></li><li><a href=/deploy/users/using_optimizer/>Using an Optimizer</a></li><li><a href=/deploy/users/variational/>Variational Algorithms</a></li></ul></li></ul></nav><div class=sidebar-footer></div></div></div><a href=# id=backtothetop-fixed class=backtothetop data-backtothetop-duration=600 data-backtothetop-easing=easeOutQuart data-backtothetop-fixed-fadein=1000 data-backtothetop-fixed-fadeout=1000 data-backtothetop-fixed-bottom=10 data-backtothetop-fixed-right=20><span class="fa-layers fa-fw"><i class="fas fa-circle"></i><i class="fas fa-arrow-circle-up"></i></span></a></div></body></html>

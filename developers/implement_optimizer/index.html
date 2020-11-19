@@ -1,0 +1,361 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Implement a new Optimizer - AIDE-QC</title><meta name=description content="Advancing Integrated Development Environments for Quantum Computing"><meta name=generator content="Hugo 0.78.2"><link href=https://aide-qc.github.io/deployindex.xml rel=alternate type=application/rss+xml><link rel=canonical href=https://aide-qc.github.io/deploy/developers/implement_optimizer/><link rel=stylesheet href=https://aide-qc.github.io/deploy/css/theme.css><script src=https://use.fontawesome.com/releases/v5.0.6/js/all.js></script><link rel=stylesheet href=https://aide-qc.github.io/deploy/css/chroma.min.css><script src=https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js></script><script src=https://cdn.jsdelivr.net/npm/jquery.easing@1.4.1/jquery.easing.min.js></script><script src=https://aide-qc.github.io/deploy/js/bundle.js></script><style>:root{}</style></head><body><div class=container><header><h1><div><img src=https://aide-qc.github.io/deploy/aide_qc_logo_v3.png width=40px align=absmiddle>
+AIDE-QC</div></h1><p class=description>Advancing Integrated Development Environments for Quantum Computing</p></header><div class=global-menu><nav><ul><li class=parent><a href>Community<i class="fas fa-angle-right"></i></a><ul class=sub-menu><li class=child><a href=https://aideqc.slack.com>AIDE-QC Slack</a></li><li class=child><a href=https://xacc-dev.slack.com>XACC/QCOR Slack</a></li></ul></li><li class=parent><a href=https://github.com/aide-qc>Source<i class="fas fa-angle-right"></i></a><ul class=sub-menu><li class=child><a href=https://ornl-qci.github.io/qcor-api-docs/>QCOR Doxygen</a></li><li class=child><a href=https://ornl-qci.github.io/xacc-api-docs/>XACC Doxygen</a></li><li class=child><a href=https://github.com/aide-qc/qcor>QCOR</a></li><li class=child><a href=https://github.com/aide-qc/xacc>XACC</a></li></ul></li><li><a href=https://github.com/aide-qc/aide-qc/issues>Bugs</a></li><li><a href=http://aide-qc.org>Project Page</a></li></ul></nav></div><div class=content-container><main><h1>Implement a new Optimizer</h1><h3 id=table-of-contents>Table of Contents&nbsp;<a class=headline-hash href=#table-of-contents>¶</a></h3><ul><li><a href=#background>Background</a></li><li><a href=#create-optimizer>Create a Custom L-BFGS Optimizer</a></li><li><a href=#test-my-lbfgs>Test the Custom L-BFGS Optimizer</a></li><li><a href=#custom-lbfgs-options>Custom Optimizer Options</a></li></ul><h2 id=a-idbackgrounda-background><a id=background></a>Background&nbsp;<a class=headline-hash href=#a-idbackgrounda-background>¶</a></h2><p>The AIDE-QC software stack provides an extension point for classical, multi-variate function optimization. This provides the means
+to experiment with multiple optimization strategies pertinent to variational quantum computing algorithms (e.g. VQE).</p><p>We describe optimization via an extensible <code>Optimizer</code> class. The essential structure of the <code>Optimizer</code> infrastructure is shown below</p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=c1>// Identifiable, exposes a name and a description
+</span><span class=c1></span><span class=k>class</span> <span class=nc>Identifiable</span> <span class=p>{</span>
+<span class=k>public</span><span class=o>:</span>
+   <span class=k>virtual</span> <span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=n>name</span><span class=p>()</span> <span class=k>const</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+   <span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=n>description</span><span class=p>()</span> <span class=k>const</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+<span class=p>};</span>
+
+<span class=c1>// Useful typedef for Functors that can be optimized
+</span><span class=c1></span><span class=k>using</span> <span class=n>OptimizerFunctor</span> <span class=o>=</span> 
+     <span class=n>std</span><span class=o>::</span><span class=n>function</span><span class=o>&lt;</span><span class=kt>double</span><span class=p>(</span><span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>vector</span><span class=o>&lt;</span><span class=kt>double</span><span class=o>&gt;</span> <span class=o>&amp;</span><span class=p>,</span> <span class=n>std</span><span class=o>::</span><span class=n>vector</span><span class=o>&lt;</span><span class=kt>double</span><span class=o>&gt;</span> <span class=o>&amp;</span><span class=p>)</span><span class=o>&gt;</span><span class=p>;</span>
+
+<span class=c1>// OptFunction
+</span><span class=c1></span><span class=k>class</span> <span class=nc>OptFunction</span> <span class=p>{</span>
+<span class=k>public</span><span class=o>:</span>
+   <span class=n>OptFunction</span><span class=p>(</span><span class=n>OptimizerFunctor</span><span class=o>&amp;</span><span class=p>,</span> <span class=k>const</span> <span class=kt>int</span> <span class=n>n_dim</span><span class=p>);</span>
+   <span class=k>const</span> <span class=kt>int</span> <span class=nf>dimensions</span><span class=p>()</span> <span class=k>const</span><span class=p>;</span>
+   <span class=k>virtual</span> <span class=kt>double</span> <span class=nf>operator</span><span class=p>()(</span><span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>vector</span><span class=o>&lt;</span><span class=kt>double</span><span class=o>&gt;</span> <span class=o>&amp;</span><span class=n>x</span><span class=p>,</span>
+                            <span class=n>std</span><span class=o>::</span><span class=n>vector</span><span class=o>&lt;</span><span class=kt>double</span><span class=o>&gt;</span> <span class=o>&amp;</span><span class=n>dx</span><span class=p>);</span>
+<span class=p>};</span>
+
+<span class=k>class</span> <span class=nc>Optimizer</span> <span class=o>:</span> <span class=k>public</span> <span class=n>Identifiable</span> <span class=p>{</span>
+<span class=k>public</span><span class=o>:</span>
+<span class=k>virtual</span> <span class=n>OptResult</span> <span class=n>optimize</span><span class=p>(</span><span class=n>OptFunction</span> <span class=o>&amp;</span> <span class=n>function</span><span class=p>)</span> <span class=o>=</span> <span class=mi>0</span>
+<span class=p>};</span>
+</code></pre></div><p>First, we consider functions that can be optimized to be of a specific structure. In C++, we associate these functions with an <code>std::function&lt;></code> that returns a <code>double</code> and takes a <code>std::vector&lt;double></code> as input (evaluate this function at the given parameters <code>x</code>), and another optional <code>std::vector&lt;double></code> that encodes the gradient of the vector <code>x</code>. The gradient vector may or may not be provided by the function, but if it is not, we do not allow gradient-based optimization strategies. We assign a type name to this functor, the <code>OptimizerFunctor</code>.</p><p>We wrap <code>OptimizerFunctors</code> in another data structure called the <code>OptFunction</code>. This class exposes an <code>operator()()</code> overload that delegates to the wrapped <code>OptimizerFunctor</code>, but additionaly encodes information about the number of optimization functor parameters (the dimension of the problem).</p><p>Finally, <code>Optimizers</code> expose an <code>optimize</code> method that is designed to be implemented by sub-types to provide a sub-type specific optimization strategy. Implementations should take the input <code>OptFunction</code> and use calls to its <code>operator()()</code> to affect execution of the optimization strategy (derivative-free or gradient-based). <code>optimize()</code> returns an <code>OptResult</code>, which is just a <code>std::pair&lt;double, std::vector&lt;double>></code> encoding the optimal function value and the corresponding optimal parameters. Also, in the <code>qcor</code> data model, <code>ObjectiveFunctions</code> are sub-types of <code>OptFunction</code>, and therefore, one can pass an <code>ObjectiveFunction</code> to <code>optimize()</code> as well.</p><p>Note, all <code>Optimizers</code> are <code>Identifiable</code>, therefore, sub-types must implement <code>name()</code> and <code>description()</code> providing a unique name for the <code>Optimizer</code> sub-type and corresponding description.</p><h2 id=a-idcreate-optimizera-create-a-new-optimizer><a id=create-optimizer></a>Create a New Optimizer&nbsp;<a class=headline-hash href=#a-idcreate-optimizera-create-a-new-optimizer>¶</a></h2><p>For the purposes of this tutorial, let&rsquo;s try to create a new AIDE-QC <code>Optimizer</code> that delegates to the
+<a href=https://github.com/yixuan/LBFGSpp>LBFGS++</a>
+header-only C++ library providing an implementation of the
+<a href=https://en.wikipedia.org/wiki/Limited-memory_BFGS>L-BFGS</a>
+gradient-based optimization algorithm that leverages the
+<a href=https://eigen.tuxfamily.org>Eigen</a>
+matrix library. To start, create a new project directory and add the library as a submodule</p><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>mkdir my-lbfgs <span class=o>&amp;&amp;</span> <span class=nb>cd</span> mylbfgs 
+git clone https://github.com/yixuan/LBFGSpp
+touch CMakeLists.txt mylbfgs_optimizer.<span class=o>{</span>hpp,cpp<span class=o>}</span> manifest.json
+<span class=c1># create an examples directory too</span>
+mkdir examples
+touch rosenbrock.<span class=o>{</span>cpp,py<span class=o>}</span>
+</code></pre></div><p>First, let&rsquo;s populate the <code>mylbfgs_optimizer.*</code> source files with the necessary <code>Optimizer</code> sub-type boilerplate</p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=c1>// mylbfgs_optimizer.hpp
+</span><span class=c1></span><span class=cp>#pragma once
+</span><span class=cp>#include</span> <span class=cpf>&#34;Optimizer.hpp&#34;</span><span class=cp>
+</span><span class=cp></span><span class=k>using</span> <span class=k>namespace</span> <span class=n>xacc</span><span class=p>;</span>
+
+<span class=k>namespace</span> <span class=n>mylbfgs</span> <span class=p>{</span>
+<span class=k>class</span> <span class=nc>MyLBFGSOptimizer</span> <span class=o>:</span> <span class=k>public</span> <span class=n>Optimizer</span> <span class=p>{</span>
+<span class=k>public</span><span class=o>:</span>
+  <span class=c1>// Define here, we implement in the cpp file
+</span><span class=c1></span>  <span class=n>OptResult</span> <span class=n>optimize</span><span class=p>(</span><span class=n>OptFunction</span> <span class=o>&amp;</span><span class=n>function</span><span class=p>)</span> <span class=k>override</span><span class=p>;</span>
+  <span class=c1>// L-BFGS requires gradients
+</span><span class=c1></span>  <span class=k>const</span> <span class=kt>bool</span> <span class=nf>isGradientBased</span><span class=p>()</span> <span class=k>const</span> <span class=k>override</span> <span class=p>{</span><span class=k>return</span> <span class=nb>true</span><span class=p>;}</span>
+  <span class=c1>// Give it a unique name and description
+</span><span class=c1></span>  <span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=n>name</span><span class=p>()</span> <span class=k>const</span> <span class=k>override</span> <span class=p>{</span> <span class=k>return</span> <span class=s>&#34;my-lbfgs&#34;</span><span class=p>;</span> <span class=p>}</span>
+  <span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=n>description</span><span class=p>()</span> <span class=k>const</span> <span class=k>override</span> <span class=p>{</span> <span class=k>return</span> <span class=s>&#34;This is a demo!&#34;</span><span class=p>;</span> <span class=p>}</span>
+<span class=p>};</span>
+<span class=p>}</span>
+</code></pre></div><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=c1>// mylbfgs_optimizer.cpp
+</span><span class=c1></span><span class=cp>#include</span> <span class=cpf>&#34;mylbfgs_optimizer.hpp&#34;</span><span class=cp>
+</span><span class=cp>#include</span> <span class=cpf>&#34;xacc_plugin.hpp&#34;</span><span class=cp>
+</span><span class=cp></span>
+<span class=k>namespace</span> <span class=n>mylbfgs</span> <span class=p>{</span>
+<span class=n>OptResult</span> <span class=n>MyLBFGSOptimizer</span><span class=o>::</span><span class=n>optimize</span><span class=p>(</span><span class=n>OptFunction</span> <span class=o>&amp;</span><span class=n>function</span><span class=p>)</span> <span class=p>{</span>
+    <span class=c1>// ... Optimization code here ...
+</span><span class=c1></span>    <span class=c1>// ... We will implement this in a minute ... 
+</span><span class=c1></span>    <span class=k>return</span> <span class=p>{</span><span class=mf>0.0</span><span class=p>,</span> <span class=n>std</span><span class=o>::</span><span class=n>vector</span><span class=o>&lt;</span><span class=kt>double</span><span class=o>&gt;</span><span class=p>{}};</span>
+<span class=p>}</span>
+<span class=p>}</span>
+<span class=n>REGISTER_OPTIMIZER</span><span class=p>(</span><span class=n>mylbfgs</span><span class=o>::</span><span class=n>MyLBFGSOptimizer</span><span class=p>)</span>
+</code></pre></div><p>In <code>mylbfgs_optimizer.hpp</code>, we declare the <code>MyLBFGSOptimizer</code> sub-class of <code>Optimizer</code>, indicate that it is a gradient-based <code>Optimizer</code>, and give it the unique name <code>my-lbfgs</code>. In the implementation file, we start on the <code>MyLBFGSOptimizer::optimize</code> implementation. Critically, we include <code>xacc_plugin.hpp</code> and end the file with a registration macro that registers the new <code>Optimizer</code> with AIDE-QC - this ensures the new <code>Optimizer</code> can be used in the AIDE-QC stack.</p><p>Next, we turn our attention to the <code>CMake</code> build system - <code>CMakeLists.txt</code> and <code>manifest.json</code>. The plugin must define a <code>manifest.json</code> file to encode information about the plugin name and description. We populate the file with the following</p><div class=highlight><pre class=chroma><code class=language-json data-lang=json><span class=p>{</span>
+  <span class=nt>&#34;bundle.symbolic_name&#34;</span> <span class=p>:</span> <span class=s2>&#34;my_lbfgs_optimizer&#34;</span><span class=p>,</span>
+  <span class=nt>&#34;bundle.activator&#34;</span> <span class=p>:</span> <span class=kc>true</span><span class=p>,</span>
+  <span class=nt>&#34;bundle.name&#34;</span> <span class=p>:</span> <span class=s2>&#34;LBFGS++ Optimizer&#34;</span><span class=p>,</span>
+  <span class=nt>&#34;bundle.description&#34;</span> <span class=p>:</span> <span class=s2>&#34;This plugin integrates LBFGS++ with AIDE-QC.&#34;</span>
+<span class=p>}</span>
+</code></pre></div><p>Now we populate the <code>CMakeLists.txt</code> file with typical <code>CMake</code> boilerplate project calls, plus additional code to correctly build our plugin and install to the appropriate plugin folder location:</p><div class=highlight><pre class=chroma><code class=language-cmake data-lang=cmake><span class=c># Boilerplate CMake calls to setup the project
+</span><span class=c></span><span class=nb>cmake_minimum_required</span><span class=p>(</span><span class=s>VERSION</span> <span class=s>3.12</span> <span class=s>FATAL_ERROR</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>project</span><span class=p>(</span><span class=s>my_lbfgs_optimizer</span> <span class=s>VERSION</span> <span class=s>1.0.0</span> <span class=s>LANGUAGES</span> <span class=s>CXX</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>set</span><span class=p>(</span><span class=s>CMAKE_STANDARD_REQUIRED</span> <span class=s>ON</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>set</span><span class=p>(</span><span class=s>CMAKE_CXX_STANDARD</span> <span class=s>17</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>set</span><span class=p>(</span><span class=s>CMAKE_EXPORT_COMPILE_COMMANDS</span> <span class=s>TRUE</span><span class=p>)</span><span class=err>
+</span><span class=err>
+</span><span class=err></span><span class=c># Find XACC, provides underlying plugin system
+</span><span class=c></span><span class=nb>find_package</span><span class=p>(</span><span class=s>XACC</span> <span class=s>REQUIRED</span><span class=p>)</span><span class=err>
+</span><span class=err>
+</span><span class=err></span><span class=c># Create the my-lbfgs-optimizer library
+</span><span class=c></span><span class=nb>set</span><span class=p>(</span><span class=s>LIBRARY_NAME</span> <span class=s>my-lbfgs-optimizer</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>file</span><span class=p>(</span><span class=s>GLOB</span> <span class=s>SRC</span> <span class=s>mylbfgs_optimizer.cpp</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>usfunctiongetresourcesource</span><span class=p>(</span><span class=s>TARGET</span> <span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span> <span class=s>OUT</span> <span class=s>SRC</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>usfunctiongeneratebundleinit</span><span class=p>(</span><span class=s>TARGET</span> <span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span> <span class=s>OUT</span> <span class=s>SRC</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>add_library</span><span class=p>(</span><span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span> <span class=s>SHARED</span> <span class=o>${</span><span class=nv>SRC</span><span class=o>}</span><span class=p>)</span><span class=err>
+</span><span class=err>
+</span><span class=err></span><span class=c># L-BFGS++ will require Eigen, XACC provides it
+</span><span class=c></span><span class=nb>target_include_directories</span><span class=p>(</span><span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span> <span class=s>PUBLIC</span> <span class=s>.</span> 
+                                    <span class=s>LBFGSpp/include</span> 
+                                    <span class=o>${</span><span class=nv>XACC_ROOT</span><span class=o>}</span><span class=s>/include/eigen</span><span class=p>)</span><span class=err>
+</span><span class=err>
+</span><span class=err></span><span class=c># _bundle_name must be == manifest.json bundle.symbolic_name !!!
+</span><span class=c></span><span class=nb>set</span><span class=p>(</span><span class=s>_bundle_name</span> <span class=s>my_lbfgs_optimizer</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>set_target_properties</span><span class=p>(</span><span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span>
+                      <span class=s>PROPERTIES</span> <span class=s>COMPILE_DEFINITIONS</span>
+                                 <span class=s>US_BUNDLE_NAME=</span><span class=o>${</span><span class=nv>_bundle_name</span><span class=o>}</span>
+                                 <span class=s>US_BUNDLE_NAME</span> <span class=o>${</span><span class=nv>_bundle_name</span><span class=o>}</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>usfunctionembedresources</span><span class=p>(</span><span class=s>TARGET</span> <span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span> 
+                         <span class=s>WORKING_DIRECTORY</span> <span class=o>${</span><span class=nv>CMAKE_CURRENT_SOURCE_DIR</span><span class=o>}</span>
+                         <span class=s>FILES</span> <span class=s>manifest.json</span><span class=p>)</span><span class=err>
+</span><span class=err>
+</span><span class=err></span><span class=c># Link library with XACC
+</span><span class=c></span><span class=nb>target_link_libraries</span><span class=p>(</span><span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span> <span class=s>PUBLIC</span> <span class=s>xacc::xacc</span><span class=p>)</span><span class=err>
+</span><span class=err>
+</span><span class=err></span><span class=c># Configure RPATH
+</span><span class=c></span><span class=nb>if</span><span class=p>(</span><span class=s>APPLE</span><span class=p>)</span><span class=err>
+</span><span class=err></span>  <span class=nb>set_target_properties</span><span class=p>(</span><span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span> <span class=s>PROPERTIES</span> <span class=s>INSTALL_RPATH</span> 
+                            <span class=s2>&#34;${XACC_ROOT}/lib&#34;</span><span class=p>)</span><span class=err>
+</span><span class=err></span>  <span class=nb>set_target_properties</span><span class=p>(</span><span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span> <span class=s>PROPERTIES</span> <span class=s>LINK_FLAGS</span> 
+                            <span class=s2>&#34;-undefined dynamic_lookup&#34;</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>else</span><span class=p>()</span><span class=err>
+</span><span class=err></span>  <span class=nb>set_target_properties</span><span class=p>(</span><span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span> <span class=s>PROPERTIES</span> <span class=s>INSTALL_RPATH</span> 
+                        <span class=s2>&#34;${XACC_ROOT}/lib&#34;</span><span class=p>)</span><span class=err>
+</span><span class=err></span>  <span class=nb>set_target_properties</span><span class=p>(</span><span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span> <span class=s>PROPERTIES</span> <span class=s>LINK_FLAGS</span> <span class=s2>&#34;-shared&#34;</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>endif</span><span class=p>()</span><span class=err>
+</span><span class=err>
+</span><span class=err></span><span class=c># Install to Plugins directory
+</span><span class=c></span><span class=nb>install</span><span class=p>(</span><span class=s>TARGETS</span> <span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span> <span class=s>DESTINATION</span> <span class=o>${</span><span class=nv>XACC_ROOT</span><span class=o>}</span><span class=s>/plugins</span><span class=p>)</span><span class=err>
+</span></code></pre></div><p>The above CMake code is pretty much ubiquitous across all XACC plugin builds. The first crucial part is <code>find_package(XACC)</code> which can be configured or customized with the <code>cmake .. -DXACC_DIR=/path/to/xacc</code> flag. Next we create a shared library containing the compiled <code>mylbfgs_optimizer</code> code, and configure it as a plugin with appropriate <code>usfunction*</code> calls (from the underlying <code>CppMicroServices</code> infrastructure). We link the library to the <code>xacc::xacc</code> target, configure the <code>RPATH</code> such that it can link to the install <code>lib/</code> directory, and install to the plugin storage directory.</p><p>To build this we run (from the top-level of the project directory)</p><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>mkdir build <span class=o>&amp;&amp;</span> <span class=nb>cd</span> build 
+cmake .. -G Ninja -DXACC_DIR<span class=o>=</span><span class=k>$(</span>qcor -xacc-install<span class=k>)</span>
+cmake --build . --target install
+</code></pre></div><p>Now a quick and easy way to test that your <code>Optimizer</code> is installed and available (even though we haven&rsquo;t implemented <code>optimize()</code> yet) is start the interactive Python interpreter and run the following commands to see the name <code>my-lbfgs</code> printed.</p><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>$ python3
+Python 3.8.6 <span class=o>(</span>default, Oct <span class=m>10</span> 2020, 07:54:55<span class=o>)</span> 
+<span class=o>[</span>GCC 5.4.0 20160609<span class=o>]</span> on linux
+Type <span class=s2>&#34;help&#34;</span>, <span class=s2>&#34;copyright&#34;</span>, <span class=s2>&#34;credits&#34;</span> or <span class=s2>&#34;license&#34;</span> <span class=k>for</span> more information.
+&gt;&gt;&gt; from qcor import createOptimizer
+&gt;&gt;&gt; <span class=nv>optimizer</span> <span class=o>=</span> createOptimizer<span class=o>(</span><span class=s1>&#39;my-lbfgs&#39;</span><span class=o>)</span>
+&gt;&gt;&gt; print<span class=o>(</span>optimizer.name<span class=o>())</span>
+my-lbfgs
+</code></pre></div><p>Next we turn our attention to implementing <code>optimize()</code> in <code>mylbfgs_optimizer.cpp</code>. To do so we follow their provided
+<a href=https://github.com/yixuan/LBFGSpp/blob/master/README.md>README</a>
+example, noting that <code>xacc</code> provides the <code>Eigen</code> matrix library by default (so we can just include it and it will work)</p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=c1>// add the required includes at the top 
+</span><span class=c1></span><span class=cp>#include</span> <span class=cpf>&lt;Eigen/Core&gt;</span><span class=cp>
+</span><span class=cp>#include</span> <span class=cpf>&lt;LBFGS.h&gt;</span><span class=cp>
+</span><span class=cp></span>
+<span class=p>...</span>
+
+<span class=n>OptResult</span> <span class=n>MyLBFGSOptimizer</span><span class=o>::</span><span class=n>optimize</span><span class=p>(</span><span class=n>OptFunction</span> <span class=o>&amp;</span><span class=n>function</span><span class=p>)</span> <span class=p>{</span>
+  <span class=k>using</span> <span class=k>namespace</span> <span class=n>LBFGSpp</span><span class=p>;</span>
+  <span class=k>using</span> <span class=k>namespace</span> <span class=n>Eigen</span><span class=p>;</span>
+
+  <span class=c1>// Get the dimension of the problem
+</span><span class=c1></span>  <span class=k>const</span> <span class=kt>int</span> <span class=n>n_dim</span> <span class=o>=</span> <span class=n>function</span><span class=p>.</span><span class=n>dimensions</span><span class=p>();</span>
+
+  <span class=c1>// Set up LBFGS++ parameters
+</span><span class=c1></span>  <span class=n>LBFGSParam</span><span class=o>&lt;</span><span class=kt>double</span><span class=o>&gt;</span> <span class=n>param</span><span class=p>;</span>
+  <span class=n>param</span><span class=p>.</span><span class=n>epsilon</span> <span class=o>=</span> <span class=mf>1e-6</span><span class=p>;</span>
+  <span class=n>param</span><span class=p>.</span><span class=n>max_iterations</span> <span class=o>=</span> <span class=mi>100</span><span class=p>;</span>
+
+  <span class=c1>// Create solver object
+</span><span class=c1></span>  <span class=n>LBFGSSolver</span><span class=o>&lt;</span><span class=kt>double</span><span class=o>&gt;</span> <span class=n>solver</span><span class=p>(</span><span class=n>param</span><span class=p>);</span>
+
+  <span class=c1>// It looks like LBFGS++ requires Eigen::VectorXd as 
+</span><span class=c1></span>  <span class=c1>// input to the objective function to be optimized
+</span><span class=c1></span>  <span class=c1>//
+</span><span class=c1></span>  <span class=c1>// So here we create a lambda that translates VectorXd to 
+</span><span class=c1></span>  <span class=c1>// OptFunction std::vector&lt;double&gt; and calls our function
+</span><span class=c1></span>  <span class=c1>// 
+</span><span class=c1></span>  <span class=c1>// This is what we will pass to the solver 
+</span><span class=c1></span>  <span class=k>auto</span> <span class=n>lbfgs_functor_wrapper</span> <span class=o>=</span> <span class=p>[</span><span class=o>&amp;</span><span class=p>](</span><span class=k>const</span> <span class=n>VectorXd</span><span class=o>&amp;</span> <span class=n>x</span><span class=p>,</span> <span class=n>VectorXd</span><span class=o>&amp;</span> <span class=n>grad</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>std</span><span class=o>::</span><span class=n>vector</span><span class=o>&lt;</span><span class=kt>double</span><span class=o>&gt;</span> <span class=n>x_vec</span><span class=p>(</span><span class=n>x</span><span class=p>.</span><span class=n>size</span><span class=p>()),</span> <span class=n>grad_vec</span><span class=p>(</span><span class=n>x</span><span class=p>.</span><span class=n>size</span><span class=p>());</span>
+
+    <span class=c1>// Map x and grad to std::vector&lt;double&gt;
+</span><span class=c1></span>    <span class=n>VectorXd</span><span class=o>::</span><span class=n>Map</span><span class=p>(</span><span class=o>&amp;</span><span class=n>x_vec</span><span class=p>[</span><span class=mi>0</span><span class=p>],</span> <span class=n>x</span><span class=p>.</span><span class=n>size</span><span class=p>())</span> <span class=o>=</span> <span class=n>x</span><span class=p>;</span>
+    <span class=n>VectorXd</span><span class=o>::</span><span class=n>Map</span><span class=p>(</span><span class=o>&amp;</span><span class=n>grad_vec</span><span class=p>[</span><span class=mi>0</span><span class=p>],</span> <span class=n>grad</span><span class=p>.</span><span class=n>size</span><span class=p>())</span> <span class=o>=</span> <span class=n>grad</span><span class=p>;</span>
+
+    <span class=c1>// Evaluate our OptFunction!
+</span><span class=c1></span>    <span class=k>auto</span> <span class=n>value</span> <span class=o>=</span> <span class=n>function</span><span class=p>(</span><span class=n>x_vec</span><span class=p>,</span> <span class=n>grad_vec</span><span class=p>);</span>
+
+    <span class=c1>// Map the gradient back to a VectorXd
+</span><span class=c1></span>    <span class=n>grad</span> <span class=o>=</span> <span class=n>Map</span><span class=o>&lt;</span><span class=n>VectorXd</span><span class=o>&gt;</span><span class=p>(</span><span class=n>grad_vec</span><span class=p>.</span><span class=n>data</span><span class=p>(),</span> <span class=n>grad_vec</span><span class=p>.</span><span class=n>size</span><span class=p>());</span>
+    <span class=k>return</span> <span class=n>value</span><span class=p>;</span>
+  <span class=p>};</span>
+
+  <span class=c1>// Initial guess
+</span><span class=c1></span>  <span class=n>VectorXd</span> <span class=n>x</span> <span class=o>=</span> <span class=n>VectorXd</span><span class=o>::</span><span class=n>Zero</span><span class=p>(</span><span class=n>n_dim</span><span class=p>);</span>
+  
+  <span class=c1>// Run the optimization algorithm!
+</span><span class=c1></span>  <span class=kt>double</span> <span class=n>fx</span><span class=p>;</span>
+  <span class=kt>int</span> <span class=n>niter</span> <span class=o>=</span> <span class=n>solver</span><span class=p>.</span><span class=n>minimize</span><span class=p>(</span><span class=n>lbfgs_functor_wrapper</span><span class=p>,</span> <span class=n>x</span><span class=p>,</span> <span class=n>fx</span><span class=p>);</span>
+
+  <span class=c1>// Print the Results!
+</span><span class=c1></span>  <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=n>niter</span> <span class=o>&lt;&lt;</span> <span class=s>&#34; iterations&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>std</span><span class=o>::</span><span class=n>endl</span><span class=p>;</span>
+  <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;x = </span><span class=se>\n</span><span class=s>&#34;</span> <span class=o>&lt;&lt;</span> <span class=n>x</span><span class=p>.</span><span class=n>transpose</span><span class=p>()</span> <span class=o>&lt;&lt;</span> <span class=n>std</span><span class=o>::</span><span class=n>endl</span><span class=p>;</span>
+  <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;f(x) = &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>fx</span> <span class=o>&lt;&lt;</span> <span class=n>std</span><span class=o>::</span><span class=n>endl</span><span class=p>;</span>
+
+  <span class=c1>// Map optimal parameters from VectorXd to std::vector&lt;double&gt;
+</span><span class=c1></span>  <span class=n>std</span><span class=o>::</span><span class=n>vector</span><span class=o>&lt;</span><span class=kt>double</span><span class=o>&gt;</span> <span class=n>opt_params</span><span class=p>(</span><span class=n>x</span><span class=p>.</span><span class=n>size</span><span class=p>());</span>
+  <span class=n>VectorXd</span><span class=o>::</span><span class=n>Map</span><span class=p>(</span><span class=o>&amp;</span><span class=n>opt_params</span><span class=p>[</span><span class=mi>0</span><span class=p>],</span> <span class=n>x</span><span class=p>.</span><span class=n>size</span><span class=p>())</span> <span class=o>=</span> <span class=n>x</span><span class=p>;</span>
+
+  <span class=c1>// Return the OptResult
+</span><span class=c1></span>  <span class=k>return</span> <span class=n>OptResult</span><span class=p>{</span><span class=n>fx</span><span class=p>,</span> <span class=n>opt_params</span><span class=p>};</span>
+<span class=p>}</span>
+</code></pre></div><p>Now in the <code>build/</code> directory, run cmake again</p><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>cmake --build . --target install
+</code></pre></div><p>You&rsquo;re now ready to test out the new <code>Optimizer</code>.</p><h2 id=a-idtest-my-lbfgsa-test-the-my-lbfgs-optimizer><a id=test-my-lbfgs></a>Test the my-lbfgs Optimizer&nbsp;<a class=headline-hash href=#a-idtest-my-lbfgsa-test-the-my-lbfgs-optimizer>¶</a></h2><p>We can demonstrate the utility of our custom <code>Optimizer</code> in both C++ and Python:</p><table><tr><th>Rosenbrock + My-LBFGS - C++</th><th>Rosenbrock + My-LBFGS - Python</th></tr><tr><td><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=c1>// Include qcor, you don&#39;t need to do this 
+</span><span class=c1>// if you have quantum kernels defined
+</span><span class=c1>// e.g. __qpu__ void foo(...) {...}
+</span><span class=c1>// we don&#39;t in this example, so include qcor.hpp
+</span><span class=c1></span>
+<span class=cp>#include</span> <span class=cpf>&#34;qcor.hpp&#34;</span><span class=cp>
+</span><span class=cp></span><span class=k>using</span> <span class=k>namespace</span> <span class=n>qcor</span><span class=p>;</span>
+
+<span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+  <span class=c1>// Get the Optimizer
+</span><span class=c1></span>  <span class=k>auto</span> <span class=n>optimizer</span> <span class=o>=</span> <span class=n>createOptimizer</span><span class=p>(</span><span class=s>&#34;my-lbfgs&#34;</span><span class=p>);</span>
+
+  <span class=c1>// Define a 2-dimensional Rosenbrock function
+</span><span class=c1></span>  <span class=c1>// and its gradient
+</span><span class=c1></span>  <span class=k>auto</span> <span class=n>rosenbrock</span> <span class=o>=</span> <span class=p>[](</span><span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>vector</span><span class=o>&lt;</span><span class=kt>double</span><span class=o>&gt;&amp;</span> <span class=n>x</span><span class=p>,</span>
+                       <span class=n>std</span><span class=o>::</span><span class=n>vector</span><span class=o>&lt;</span><span class=kt>double</span><span class=o>&gt;&amp;</span> <span class=n>gradx</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>gradx</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span> <span class=o>=</span> <span class=o>-</span><span class=mi>2</span> <span class=o>*</span> <span class=p>(</span><span class=mi>1</span> <span class=o>-</span> <span class=n>x</span><span class=p>[</span><span class=mi>0</span><span class=p>])</span> <span class=o>+</span> <span class=mf>400.</span> <span class=o>*</span> <span class=p>(</span><span class=n>x</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span> <span class=o>*</span> <span class=n>x</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span> <span class=o>*</span> <span class=n>x</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span> <span class=o>-</span> <span class=n>x</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span> <span class=o>*</span> <span class=n>x</span><span class=p>[</span><span class=mi>0</span><span class=p>]);</span>
+    <span class=n>gradx</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span> <span class=o>=</span> <span class=mi>200</span> <span class=o>*</span> <span class=p>(</span><span class=n>x</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span> <span class=o>-</span> <span class=n>x</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span> <span class=o>*</span> <span class=n>x</span><span class=p>[</span><span class=mi>0</span><span class=p>]);</span>
+    <span class=k>auto</span> <span class=n>val</span> <span class=o>=</span> <span class=p>(</span><span class=mf>1.</span> <span class=o>-</span> <span class=n>x</span><span class=p>[</span><span class=mi>0</span><span class=p>])</span> <span class=o>*</span> <span class=p>(</span><span class=mf>1.</span> <span class=o>-</span> <span class=n>x</span><span class=p>[</span><span class=mi>0</span><span class=p>])</span> <span class=o>+</span>
+           <span class=mi>100</span> <span class=o>*</span> <span class=p>(</span><span class=n>x</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span> <span class=o>-</span> <span class=n>x</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span> <span class=o>*</span> <span class=n>x</span><span class=p>[</span><span class=mi>0</span><span class=p>])</span> <span class=o>*</span> <span class=p>(</span><span class=n>x</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span> <span class=o>-</span> <span class=n>x</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span> <span class=o>*</span> <span class=n>x</span><span class=p>[</span><span class=mi>0</span><span class=p>]);</span>
+    <span class=k>return</span> <span class=n>val</span><span class=p>;</span>
+  <span class=p>};</span>
+
+  <span class=c1>// Create the OptFunction, noting it has 2 parameters
+</span><span class=c1></span>  <span class=n>OptFunction</span> <span class=n>opt_function</span><span class=p>(</span><span class=n>rosenbrock</span><span class=p>,</span> <span class=mi>2</span><span class=p>);</span>
+
+  <span class=c1>// Run the Optimizer
+</span><span class=c1></span>  <span class=k>auto</span> <span class=p>[</span><span class=n>opt_val</span><span class=p>,</span> <span class=n>opt_params</span><span class=p>]</span> <span class=o>=</span> <span class=n>optimizer</span><span class=o>-&gt;</span><span class=n>optimize</span><span class=p>(</span><span class=n>opt_function</span><span class=p>);</span>
+  
+  <span class=c1>// Print the results
+</span><span class=c1></span>  <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;OptVal: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>opt_val</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>;</span>
+  <span class=k>for</span> <span class=p>(</span><span class=k>auto</span> <span class=nl>x</span> <span class=p>:</span> <span class=n>opt_params</span><span class=p>)</span> <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=n>x</span> <span class=o>&lt;&lt;</span> <span class=s>&#34; &#34;</span><span class=p>;</span>
+  <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=n>std</span><span class=o>::</span><span class=n>endl</span><span class=p>;</span>
+<span class=p>}</span>
+
+</code></pre></div><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>qcor rosenbrock.cpp <span class=p>;</span> ./a.out
+</code></pre></div></td><td><div class=highlight><pre class=chroma><code class=language-python data-lang=python><span class=c1># Import createOptimizer from qcor</span>
+<span class=kn>from</span> <span class=nn>qcor</span> <span class=kn>import</span> <span class=n>createOptimizer</span>
+
+<span class=c1># Create the Optimizer</span>
+<span class=n>optimizer</span> <span class=o>=</span> <span class=n>createOptimizer</span><span class=p>(</span><span class=s1>&#39;my-lbfgs&#39;</span><span class=p>)</span>
+
+<span class=c1># Define the 2-d Rosenbrock function and its gradient</span>
+<span class=c1># Note that in Python, we have to return the gradient</span>
+<span class=c1># as part of a return tuple</span>
+<span class=k>def</span> <span class=nf>rosenbrock</span><span class=p>(</span><span class=n>x</span><span class=p>):</span>
+    <span class=c1># Compute gradient</span>
+    <span class=n>g</span> <span class=o>=</span> <span class=p>[</span><span class=o>-</span><span class=mi>2</span><span class=o>*</span><span class=p>(</span><span class=mi>1</span><span class=o>-</span><span class=n>x</span><span class=p>[</span><span class=mi>0</span><span class=p>])</span> <span class=o>+</span> <span class=mf>400.</span><span class=o>*</span><span class=p>(</span><span class=n>x</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span><span class=o>**</span><span class=mi>3</span> <span class=o>-</span> <span class=n>x</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span><span class=o>*</span><span class=n>x</span><span class=p>[</span><span class=mi>0</span><span class=p>]),</span> <span class=mi>200</span> <span class=o>*</span> <span class=p>(</span><span class=n>x</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span> <span class=o>-</span> <span class=n>x</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span><span class=o>**</span><span class=mi>2</span><span class=p>)]</span>
+    <span class=c1># compute function</span>
+    <span class=n>xx</span> <span class=o>=</span> <span class=p>(</span><span class=mf>1.</span><span class=o>-</span><span class=n>x</span><span class=p>[</span><span class=mi>0</span><span class=p>])</span><span class=o>**</span><span class=mi>2</span> <span class=o>+</span> <span class=mi>100</span><span class=o>*</span><span class=p>(</span><span class=n>x</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span><span class=o>-</span><span class=n>x</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span><span class=o>**</span><span class=mi>2</span><span class=p>)</span><span class=o>**</span><span class=mi>2</span>
+    <span class=k>return</span> <span class=n>xx</span><span class=p>,</span> <span class=n>g</span>
+
+<span class=c1># Run the Optimizer, noting it has 2 parameters</span>
+<span class=c1># OptFunction is implicit in Python</span>
+<span class=n>opt_val</span><span class=p>,</span><span class=n>opt_params</span> <span class=o>=</span> <span class=n>optimizer</span><span class=o>.</span><span class=n>optimize</span><span class=p>(</span><span class=n>rosenbrock</span><span class=p>,</span><span class=mi>2</span><span class=p>)</span>
+
+<span class=c1># Print the results</span>
+<span class=k>print</span><span class=p>(</span><span class=s1>&#39;Result = &#39;</span><span class=p>,</span> <span class=n>opt_val</span><span class=p>,</span><span class=n>opt_paramas</span><span class=p>)</span>
+
+
+</code></pre></div><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>python3 rosenbrock.py 
+</code></pre></div></td></tr></table><p>The <code>Optimizer</code> can also be used for variational quantum algorithms. Here we demonstrate using this <code>Optimizer</code> for the VQE algorithm.</p><table><tr><th>Deuteron VQE, My-LBFGS - C++</th><th>Deuteron VQE, My-LBFGS - Python</th></tr><tr><td><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=n>__qpu__</span> <span class=kt>void</span> <span class=nf>ansatz</span><span class=p>(</span><span class=n>qreg</span> <span class=n>q</span><span class=p>,</span> <span class=kt>double</span> <span class=n>theta</span><span class=p>)</span> <span class=p>{</span>
+  <span class=n>X</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>]);</span>
+  <span class=n>Ry</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span> <span class=n>theta</span><span class=p>);</span>
+  <span class=n>CX</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span> <span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>]);</span>
+<span class=p>}</span>
+
+<span class=kt>int</span> <span class=nf>main</span><span class=p>(</span><span class=kt>int</span> <span class=n>argc</span><span class=p>,</span> <span class=kt>char</span> <span class=o>**</span><span class=n>argv</span><span class=p>)</span> <span class=p>{</span>
+  
+  <span class=c1>// Programmer needs to set 
+</span><span class=c1></span>  <span class=c1>// the number of variational params
+</span><span class=c1></span>  <span class=k>auto</span> <span class=n>n_variational_params</span> <span class=o>=</span> <span class=mi>1</span><span class=p>;</span>
+
+  <span class=c1>// Create the Deuteron Hamiltonian
+</span><span class=c1></span>  <span class=k>auto</span> <span class=n>H</span> <span class=o>=</span> <span class=mf>5.907</span> <span class=o>-</span> <span class=mf>2.1433</span> <span class=o>*</span> <span class=n>X</span><span class=p>(</span><span class=mi>0</span><span class=p>)</span> <span class=o>*</span> <span class=n>X</span><span class=p>(</span><span class=mi>1</span><span class=p>)</span> <span class=o>-</span> 
+        <span class=mf>2.1433</span> <span class=o>*</span> <span class=n>Y</span><span class=p>(</span><span class=mi>0</span><span class=p>)</span> <span class=o>*</span> <span class=n>Y</span><span class=p>(</span><span class=mi>1</span><span class=p>)</span> <span class=o>+</span> <span class=mf>.21829</span> <span class=o>*</span> <span class=n>Z</span><span class=p>(</span><span class=mi>0</span><span class=p>)</span> <span class=o>-</span>
+        <span class=mf>6.125</span> <span class=o>*</span> <span class=n>Z</span><span class=p>(</span><span class=mi>1</span><span class=p>);</span>
+
+  <span class=c1>// Create the ObjectiveFunction, here we want to run VQE
+</span><span class=c1></span>  <span class=c1>// need to provide ansatz, Operator, and number of params
+</span><span class=c1></span>  <span class=c1>// we also provide a gradient strategy to use
+</span><span class=c1></span>  <span class=k>auto</span> <span class=n>objective</span> <span class=o>=</span> <span class=n>createObjectiveFunction</span><span class=p>(</span>
+      <span class=n>ansatz</span><span class=p>,</span> <span class=n>H</span><span class=p>,</span> <span class=n>n_variational_params</span><span class=p>,</span>
+      <span class=p>{{</span><span class=s>&#34;gradient-strategy&#34;</span><span class=p>,</span> <span class=s>&#34;parameter-shift&#34;</span><span class=p>}});</span>
+
+  <span class=c1>// Create the Optimizer.
+</span><span class=c1></span>  <span class=k>auto</span> <span class=n>optimizer</span> <span class=o>=</span> <span class=n>createOptimizer</span><span class=p>(</span><span class=s>&#34;my-lbfgs&#34;</span><span class=p>);</span>
+
+  <span class=c1>// Optimize, get opt val and params
+</span><span class=c1></span>  <span class=k>auto</span> <span class=p>[</span><span class=n>opt_val</span><span class=p>,</span> <span class=n>opt_params</span><span class=p>]</span> <span class=o>=</span> <span class=n>optimizer</span><span class=o>-&gt;</span><span class=n>optimize</span><span class=p>(</span><span class=o>*</span><span class=n>objective</span><span class=p>.</span><span class=n>get</span><span class=p>());</span>
+  
+  <span class=c1>// Print the results
+</span><span class=c1></span>  <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;OptVal: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>opt_val</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>;</span>
+  <span class=k>for</span> <span class=p>(</span><span class=k>auto</span> <span class=nl>x</span> <span class=p>:</span> <span class=n>opt_params</span><span class=p>)</span> <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=n>x</span> <span class=o>&lt;&lt;</span> <span class=s>&#34; &#34;</span><span class=p>;</span>
+  <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=n>std</span><span class=o>::</span><span class=n>endl</span><span class=p>;</span>
+<span class=p>}</span>
+
+</code></pre></div><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>qcor vqe_mylbfgs.cpp <span class=p>;</span> ./a.out
+</code></pre></div></td><td><div class=highlight><pre class=chroma><code class=language-python data-lang=python><span class=c1># Import data structures from qcor</span>
+<span class=kn>from</span> <span class=nn>qcor</span> <span class=kn>import</span> <span class=o>*</span>
+<span class=c1># Define a quantum kernel in python using </span>
+<span class=c1># the @qjit decorator for quantum just in </span>
+<span class=c1># time compilation</span>
+<span class=nd>@qjit</span>
+<span class=k>def</span> <span class=nf>ansatz</span><span class=p>(</span><span class=n>q</span><span class=p>:</span> <span class=n>qreg</span><span class=p>,</span> <span class=n>theta</span><span class=p>:</span> <span class=nb>float</span><span class=p>):</span>
+    <span class=n>X</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>])</span>
+    <span class=n>Ry</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span> <span class=n>theta</span><span class=p>)</span>
+    <span class=n>CX</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span> <span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>])</span>
+        
+<span class=c1># Programmer needs to set</span>
+<span class=c1># the number of variational params</span>
+<span class=n>n_variational_params</span> <span class=o>=</span> <span class=mi>1</span>
+
+<span class=c1># Create the Deuteron Hamiltonian</span>
+<span class=n>H</span> <span class=o>=</span> <span class=o>-</span><span class=mf>2.1433</span> <span class=o>*</span> <span class=n>X</span><span class=p>(</span><span class=mi>0</span><span class=p>)</span> <span class=o>*</span> <span class=n>X</span><span class=p>(</span><span class=mi>1</span><span class=p>)</span> <span class=o>-</span> <span class=mf>2.1433</span> <span class=o>*</span> \
+        <span class=n>Y</span><span class=p>(</span><span class=mi>0</span><span class=p>)</span> <span class=o>*</span> <span class=n>Y</span><span class=p>(</span><span class=mi>1</span><span class=p>)</span> <span class=o>+</span> <span class=o>.</span><span class=mi>21829</span> <span class=o>*</span> <span class=n>Z</span><span class=p>(</span><span class=mi>0</span><span class=p>)</span> <span class=o>-</span> <span class=mf>6.125</span> <span class=o>*</span> <span class=n>Z</span><span class=p>(</span><span class=mi>1</span><span class=p>)</span> <span class=o>+</span> <span class=mf>5.907</span>
+
+<span class=c1># Create the ObjectiveFunction, here we want to run VQE</span>
+<span class=c1># need to provide ansatz, Operator, and number of params</span>
+<span class=c1># we also provide a gradient strategy to use</span>
+<span class=n>objective</span> <span class=o>=</span> <span class=n>createObjectiveFunction</span><span class=p>(</span>
+    <span class=n>ansatz</span><span class=p>,</span> <span class=n>H</span><span class=p>,</span> <span class=n>n_variational_params</span><span class=p>,</span>
+    <span class=p>{</span><span class=s1>&#39;gradient-strategy&#39;</span><span class=p>:</span> <span class=s1>&#39;parameter-shift&#39;</span><span class=p>})</span>
+
+<span class=c1># Create the Optimizer.</span>
+<span class=n>optimizer</span> <span class=o>=</span> <span class=n>createOptimizer</span><span class=p>(</span><span class=s2>&#34;my-lbfgs&#34;</span><span class=p>)</span>
+
+<span class=c1># Optimize, get opt val and params</span>
+<span class=n>opt_val</span><span class=p>,</span> <span class=n>opt_params</span> <span class=o>=</span> <span class=n>optimizer</span><span class=o>.</span><span class=n>optimize</span><span class=p>(</span><span class=n>objective</span><span class=p>)</span>
+
+<span class=c1># Print the results</span>
+<span class=k>print</span><span class=p>(</span><span class=s1>&#39;Result = &#39;</span><span class=p>,</span> <span class=n>opt_val</span><span class=p>,</span> <span class=n>opt_params</span><span class=p>)</span>
+</code></pre></div><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>python3 vqe_mylbfgs.py 
+</code></pre></div></td></tr></table><h2 id=a-idcustom-lbfgs-optionsa-custom-optimizer-options><a id=custom-lbfgs-options></a>Custom Optimizer Options&nbsp;<a class=headline-hash href=#a-idcustom-lbfgs-optionsa-custom-optimizer-options>¶</a></h2><p><code>Optimizers</code> also support the injection of custom options, structured as a map of strings (keys) to any type (values).
+This is useful for customizing the <code>Optimizer</code> workflow strategy. Let&rsquo;s demonstrate this with the <code>MyLBFGSOptimizer</code>, and specifically,
+let&rsquo;s make it so that the programmer can modify a <code>max-iterations</code> parameter.</p><p>Every <code>Optimizer</code> has access to a protected class member called <code>options</code>. This is a <code>HeterogeneousMap</code> instance that maps string keys to
+any type (using the
+<a href=https://en.cppreference.com/w/cpp/utility/any><code>std::any</code></a>
+template type, or in Python, just a <code>dict</code>). This options
+map is injected into the <code>Optimizer</code> at creation, and is available for implementations of <code>Optimizer::optimize()</code> to use. Let&rsquo;s modify
+the <code>MyLBFGSOptimizer::optimize()</code> implementation to support a <code>max-iterations</code> key:</p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=n>OptResult</span> <span class=n>MyLBFGSOptimizer</span><span class=o>::</span><span class=n>optimize</span><span class=p>(</span><span class=n>OptFunction</span> <span class=o>&amp;</span><span class=n>function</span><span class=p>)</span> <span class=p>{</span>
+  
+  <span class=p>...</span> <span class=n>rest</span> <span class=n>of</span> <span class=n>the</span> <span class=n>code</span> <span class=n>from</span> <span class=n>above</span> <span class=p>...</span> 
+
+  <span class=kt>int</span> <span class=n>max_iters</span> <span class=o>=</span> <span class=mi>100</span><span class=p>;</span>
+  <span class=k>if</span> <span class=p>(</span><span class=n>options</span><span class=p>.</span><span class=n>keyExists</span><span class=o>&lt;</span><span class=kt>int</span><span class=o>&gt;</span><span class=p>(</span><span class=s>&#34;max-iterations&#34;</span><span class=p>))</span> <span class=p>{</span>
+    <span class=n>max_iters</span> <span class=o>=</span> <span class=n>options</span><span class=p>.</span><span class=n>get</span><span class=o>&lt;</span><span class=kt>int</span><span class=o>&gt;</span><span class=p>(</span><span class=s>&#34;max-iterations&#34;</span><span class=p>);</span>
+  <span class=p>}</span>
+
+  <span class=c1>// Set up LBFGS++ parameters
+</span><span class=c1></span>  <span class=n>LBFGSParam</span><span class=o>&lt;</span><span class=kt>double</span><span class=o>&gt;</span> <span class=n>param</span><span class=p>;</span>
+  <span class=n>param</span><span class=p>.</span><span class=n>epsilon</span> <span class=o>=</span> <span class=mf>1e-6</span><span class=p>;</span>
+  <span class=n>param</span><span class=p>.</span><span class=n>max_iterations</span> <span class=o>=</span> <span class=n>max_iters</span><span class=p>;</span>
+
+  <span class=p>...</span> <span class=n>rest</span> <span class=n>of</span> <span class=n>the</span> <span class=n>code</span> <span class=n>from</span> <span class=n>above</span> <span class=p>...</span>
+
+<span class=p>}</span>
+</code></pre></div><p><code>HeterogeneousMap</code> exposes a <code>keyExists&lt;T>(key:string) : bool</code> to indicate if a given key exists in the map with the correct template type. <code>Optimizer</code> developers should always check first to see if the key exists, as programmers may or may not provide the given optional parameter. If the key does exists with the given type, then developers can leverage the <code>get&lt;T>(key:string):T</code> method on the map to get the value of the input parameter, and use it to influence the rest of the <code>Optimizer::optimize</code> workflow.</p><p>Users of the <code>Optimizer</code> can provide custom options via the <code>createOptimizer</code> function in the following manner (shown in both C++ and Python):</p><table><tr><th>Custom Optimizer Options - C++</th><th>Custom Optimizer Options - Python</th></tr><tr><td><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp>  <span class=c1>// Create the Optimizer.
+</span><span class=c1></span>  <span class=k>auto</span> <span class=n>optimizer</span> <span class=o>=</span> <span class=n>createOptimizer</span><span class=p>(</span><span class=s>&#34;my-lbfgs&#34;</span><span class=p>,</span> <span class=p>{{</span><span class=s>&#34;max-iterations&#34;</span><span class=p>,</span> <span class=mi>50</span><span class=p>}});</span>
+</code></pre></div></td><td><div class=highlight><pre class=chroma><code class=language-python data-lang=python><span class=c1># Create the Optimizer.</span>
+<span class=n>optimizer</span> <span class=o>=</span> <span class=n>createOptimizer</span><span class=p>(</span><span class=s2>&#34;my-lbfgs&#34;</span><span class=p>,</span> <span class=p>{</span><span class=s1>&#39;max-iterations&#39;</span><span class=p>:</span><span class=mi>50</span><span class=p>})</span>
+</code></pre></div></td></tr></table><div class=edit-meta><br><a href=https://github.com/aide-qc/deploy//edit/master/website/content/developers/implement_optimizer.md class=edit-page><i class="fas fa-pen-square"></i>Edit on GitHub</a></div><nav class=pagination><a class="nav nav-prev" href=/deploy/developers/ title="Developer Guide"><i class="fas fa-arrow-left" aria-hidden=true></i>Prev - Developer Guide</a>
+<a class="nav nav-next" href=/deploy/developers/clang_syntax/ title="QCOR Clang Syntax Handler">Next - QCOR Clang Syntax Handler <i class="fas fa-arrow-right" aria-hidden=true></i></a></nav><footer><p class=powered>Powered by <a href=https://gohugo.io>Hugo</a>. Theme by <a href=https://themes.gohugo.io/hugo-theme-techdoc/>TechDoc</a>. Designed by <a href=https://github.com/thingsym/hugo-theme-techdoc>Thingsym</a>.</p></footer></main><div class=sidebar><nav class=slide-menu><ul><li><a href=https://aide-qc.github.io/deploy>Home</a></li><li class=has-sub-menu><a href=/deploy/background/>Background<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=/deploy/background/qcor/>QCOR C++ Compiler and JIT Engine</a></li><li><a href=/deploy/background/xacc/>XACC Quantum Programming Framework</a></li><li><a href=/deploy/background/project/></a></li></ul></li><li class="parent has-sub-menu"><a href=/deploy/developers/>Developer Guide<span class="mark opened">-</span></a><ul class=sub-menu><li class=active><a href=/deploy/developers/implement_optimizer/>Implement a new Optimizer</a></li><li><a href=/deploy/developers/clang_syntax/>QCOR Clang Syntax Handler</a></li></ul></li><li class=has-sub-menu><a href=/deploy/getting_started/>Getting Started<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=/deploy/getting_started/Faq/>Frequently Asked Questions</a></li><li><a href=/deploy/getting_started/build_from_source/>Build Everything from Source</a></li></ul></li><li class=has-sub-menu><a href=/deploy/users/>User Guide<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=/deploy/users/hello_world/>Hello World</a></li><li><a href=/deploy/users/operators/>Operators</a></li><li><a href=/deploy/users/pass_manager/>Pass Manager</a></li><li><a href=/deploy/users/qjit/>Quantum JIT (QJIT)</a></li><li><a href=/deploy/users/quantum_kernels/>Quantum Kernels</a></li><li><a href=/deploy/users/remote_qpu_creds/>Remote QPU Credentials</a></li><li><a href=/deploy/users/tnqvm/>Tensor Network Quantum Virtual Machine</a></li><li><a href=/deploy/users/using_optimizer/>Using an Optimizer</a></li><li><a href=/deploy/users/variational/>Variational Algorithms</a></li></ul></li></ul></nav><div class=sidebar-footer></div></div></div><a href=# id=backtothetop-fixed class=backtothetop data-backtothetop-duration=600 data-backtothetop-easing=easeOutQuart data-backtothetop-fixed-fadein=1000 data-backtothetop-fixed-fadeout=1000 data-backtothetop-fixed-bottom=10 data-backtothetop-fixed-right=20><span class="fa-layers fa-fw"><i class="fas fa-circle"></i><i class="fas fa-arrow-circle-up"></i></span></a></div></body></html>
