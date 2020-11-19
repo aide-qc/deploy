@@ -52,6 +52,14 @@ if [ "$DISTRO" == "Ubuntu" ]; then
        fi
     else
        echo "Skipping apt-get install, will try homebrew at user request (--use-brew)."
+
+       # If this is 18.04, then need to install special build-essential with glibc 2.29
+       lsb_release -cs | grep 'bionic' &> /dev/null
+       if [ $? == 0 ]; then
+           sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 04EE7237B7D453EC 648ACFD622F3D138
+           echo "deb http://ftp.us.debian.org/debian testing main contrib non-free" >> sudo tee -a /etc/apt/sources.list 
+           sudo apt-get update && apt-get install -y build-essential || true
+       fi
     fi
 
 elif [[ $DISTRO == "fedora"* ]]; then
