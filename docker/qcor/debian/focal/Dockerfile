@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y wget gnupg ca-certificates lsb-release 
 
 RUN apt-get install -y git ninja-build && git clone https://github.com/ornl-qci/qcor \
    && cd qcor && mkdir build && cd build \
-   && CC=gcc-10 CXX=g++-10 /root/.local/bin/cmake .. -G Ninja -DQCOR_CPACK_DEB_PLATFORM=focal -DXACC_DIR=/usr/local/xacc -DCMAKE_INSTALL_PREFIX=/usr/local/xacc \
-   && /root/.local/bin/cmake  --build . --target install \ 
-   && /root/.local/bin/cpack 
+   && which cmake && cmake --version \
+   && CC=gcc-10 CXX=g++-10 cmake .. -G Ninja -DQCOR_CPACK_DEB_PLATFORM=focal -DXACC_DIR=/usr/local/xacc -DCMAKE_INSTALL_PREFIX=/usr/local/xacc \
+   && cmake  --build . --target install \ 
+   && cpack 
