@@ -8,7 +8,7 @@ Therefore you must first install Hombebrew (simple instructions on Homebrew [hom
 
 Once Homebrew is installed, run the following command from your terminal 
 ```bash 
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/aide-qc/deploy/master/aide_qc/homebrew/install.sh)"
+/bin/bash -c "$(curl -fsSL https://aide-qc.github.io/deploy/install.sh)"
 ```
 This will install the AIDE-QC stack, including XACC and QCOR. 
 
