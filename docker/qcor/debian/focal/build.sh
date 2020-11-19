@@ -3,7 +3,7 @@
 set -e
 
 # Build the deb via Docker
-docker build -t qcor/focal . #--no-cache
+docker build -t qcor/focal . --no-cache
 docker run -d -P -it --name focalqcor qcor/focal
 id=$(docker ps -aqf "name=focalqcor") && docker cp $id:/qcor/build/qcor-1.0.0.deb . 
 docker stop focalqcor 
