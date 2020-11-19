@@ -14,7 +14,7 @@ deploy build_site:
     - git add background categories css developers getting_started js tags users *.html *.xml *.png 
     - git status
     - export n_changes=$(git diff --cached --numstat | wc -l)
-    - if [ "$n_changes" -gt "0" ]; then git commit -m "updating aide-qc software docs page" && git push -f aideqcdeploy HEAD:gh-pages && git remote remove aideqcdeploy ; else echo "Ran the else statement, no files to upload." ; fi
+    - if [ "$n_changes" -gt "0" ]; then git commit -m "updating aide-qc software docs page" && git push -f aideqcdeploy HEAD:master && git remote remove aideqcdeploy ; else echo "Ran the else statement, no files to upload." ; fi
 
 docker run_docker_deploy_xacc_bionic:
   stage: deploy
