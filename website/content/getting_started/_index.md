@@ -14,7 +14,7 @@ The second way to get AIDE-QC on your system is to install directly from source.
 ## Install AIDE-QC
 To install AIDE-QC, run the following command from your local terminal (will require `sudo` credentials):
 ```sh
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/aide-qc/deploy/master/aide_qc/install.sh)"
+/bin/bash -c "$(curl -fsSL https://aide-qc.github.io/deploy/install.sh)"
 ```
 > **_NOTE:_** You may need to evaluate your $HOME/.bashrc (or .bash_profile on MacOS) in order to configure your install. If `brew list` fails, run `source ~/.bashrc` or `source ~/.bash_profile`.
 
@@ -26,7 +26,7 @@ We recommend you add this to your `.bashrc` or `.bash_profile`.
 
 Note: On Ubuntu, the installation script will attempt to use `apt-get` over our custom [Homebrew](https://brew.sh) installer. If you would rather use Homebrew instead of `apt-get`, run the following 
 ```sh
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/aide-qc/deploy/master/aide_qc/install.sh) '$1'" bash --use-brew
+/bin/bash -c "$(curl -fsSL https://aide-qc.github.io/deploy/install.sh) '$1'" bash --use-brew
 ```
 
 Now, test out your install (next section). 
