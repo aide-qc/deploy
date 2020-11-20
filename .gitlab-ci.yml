@@ -6,6 +6,8 @@ deploy build_site:
     stage: build-site
     only:
     - master
+    except:
+    - schedules
     script:
     - cd website && hugo --minify -d ../public && cd ..
     - git config remote.aideqcdeploy.url >&- || git remote add -t master aideqcdeploy https://amccaskey:$AIDEQC_ACCESS_TOKEN@github.com/aide-qc/deploy
