@@ -5,10 +5,10 @@ Maintainer: mccaskeyaj@ornl.gov
 Installed-Size: 37651
 Depends: xacc, clang-syntax-handler
 Filename: ./qcor-1.0.0.deb
-Size: 8275192
-MD5sum: 6b47aca0cccdacdd69ebe1467a745a6c
-SHA1: 0342be50b64ed9a6bd06c83c5e2023aa688032c6
-SHA256: 644c67fe88a56d429e9b4888516ee4db3cefa204fb1502891e0e86a402e77d5e
+Size: 8275374
+MD5sum: 2a272d3c0c7c065b0a4f3f44279b66c1
+SHA1: 62b225f212883a45811f6b7fa2cfbaf0c7beef85
+SHA256: 63f4ffe78ccc896ff1c891767e3f147210a9ad981c80b88a990f79cd01f625b3
 Section: base
 Priority: optional
 Description: qcor is a c++ compiler for heterogenous quantum-classical computing
