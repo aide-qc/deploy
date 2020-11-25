@@ -5,6 +5,8 @@ draft: false
 weight: 15
 ---
 
+## <a id="overview"></a> Overview 
+
 The QSim library provides domain-specific tools for quantum simulation on quantum computes. It supports problems such as ground-state energy computations or time-dependent simulations.
 
 The library comprises the main drivers, so-called workflows (`QuantumSimulationWorkflow`), which encapsulate the procedure (classical and quantum routines) to solve the quantum simulation problem. The input to QSim's workflows is a `QuantumSimulationModel`, specifying all the parameters of the quantum simulation problem, e.g., the observable operator, the Hamiltonian operator, which may be different from the observable or is time-dependent, etc.
@@ -22,3 +24,289 @@ For advanced users or workflow developers, the QSim library also provides interf
 The first can be used during workflow execution to construct the quantum circuits for evaluation, e.g., variational circuits of a particular structure or first-order Trotter circuits for Hamiltonian evolution. 
 
 The latter provides an abstraction for quantum backend execution and post-processing actions to compute the expectation value of an observable operator. For example, the cost function evaluator may add necessary gates to change the basis according to the observable operators, analyze the bitstring result to extract the expectation value. For more information, please refer to the Custom Workflow section.
+
+## <a id="workflow"></a> Workflow 
+
+
+### <a id="vqe-workflow"></a> Variational Quantum Eigensolver - VQE 
+
+<table>
+<tr>
+<th>Deuteron VQE - C++</th>
+<th>Deuteron VQE - Python</th>
+</tr>
+<tr>
+<td>
+
+```cpp
+#include "qcor_qsim.hpp"
+
+// Define a fixed ansatz as a QCOR kernel
+__qpu__ void ansatz(qreg q, double theta) {
+  X(q[0]);
+  auto exponent_op = X(0) * Y(1) - Y(0) * X(1);
+  exp_i_theta(q, theta, exponent_op);
+}
+
+int main(int argc, char **argv) {
+  // Create the Deuteron Hamiltonian
+  auto H = 5.907 - 2.1433 * X(0) * X(1) - 2.143 * Y(0) * Y(1) + 0.21829 * Z(0) -
+           6.125 * Z(1);
+  const auto num_qubits = 2;
+  const auto num_params = 1;
+  auto problemModel =
+      qsim::ModelBuilder::createModel(ansatz, H, num_qubits, num_params);
+  auto optimizer = createOptimizer("nlopt");
+  // Instantiate a VQE workflow with the nlopt optimizer
+  auto workflow = qsim::getWorkflow("vqe", {{"optimizer", optimizer}});
+
+  // Result should contain the ground-state energy along with the optimal
+  // parameters.
+  auto result = workflow->execute(problemModel);
+
+  const auto energy = result.get<double>("energy");
+  std::cout << "Ground-state energy = " << energy << "\n";
+  return 0;
+}
+```
+</td>
+<td>
+
+```python
+from qcor import * 
+
+# Define the deuteron hamiltonian 
+H = -2.1433 * X(0) * X(1) - 2.1433 * \
+    Y(0) * Y(1) + .21829 * Z(0) - 6.125 * Z(1) + 5.907
+
+# Define the quantum kernel by providing a 
+# python function that is annotated with qjit for 
+# quantum just in time compilation
+@qjit
+def ansatz(q : qreg, theta : float):
+    X(q[0])
+    Ry(q[1], theta)
+    CX(q[1], q[0])
+
+# Create the problem model, provide the state 
+# prep circuit, Hamiltonian and note how many qubits
+# and variational parameters 
+num_params = 1
+problemModel = qsim.ModelBuilder.createModel(ansatz, H, num_params)
+      
+# Create the NLOpt derivative free optimizer
+optimizer = createOptimizer('nlopt')
+
+# Create the VQE workflow
+workflow = qsim.getWorkflow('vqe', {'optimizer': optimizer})
+
+# Execute and print the result
+result = workflow.execute(problemModel)
+energy = result['energy']
+print(energy)
+```
+</td>
+</tr>
+</table>
+
+### <a id="qaoa-workflow"></a> Quantum Approximate Optimization Algorithm - QAOA 
+
+<table>
+<tr>
+<th>Deuteron QAOA - C++</th>
+<th>Deuteron QAOA - Python</th>
+</tr>
+<tr>
+<td>
+
+```cpp
+#include "qcor_qsim.hpp"
+
+int main(int argc, char **argv) {
+  // Create the Deuteron Hamiltonian
+  auto H = 5.907 - 2.1433 * X(0) * X(1) - 2.143 * Y(0) * Y(1) + 0.21829 * Z(0) -
+           6.125 * Z(1);
+  auto problemModel = qsim::ModelBuilder::createModel(H);
+  auto optimizer = createOptimizer("nlopt");
+  // Instantiate a QAOA workflow with the nlopt optimizer
+  // "steps" = the (p) param in QAOA algorithm.
+  auto workflow = qsim::getWorkflow("qaoa", {{"optimizer", optimizer}, {"steps", 8}});
+
+  // Result should contain the ground-state energy along with the optimal
+  // parameters.
+  auto result = workflow->execute(problemModel);
+
+  const auto energy = result.get<double>("energy");
+  std::cout << "Ground-state energy = " << energy << "\n";
+  return 0;
+}
+```
+</td>
+<td>
+
+```python
+from qcor import * 
+
+# Solving deuteron problem using qsim QAOA
+
+# Define the deuteron hamiltonian 
+H = -2.1433 * X(0) * X(1) - 2.1433 * \
+    Y(0) * Y(1) + .21829 * Z(0) - 6.125 * Z(1) + 5.907
+
+problemModel = qsim.ModelBuilder.createModel(H)
+      
+# Create the NLOpt derivative free optimizer
+optimizer = createOptimizer('nlopt')
+
+# Create the QAOA workflow with p = 8 steps
+workflow = qsim.getWorkflow('qaoa', {'optimizer': optimizer, 'steps': 8})
+
+# Execute and print the result
+result = workflow.execute(problemModel)
+energy = result['energy']
+print(energy)
+```
+</td>
+</tr>
+</table>
+
+
+### <a id="qite-workflow"></a> Quantum Imaginary Time Evolution - QITE 
+
+<table>
+<tr>
+<th>QITE - C++</th>
+<th>QITE - Python</th>
+</tr>
+<tr>
+<td>
+
+```cpp
+#include "qcor_qsim.hpp"
+int main(int argc, char **argv) {
+  auto ham = 0.7071067811865475 * X(0) + 0.7071067811865475 * Z(0);
+  // Number of QITE time steps and step size
+  const int nbSteps = 25;
+  const double stepSize = 0.1;
+  auto problemModel = qsim::ModelBuilder::createModel(ham);
+  auto workflow =
+      qsim::getWorkflow("qite", {{"steps", nbSteps}, {"step-size", stepSize}});
+  auto result = workflow->execute(problemModel);
+  const auto energy = result.get<double>("energy");
+  // Array of energy values at each QITE step
+  const auto energyAtStep = result.get<std::vector<double>>("exp-vals");
+  std::cout << "Ground state energy: " << energy << "\n";
+  return 0;
+}
+```
+</td>
+<td>
+
+```python
+from qcor import * 
+
+# Target H = 1/sqrt(2)(X + Z)
+H = 0.7071067811865475 * X(0) + 0.7071067811865475 * Z(0)
+
+# The number of Trotter steps 
+nbSteps = 25
+
+# The Trotter step size
+stepSize = 0.1
+
+# Create the problem model
+problemModel = qsim.ModelBuilder.createModel(H)
+
+# Create the QITE workflow
+workflow = qsim.getWorkflow('qite', {'steps': nbSteps, 'step-size': stepSize})
+
+# Execute and print the result
+result = workflow.execute(problemModel)
+
+# Final energy:
+energy = result['energy']
+print('Ground state energy =', energy)
+
+# Energy values along QITE steps
+td_energy_vals = result['exp-vals']
+print(td_energy_vals)
+```
+</td>
+</tr>
+</table>
+
+### <a id="td-ham-workflow"></a> Time-dependent Simulation 
+
+<table>
+<tr>
+<th>Time-dependent - C++</th>
+<th>Time-dependent - Python</th>
+</tr>
+<tr>
+<td>
+
+```cpp
+#include "qcor_qsim.hpp"
+
+int main(int argc, char **argv) {
+  // Time-dependent Hamiltonian
+  qsim::TdObservable H = [](double t) {
+    // Parameters:
+    const double Jz = 2 * M_PI * 2.86265 * 1e-3;
+    const double epsilon = Jz; 
+    const double omega = 4.8 * 2 * M_PI * 1e-3;
+    return -Jz * Z(0) * Z(1) - Jz * Z(1) * Z(2) -
+           epsilon * std::cos(omega * t) * (X(0) + X(1) + X(2));
+  };
+
+  // Observable = average magnetization
+  auto observable = (1.0 / 3.0) * (Z(0) + Z(1) + Z(2));
+
+  // Example: build model and TD workflow 
+  auto problemModel = qsim::ModelBuilder::createModel(observable, H);
+  // Trotter step = 3fs, number of steps = 100 -> end time = 300fs
+  auto workflow = qsim::getWorkflow(
+      "td-evolution", {{"method", "trotter"}, {"dt", 3.0}, {"steps", 100}});
+
+  // Result should contain the observable expectation value along Trotter steps.
+  auto result = workflow->execute(problemModel);
+  // Get the observable values (average magnetization)
+  const auto obsVals = result.get<std::vector<double>>("exp-vals");
+
+  return 0;
+}
+
+```
+</td>
+<td>
+
+```python
+from qcor import *
+import numpy as np
+
+# Time-dependent Hamiltonian: 
+# Returns the Pauli operators at a time point.
+def td_hamiltonian(t):
+  Jz = 2 * np.pi * 2.86265 * 1e-3
+  epsilon = Jz
+  omega = 4.8 * 2 * np.pi * 1e-3
+  return -Jz * Z(0) * Z(1)  - Jz * Z(1) * Z(2) + (-epsilon * np.cos(omega * t)) * (X(0) + X(1) + X(2)) 
+
+# Observable = average magnetization
+observable = (1.0 / 3.0) * (Z(0) + Z(1) + Z(2))
+
+# Build model and TD workflow 
+problemModel = qsim.ModelBuilder.createModel(observable, td_hamiltonian)
+# TD workflow with hyper-parameters: 
+# Trotter step = 3fs, number of steps = 100 -> end time = 300fs
+workflow = qsim.getWorkflow(
+      "td-evolution", {"method": "trotter", "dt": 3.0, "steps": 100})
+
+# Result contains the observable expectation value along Trotter steps.
+result = workflow.execute(problemModel)
+obsVals = result["exp-vals"]
+print(obsVals)
+```
+</td>
+</tr>
+</table>
