@@ -50,6 +50,7 @@ The user guide pages are listed below, with pertinent sub-sections called out fo
 
 [Quantum Simulation (QSim) Library  ](qsim)
 * [Overview](qsim/#overview)
+* [Simulation Model](qsim/#problem-model)
 * [Workflow](qsim/#workflow)
     * [Variational Quantum Eigensolver - VQE](qsim/#vqe-workflow)
     * [Quantum Approximate Optimization Algorithm - QAOA](qsim/#qaoa-workflow)
