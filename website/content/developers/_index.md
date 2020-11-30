@@ -12,3 +12,5 @@ weight: 10
 * [Custom Optimizer Options](implement_optimizer/#custom-lbfgs-options)
 
 [QCOR Clang Syntax Handler](clang_syntax)
+
+[Implement a new QSim workflow](implement_qsim_workflow)
