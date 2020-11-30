@@ -15,7 +15,7 @@ if [ "$1" == "-qcs" ]; then
     dpkg -x xacc-1.0.0.deb $HOME/.aideqc_install 
     dpkg -x LLVM-10.0.0git-Linux.deb $HOME/.aideqc_install 
     
-    python3 -m pip install cmake ipopo qsearch scikit-quant --user 
+    python3 -m pip install cmake ipopo scikit-quant --user 
     export MY_CWD=$PWD
     git clone https://github.com/eclipse/xacc
     cd xacc/quantum/plugins/rigetti/qcs 
@@ -170,7 +170,7 @@ fi
 
 brew tap aide-qc/deploy
 brew install qcor
-python3 -m pip install --user ipopo cmake qsearch scikit-quant
+python3 -m pip install --user ipopo cmake scikit-quant
 echo "AIDE-QC installed via Homebrew."
 echo ""
 echo ""
