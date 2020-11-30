@@ -5,6 +5,13 @@ draft: false
 weight: 15
 ---
 
+### Table of Contents
+* [Overview](#overview)
+* [Simulation Model](#problem-model)
+* [Workflow](#workflow)
+* [Cost Function Evaluate](#cost-eval)
+* [Implement a new workflow](#new-workflow)
+
 ## <a id="overview"></a> Overview 
 
 The QSim library provides domain-specific tools for quantum simulation on quantum computes. It supports problems such as ground-state energy computations or time-dependent simulations.
@@ -457,3 +464,127 @@ The `qpe` cost evaluator has the following configuration parameters:
 |--------------------|------------------------------------------------------------------|
 | `steps`            | The number of data points for classical signal processing. Default is 5, which is the minimum number of samples to estimate the energy of two-eigenvalue operators.|
 | `verified`            | (True/False) If true, it will run the verified phase estimation protocol as described in this [paper](https://arxiv.org/pdf/2010.02538.pdf).|
+
+The `qpe` cost evaluator can be explicitly instantiated by using the `getObjEvaluator` helper function and providing the
+operator to be evaluated, the name key (`qpe`), and any additional parameters.
+
+For example,
+
+- In C++:
+
+```cpp
+auto observable = Z(0) + Z(1) + Z(2);
+auto vqpeEvaluator = qsim::getObjEvaluator(observable, "qpe", {{"verified", true}});
+```
+
+- In Python:
+
+```python
+observable = Z(0) + Z(1) + Z(2)
+vqpeEvaluator = qsim.getObjEvaluator(observable, 'qpe', {'verified': True})
+```
+
+## <a id="new-workflow"></a> Implement a new workflow
+
+The workflow is described via an abstract `QuantumSimulationWorkflow` class:
+
+```cpp
+// Quantum Simulation Workflow (Protocol)
+// This can handle both variational workflow (optimization loop)
+// as well as simple Trotter evolution workflow.
+
+// Workflow result is stored in a HetMap
+using QuantumSimulationResult = HeterogeneousMap;
+
+// Abstract workflow:
+class QuantumSimulationWorkflow : public Identifiable {
+public:
+  virtual bool initialize(const HeterogeneousMap &params) = 0;
+  virtual QuantumSimulationResult
+  execute(const QuantumSimulationModel &model) = 0;
+};
+```
+
+Similar to [creating a new `Optimizer`](/deploy/developers/implement_optimizer/), to create a new QSim workflow, one need to subclass `QuantumSimulationWorkflow` and provide a concrete implementation.
+
+Specifically, we need to provide a `name` and `description` string (`Identifiable` interface) and implement the `initialize` and `execute` methods of the `QuantumSimulationWorkflow` interface. Generally-speaking, `initialize` is where we parse any user-provided configuration parameters that the workflow supports, and `execute` is where we run the workflow procedure. This may include constructing quantum circuits, evaluating those circuits to estimate operator expectation values, classical processing and/or optimization, etc.
+
+For example, looking at the `vqe` workflow implementation, one may find this subclass declaration:
+
+```cpp
+// VQE-type workflow which involves an optimization loop, i.e. an Optimizer.
+class VqeWorkflow : public QuantumSimulationWorkflow {
+public:
+  virtual bool initialize(const HeterogeneousMap &params) override;
+  virtual QuantumSimulationResult
+  execute(const QuantumSimulationModel &model) override;
+
+  virtual const std::string name() const override { return "vqe"; }
+  virtual const std::string description() const override { return ""; }
+
+private:
+  std::shared_ptr<Optimizer> optimizer;
+  HeterogeneousMap config_params;
+};
+```
+
+In the above code, we create a new workflow named `vqe` and add any internal member variables as needed.
+
+The simplified implementation of the `initialize` and `execute` methods are shown below.
+
+```cpp
+bool VqeWorkflow::initialize(const HeterogeneousMap &params) {
+  const std::string DEFAULT_OPTIMIZER = "nlopt";
+  optimizer.reset();
+  if (params.pointerLikeExists<Optimizer>("optimizer")) {
+    optimizer =
+        xacc::as_shared_ptr(params.getPointerLike<Optimizer>("optimizer"));
+  } else {
+    optimizer = createOptimizer(DEFAULT_OPTIMIZER);
+  }
+  config_params = params;
+  // VQE workflow requires an optimizer
+  return (optimizer != nullptr);
+}
+
+QuantumSimulationResult
+VqeWorkflow::execute(const QuantumSimulationModel &model) {
+  auto nParams = model.user_defined_ansatz->nParams();
+  evaluator = getEvaluator(model.observable, config_params);
+
+  OptFunction f(
+      [&](const std::vector<double> &x, std::vector<double> &dx) {
+        auto kernel = model.user_defined_ansatz->evaluate_kernel(x);
+        auto energy = evaluator->evaluate(kernel);
+        return energy;
+      },
+      nParams);
+
+  auto result = optimizer->optimize(f);
+  return {{"energy", result.first}, {"opt-params", result.second}};
+}
+```
+
+As previously described, the VQE algorithm requires a classical optimizer hence we need to figure out which optimizer should be used during initialization.  In this case, we look for the `optimizer` key if provided. Otherwise, we just fall back to a default one (`nlopt` in this case).
+
+Similarly, one may preset (providing default values) and parse any number of configuration parameters that his custom workflow support.
+
+During workflow's `execute`, one can take advantage of QCOR API's to construct the quantum circuit. In this simple VQE workflow, the ansatz circuit was provided as a QCOR kernel functor (`user_defined_ansatz`), hence, we just need to evaluate (resolving variational gate parameters) during the optimization loop.
+
+One key element of implementing workflow execution is to hook up the appropriate cost function evaluator. In that regard, QSim provides a utility function `getEvaluator` which will pick the appropriate evaluator based on user configurations, e.g., selecting the `default` (tomography-based) evaluator if none provided. 
+
+Workflow developers are free to *not* use the `getEvaluator` utility if the workflow doesn't need to evaluate (observe) the operator or requires custom logic in selecting the evaluator.
+
+Lastly, one needs to register the new workflow implementation with the QSim library so that users can retrieve the new workflow via the QSim workflow registry (via QSim `getWorkflow` function).
+
+This can be achieved by adding a `RegisterService` entry to the `QuantumSimulationActivator::Start` method, e.g.
+
+```cpp
+void Start(BundleContext context) {
+ // .... Other workflows
+ context.RegisterService<qsim::QuantumSimulationWorkflow>(
+        std::make_shared<qsim::VqeWorkflow>());
+}
+```
+
+Congratulations! You have completed a new QSim workflow that will be available to all QSim users (C++ and Python). 
