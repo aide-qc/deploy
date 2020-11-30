@@ -424,3 +424,36 @@ Time-dependent simulation workflow returns the following information:
 |   Result Key       |                  Description                                     | 
 |--------------------|------------------------------------------------------------------|
 | `exp-vals`         | The time-stepping expectation value data.                        |
+
+## <a id="cost-eval"></a> Cost Function (Observable) Evaluate 
+
+A common utility that is required across QSim workflows is the ability to *observe* the expectation value of an arbitrary operator at a specific quantum state (e.g., after the ansatz circuit or after a certain number of Trotter steps). 
+
+This capability is provided by the `CostFunctionEvaluator` interface in the QSim library.
+
+There are two `CostFunctionEvaluator` implementations currently available: the `default` one, which is based on the partial tomography method, and the quantum phase estimation (`qpe`)-based method, which can be optionally error-mitigated via the protocol described in this [paper](https://arxiv.org/pdf/2010.02538.pdf).
+
+All workflows accept an optional `evaluator` key in addition to their set of configuration parameters to specify the `CostFunctionEvaluator` (via a name string or an instantiated instance). If none provided, the partial-tomography (`default`) one will be used.
+
+The `CostFunctionEvaluator` configuration parameters, if any, can be provided in the workflow parameter pack, which will be forwarded to the `CostFunctionEvaluator` appropriately.
+
+The `CostFunctionEvaluator` will use the runtime QPU instance to execute the necessary sub-circuits to evaluate the operator expectation value. 
+
+### <a id="partial-tomo"></a> Partial Tomography 
+
+The `default` CostFunctionEvaluator is based on the partial tomography method, whereby change-of-basis gates are added to measure the expectation values of each product term in the operator.
+
+Users don't need to provide the `evaluator` key (and set it to `default`) when creating the workflow if they wish to use this method because all workflows assume this option.
+
+It's worth noting that error mitigation (if any) for this cost evaluator is performed at the QPU level via conventional QCOR error mitigation decorators. 
+
+### <a id="phase-est"></a> Quantum Phase Estimation
+
+The `qpe` cost evaluator is based on the time-series quantum phase estimation method to estimate the expectation value. In particular, it makes use of the [Prony](https://en.wikipedia.org/wiki/Prony%27s_method) signal processing method to extract the expectation value estimate from the time-series QPE signal.
+
+The `qpe` cost evaluator has the following configuration parameters:
+
+|   Param Key        |                  Description                                     | 
+|--------------------|------------------------------------------------------------------|
+| `steps`            | The number of data points for classical signal processing. Default is 5, which is the minimum number of samples to estimate the energy of two-eigenvalue operators.|
+| `verified`            | (True/False) If true, it will run the verified phase estimation protocol as described in this [paper](https://arxiv.org/pdf/2010.02538.pdf).|
