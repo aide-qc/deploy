@@ -48,7 +48,7 @@ The user guide pages are listed below, with pertinent sub-sections called out fo
 * [Pythonic QJIT](qjit/#pyqjit)
     * [Advanced Variational Argument Translation](qjit/#pyqjit_translate)
 
-[Quantum Simulation (QSim) Library  ](qsim)
+[Quantum Simulation (QSim) Library](qsim)
 * [Overview](qsim/#overview)
 * [Simulation Model](qsim/#problem-model)
 * [Workflow](qsim/#workflow)
