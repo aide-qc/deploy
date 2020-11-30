@@ -77,8 +77,11 @@ When the Hamiltonian operator is different from the observable operator, e.g. fo
 
 ## <a id="workflow"></a> Workflow 
 
+The QSim library has built-in implementations for Variational Quantum Eigensolver algorithm (VQE), Quantum Approximate Optimization Algorithm (QAOA), Quantum Imaginary Time Evolution (QITE), and general time-dependent evolution workflows. Here, we show simple examples for common use cases and explain extra configuration parameters that each workflow may take.
 
 ### <a id="vqe-workflow"></a> Variational Quantum Eigensolver - VQE 
+
+A Variational Quantum Eigensolver algorithm workflow instance can be retrieved from the QSim registry by calling getWorkflow("vqe") as shown in the below example.
 
 <table>
 <tr>
@@ -159,7 +162,27 @@ print(energy)
 </tr>
 </table>
 
+As we may see, users can provide a specific optimizer instance to the VQE workflow to be used. By default, the `nlopt`(gradient-free) optimizer will be used if none is provided. 
+
+VQE workflow returns the following information:
+
+|   Result Key       |                  Description                                     | 
+|--------------------|------------------------------------------------------------------|
+| `energy`           | The final (optimized) energy (observable expectation value).     | 
+| `opt-params`       | The list of optimized variational parameters.                    |
+
 ### <a id="qaoa-workflow"></a> Quantum Approximate Optimization Algorithm - QAOA 
+
+The Quantum Approximate Optimization Algorithm (QAOA) workflow has the following configuration parameters:
+
+|   Param Key        |                  Description                                           | Default |
+|--------------------|------------------------------------------------------------------------|---------|
+| `optimizer`        | The classical optimizer.| `nlopt`             |
+| `steps`            | The integer parameter p as specified [here](https://arxiv.org/abs/1411.4028). | 1    |
+| `parameter-scheme` | `Standard` or `Extended` parameterization scheme. In the `Extended` scheme, all rotation angles are considered as independent variational parameters.  |  `Standard`       |
+| `gradient-strategy`| The gradient strategy to be used if the optimizer is gradient-based.     | `autodiff`  |
+
+A simple QAOA workflow execution is shown in the below example.
 
 <table>
 <tr>
@@ -220,8 +243,23 @@ print(energy)
 </tr>
 </table>
 
+QAOA workflow returns the following information:
+
+|   Result Key       |                  Description                                     | 
+|--------------------|------------------------------------------------------------------|
+| `energy`           | The final (optimized) energy (observable expectation value).     | 
+| `opt-params`       | The list of optimized QAOA parameters (depending on the parameterization scheme).|
 
 ### <a id="qite-workflow"></a> Quantum Imaginary Time Evolution - QITE 
+
+The Quantum Imaginary Time Evolution (QITE) workflow **requires** the following configuration parameters:
+
+|   Param Key        |                  Description                                     | 
+|--------------------|------------------------------------------------------------------|
+| `step-size`        | The imaginary time step.                                         | 
+| `steps`            | The number of time steps to evolve the system in imaginary time. |
+
+Below is a simple example of using the QITE workflow.
 
 <table>
 <tr>
@@ -285,7 +323,27 @@ print(td_energy_vals)
 </tr>
 </table>
 
+QITE workflow returns the following information:
+
+|   Result Key       |                  Description                                     | 
+|--------------------|------------------------------------------------------------------|
+| `energy`           | The final energy at the end of the QITE time-stepping.           | 
+| `exp-vals`         | QITE time-stepping expectation value data.                       |
+| `circuit`          | The complete QITE circuit.                                       |
+
 ### <a id="td-ham-workflow"></a> Time-dependent Simulation 
+
+The time-dependent simulation (`td-evolution`) workflow **requires** the following configuration parameters:
+
+|   Param Key        |                  Description                                     | 
+|--------------------|------------------------------------------------------------------|
+| `dt`               | The Trotter time step.                                           | 
+| `steps`            | The number of time steps to evolve the system.                   |
+
+To execute a time-dependent simulation workflow, the problem model should provide a Hamiltonian function
+taking time value as the input and returning the Hamiltonian operator.
+
+This is illustrated in the below example.
 
 <table>
 <tr>
@@ -316,7 +374,7 @@ int main(int argc, char **argv) {
   auto problemModel = qsim::ModelBuilder::createModel(observable, H);
   // Trotter step = 3fs, number of steps = 100 -> end time = 300fs
   auto workflow = qsim::getWorkflow(
-      "td-evolution", {{"method", "trotter"}, {"dt", 3.0}, {"steps", 100}});
+      "td-evolution", {{"dt", 3.0}, {"steps", 100}});
 
   // Result should contain the observable expectation value along Trotter steps.
   auto result = workflow->execute(problemModel);
@@ -350,7 +408,7 @@ problemModel = qsim.ModelBuilder.createModel(observable, td_hamiltonian)
 # TD workflow with hyper-parameters: 
 # Trotter step = 3fs, number of steps = 100 -> end time = 300fs
 workflow = qsim.getWorkflow(
-      "td-evolution", {"method": "trotter", "dt": 3.0, "steps": 100})
+      "td-evolution", {"dt": 3.0, "steps": 100})
 
 # Result contains the observable expectation value along Trotter steps.
 result = workflow.execute(problemModel)
@@ -360,3 +418,9 @@ print(obsVals)
 </td>
 </tr>
 </table>
+
+Time-dependent simulation workflow returns the following information:
+
+|   Result Key       |                  Description                                     | 
+|--------------------|------------------------------------------------------------------|
+| `exp-vals`         | The time-stepping expectation value data.                        |
