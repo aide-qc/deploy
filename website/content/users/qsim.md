@@ -14,23 +14,23 @@ weight: 15
 
 ## <a id="overview"></a> Overview 
 
-The QSim library provides domain-specific tools for quantum simulation on quantum computes. It supports problems such as ground-state energy computations or time-dependent simulations.
+The QSim library provides domain-specific tools for quantum simulation on quantum computers. It supports problems such as ground-state energy computations or time-dependent simulations.
 
-The library comprises the main drivers, so-called workflows (`QuantumSimulationWorkflow`), which encapsulate the procedure (classical and quantum routines) to solve the quantum simulation problem. The input to QSim's workflows is a `QuantumSimulationModel`, specifying all the parameters of the quantum simulation problem, e.g., the observable operator, the Hamiltonian operator, which may be different from the observable or is time-dependent, etc.
+The library comprises the main drivers, so-called [workflows](#workflow) (`QuantumSimulationWorkflow`), which encapsulate the procedure (classical and quantum routines) to solve the quantum simulation problem. The input to QSim's workflows is a [`QuantumSimulationModel`](#problem-model), specifying all the parameters of the quantum simulation problem, e.g., the observable operator, the Hamiltonian operator, which may be different from the observable or is time-dependent, etc.
 
 The QSim library provides a `ModelBuilder` factory to facilitate `QuantumSimulationModel` creation for common use cases.
 
-Built-in workflows can be retrieved from the registry by using getWorkflow helper function with the corresponding workflow name, such as `vqe`, `qaoa`, `qite`, etc. 
+Built-in workflows can be retrieved from the registry by using `getWorkflow` helper function with the corresponding workflow name, such as `vqe`, `qaoa`, `qite`, etc. 
 
-Some workflow may require additional configurations, which should be provided when calling getWorkflow. Please refer to specific workflow sections for information about their supported configurations. 
+Some workflow may require additional configurations, which should be provided when calling `getWorkflow`. Please refer to specific workflow sections for information about their supported configurations. 
 
-The retrieved workflow instance can then be used to solve the `QuantumSimulationModel` problem using the execute method, which returns the result information specific to that workflow, such as the ground-state energy for variational quantum eigensolver workflow or the time-series expectation values for time-dependent quantum simulation.
+The retrieved workflow instance can then be used to solve the `QuantumSimulationModel` problem using the `execute` method, which returns the result information specific to that workflow, such as the ground-state energy for variational quantum eigensolver workflow or the time-series expectation values for time-dependent quantum simulation.
 
 For advanced users or workflow developers, the QSim library also provides interfaces for state-preparation (ansatz) circuit generation and cost function (observable) evaluator. 
 
 The first can be used during workflow execution to construct the quantum circuits for evaluation, e.g., variational circuits of a particular structure or first-order Trotter circuits for Hamiltonian evolution. 
 
-The latter provides an abstraction for quantum backend execution and post-processing actions to compute the expectation value of an observable operator. For example, the cost function evaluator may add necessary gates to change the basis according to the observable operators, analyze the bitstring result to extract the expectation value. For more information, please refer to the Custom Workflow section.
+The latter provides an abstraction for quantum backend execution and post-processing actions to compute the expectation value of an observable operator. For example, the cost function evaluator may add necessary gates to change the basis according to the observable operators, analyze the bitstring result to extract the expectation value. For more information, please refer to the Cost Function Evaluate [section](#cost-eval).
 
 ## <a id="problem-model"></a> Quantum Simulation Model 
 
@@ -42,9 +42,9 @@ At the minimum, the problem model contains information about the target observab
 
 ```cpp
 // Create the Deuteron Hamiltonian
-  auto H = 5.907 - 2.1433 * X(0) * X(1) - 2.143 * Y(0) * Y(1) + 0.21829 * Z(0) -
-           6.125 * Z(1);
-  auto problemModel = qsim::ModelBuilder::createModel(H);
+auto H = 5.907 - 2.1433 * X(0) * X(1) - 2.143 * Y(0) * Y(1) + 0.21829 * Z(0) -
+          6.125 * Z(1);
+auto problemModel = qsim::ModelBuilder::createModel(H);
 ```
 
 - In Python:
@@ -88,7 +88,7 @@ The QSim library has built-in implementations for Variational Quantum Eigensolve
 
 ### <a id="vqe-workflow"></a> Variational Quantum Eigensolver - VQE 
 
-A Variational Quantum Eigensolver algorithm workflow instance can be retrieved from the QSim registry by calling getWorkflow("vqe") as shown in the below example.
+A Variational Quantum Eigensolver algorithm workflow instance can be retrieved from the QSim registry by calling `getWorkflow("vqe")` as shown in the below example.
 
 <table>
 <tr>
@@ -574,6 +574,8 @@ During workflow's `execute`, one can take advantage of QCOR API's to construct t
 One key element of implementing workflow execution is to hook up the appropriate cost function evaluator. In that regard, QSim provides a utility function `getEvaluator` which will pick the appropriate evaluator based on user configurations, e.g., selecting the `default` (tomography-based) evaluator if none provided. 
 
 Workflow developers are free to *not* use the `getEvaluator` utility if the workflow doesn't need to evaluate (observe) the operator or requires custom logic in selecting the evaluator.
+
+Workflow developers are free to select which information to be returned at the end of the workflow execution. In particular, the workflow returns a heterogeneous key-value map (dictionary). In the VQE example, we returned the optimized energy value as well as the optimal parameters.
 
 Lastly, one needs to register the new workflow implementation with the QSim library so that users can retrieve the new workflow via the QSim workflow registry (via QSim `getWorkflow` function).
 
