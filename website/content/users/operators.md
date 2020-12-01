@@ -45,10 +45,34 @@ exposed `adag(int)` and `a(int)` API calls representing fermion creation and ann
 TODO finish this...
 
 ## <a id="chemistry"></a> Chemistry Operators
+AIDE-QC puts forward an `Operator` implementation to model complex fermionic operators as Hamiltonians from quantum chemistry. This is enabled due to the interface with the established quantum chemistry packages `PySCF` and `Psi4`.
+
+`PySCF` can be installed via `pip` (other installation methods on the `PySCF` [documentation](http://pyscf.org/pyscf/install.html)):
+
+```sh
+pip install pyscf
+```
+
+Users are referred to the `Psi4` [manual](http://psicode.org/psi4manual/1.3.2/external.html) for the installation that suits their needs and is compatible with their Python install.
+
+The C++ example below illustrates how to obtain the Hamiltonian for the hydrogen molecule:
+
+```cpp
+// Psi4
+auto geom_str = "0 1\nH 0.0 0.0 0.0\nH 0.0 0.0 0.7\nsymmetry c1";
+auto H = createOperator("psi4", {{"geometry", geom_str}, {"basis", "sto-3g"}});
+// PySCF
+auto geom_str = "H 0.0 0.0 0.0\nH 0.0 0.0 0.7";
+auto H = createOperator("pyscf", {{"geometry", geom_str}, {"basis", "sto-3g"}});
+```
+
+Similarly, with Python:
 
 ```python
-H = createOperator('psi4', {'geometry':geom_str, 'basis':'sto-3g'})
+geom_str = '0 1\nH 0.0 0.0 0.0\nH 0.0 0.0 0.7\nsymmetry c1'
+H = createOperator('psi4', {'geometry':, 'basis':'sto-3g'})
 -or-
+geom_str = 'H 0.0 0.0 0.0\nH 0.0 0.0 0.7'
 H = createOperator('pyscf', {'geometry':geom_str, 'basis':'sto-3g'})
 ```
 
