@@ -35,17 +35,17 @@ custom input parameters. Here we demonstrate a few examples of this in C++ and P
   auto optimizer = createOptimizer("nlopt");
 
   // Get NLOpt, but use L-BFGS
-  auto optimizer = createOptimizer("nlopt", {{"nlopt-optimizer", "l-bfgs"}});
+  auto optimizer = createOptimizer("nlopt", {{"algorithm", "l-bfgs"}});
 
   // Get NLOpt, specify max function evaluations
-  auto optimizer = createOptimizer("nlopt", {{"nlopt-optimizer", "l-bfgs"}, {"nlopt-maxeval", 100}});
+  auto optimizer = createOptimizer("nlopt", {{"algorithm", "l-bfgs"}, {"nlopt-maxeval", 100}});
 
   // Get the MLPack optimizer, default is adam
   auto optimizer = createOptimizer("mlpack");
 
   // Get MLPack, Stochastic Gradient Descent 
   // with custom step-size
-  auto optimizer = createOptimizer("mlpack", {{"mlpack-optimizer", "sgd"}, {"mlpack-step-size", .3}});
+  auto optimizer = createOptimizer("mlpack", {{"algorithm", "sgd"}, {"mlpack-step-size", .3}});
 ```
 </td>
 <td>
@@ -56,17 +56,17 @@ custom input parameters. Here we demonstrate a few examples of this in C++ and P
 optimizer = createOptimizer('nlopt')
 
 # Get NLOpt, but use L-BFGS
-optimizer = createOptimizer('nlopt', {'nlopt-optimizer': 'l-bfgs'})
+optimizer = createOptimizer('nlopt', {'algorithm': 'l-bfgs'})
 
 # Get NLOpt, specify max function evaluations
-optimizer = createOptimizer('nlopt', {'nlopt-optimizer': 'l-bfgs', 'nlopt-maxeval': 100})
+optimizer = createOptimizer('nlopt', {'algorithm': 'l-bfgs', 'nlopt-maxeval': 100})
 
 # Get the MLPack optimizer, default is adam
 optimizer = createOptimizer('mlpack')
 
 # Get MLPack, Stochastic Gradient Descent 
 # with custom step-size
-optimizer = createOptimizer('mlpack', {'mlpack-optimizer': 'sgd', 'mlpack-step-size': .3})
+optimizer = createOptimizer('mlpack', {'algorithm': 'sgd', 'mlpack-step-size': .3})
 ```
 </td>
 </tr>
@@ -170,10 +170,10 @@ For each, we detail its available options - their key name, default values, and 
 
 ### <a id="avail-mlpack"></a> mlpack
 Get reference to this `Optimizer` with `createOptimizer("mlpack")`. Get reference to the various optimization strategies with 
-`createOptimizer("mlpack", {{"mlpack-optimizer", "adadelta"}})` (`adadelta` as an example). See below for all strategies and associated 
+`createOptimizer("mlpack", {{"algorithm", "adadelta"}})` (`adadelta` as an example). See below for all strategies and associated 
 options. 
 
-| ``mlpack-optimizer``   | Optimizer Parameter    |                  Parameter Description                          | default | type   |
+|    ``algorithm``       | Optimizer Parameter    |                  Parameter Description                          | default | type   |
 |------------------------|------------------------|-----------------------------------------------------------------|---------|--------|
 |        adam            | mlpack-step-size       | Step size for each iteration.                                   | .5      | double |
 |                        | mlpack-beta1           | Exponential decay rate for the first moment estimates.          | .7      | double |
@@ -218,11 +218,11 @@ options.
 
 ### <a id="avail-nlopt"></a> nlopt
 Get reference to this `Optimizer` with `createOptimizer("nlopt")`. Get reference to the various optimization strategies with 
-`createOptimizer("nlopt", {{"nlopt-optimizer", "l-bfgs"}})` (`l-bfgs` as an example). See below for all strategies and associated 
+`createOptimizer("nlopt", {{"algorithm", "l-bfgs"}})` (`l-bfgs` as an example). See below for all strategies and associated 
 options. 
 
 
-| ``nlopt-optimizer``    | Optimizer Parameter    |                  Parameter Description                          | default | type   |
+|     ``algorithm``      | Optimizer Parameter    |                  Parameter Description                          | default | type   |
 |------------------------|------------------------|-----------------------------------------------------------------|---------|--------|
 |        cobyla          | nlopt-ftol             | Maximum absolute tolerance to terminate algorithm.              | 1e-6    | double |
 |                        | nlopt-maxeval          | Maximum number of iterations allowed                            | 1000    | int    |
@@ -230,3 +230,37 @@ options.
 |                        | nlopt-maxeval          | Maximum number of iterations allowed                            | 1000    | int    |
 |      nelder-mead       | nlopt-ftol             | Maximum absolute tolerance to terminate algorithm.              | 1e-6    | double |
 |                        | nlopt-maxeval          | Maximum number of iterations allowed                            | 1000    | int    |
+
+### <a id="scikitquant"></a> scikit-quant
+Get reference to this `Optimizer` with `createOptimizer("skquant")`. Get reference to the various optimization strategies with 
+`createOptimizer("skquant", {{"method", "imfil"}})` (`imfil` as an example). See below for all strategies and associated 
+options. 
+
+To use this `Optimizer` you must install it separately:
+```sh
+python3 -m pip install --user scikit-quant
+```
+
+
+|   ``algorithm``        | Optimizer Parameter    |                  Parameter Description                          | default | type   |
+|------------------------|------------------------|-----------------------------------------------------------------|---------|--------|
+|        (all)           | budget                 | Number of allowed function evaluations.                         | 100     | int    |
+
+### <a id="libcmaes"></a> libcmaes
+Get reference to this `Optimizer` with `createOptimizer("cmaes")`. Get reference to the various optimization strategies with 
+`createOptimizer("cmaes", {{"cmaes-max-iter", 100}})` (`cmaes-max-iter` as an example). See below for all strategies and associated 
+options. 
+
+To use this `Optimizer` you must install it separately:
+```sh
+git clone https://github.com/ornl-qci/libcmaes
+cd libcmaes && mkdir build && cd build
+cmake .. -DXACC_DIR=$(qcor -xacc-install) -DEIGEN3_INCLUDE_DIR=$(qcor -xacc-install)/include/eigen -DCMAKE_INSTALL_PREFIX=$HOME/.libcmaes
+make install
+```
+
+
+| Optimizer Parameter    |                  Parameter Description                          | default | type   |
+|------------------------|-----------------------------------------------------------------|---------|--------|
+| cmaes-max-iter         | Number of allowed cmaes iterations.                             | -1      | int    |
+| cmaes-max-feval        | Number of allowed function evaluations.                         | -1      | int    |

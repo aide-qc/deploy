@@ -33,6 +33,8 @@ The user guide pages are listed below, with pertinent sub-sections called out fo
 * [Available Optimizers](using_optimizer/#available-optimizers)
     * [mlpack](using_optimizer/#avail-mlpack)
     * [nlopt](using_optimizer/#avail-nlopt)
+    * [scikit-quant](using_optimizer/#scikitquant)
+    * [libcmaes](using_optimizer/#libcmaes)
 
 [Tensor Network Quantum Virtual Machine](tnqvm)
 * [Installing TNQVM](tnqvm/#installation)
@@ -47,6 +49,7 @@ The user guide pages are listed below, with pertinent sub-sections called out fo
 * [Use in C++](qjit)
 * [Pythonic QJIT](qjit/#pyqjit)
     * [Advanced Variational Argument Translation](qjit/#pyqjit_translate)
+    * [Circuit Synthesis](qjit/#circsynth)
 
 [Quantum Simulation (QSim) Library](qsim)
 * [Overview](qsim/#overview)
