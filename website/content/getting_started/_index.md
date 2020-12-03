@@ -20,7 +20,7 @@ To install AIDE-QC, run the following command from your local terminal (will req
 
 This will install the AIDE-QC software stack. You will have the `qcor` compiler, the underlying `xacc` framework, as well as pertinent Python bindings. If you are going to use the Python API, you'll need to export your `PYTHONPATH`
 ```sh
-export PYTHONPATH=$(qcor -qcor-install):$(qcor -xacc-install):$PYTHONPATH
+export PYTHONPATH=$(qcor -pythonpath):$PYTHONPATH
 ```
 We recommend you add this to your `.bashrc` or `.bash_profile`. 
 
@@ -31,6 +31,7 @@ If you are using the [Rigetti QCS](https://qcs.rigetti.com/) platform, and have 
 ```sh
 wget https://aide-qc.github.io/deploy/install.sh 
 bash install.sh -qcs
+export PYTHONPATH=$(qcor -pythonpath):$PYTHONPATH
 ```
 
 ## <a id="test"></a> Test out your install
