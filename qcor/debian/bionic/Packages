@@ -2,13 +2,13 @@ Package: qcor
 Version: 1.0.0
 Architecture: amd64
 Maintainer: mccaskeyaj@ornl.gov
-Installed-Size: 38569
+Installed-Size: 38829
 Depends: xacc, clang-syntax-handler
 Filename: ./qcor-1.0.0.deb
-Size: 8465654
-MD5sum: 3b6a4f939412373f4837f26f0c96e27d
-SHA1: 24178cc38d2833917e2cb09810fdfcefd6e2bf65
-SHA256: 6c08be6c30bc602d6cd1a417b188ea590412db0b3a39e64591512df5b1430207
+Size: 8507720
+MD5sum: 252b5e8cc33e4d9c2954f41e0e990b5b
+SHA1: 1c4319a950e6cb2c775b736832242687d95b2ab3
+SHA256: b418907b3d98dda1c6976e4994754858c042cda3d165eac3c1d11fc0414e8e07
 Section: base
 Priority: optional
 Description: qcor is a c++ compiler for heterogenous quantum-classical computing
