@@ -8,6 +8,7 @@ weight: 10
 [Add a New Quantum Backend](implement_accelerator)
 * [Background](implement_accelerator/#background)
 * [Concrete Example - Quimb Integration](implement_accelerator/#quimb)
+* [OpenQasm Compatible Backends](implement_accelerator/#openqasm)
 
 [Add a New Optimizer](implement_optimizer)
 * [Background](implement_optimizer/#background)

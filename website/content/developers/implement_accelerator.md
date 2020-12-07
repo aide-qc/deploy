@@ -484,3 +484,27 @@ std::map<std::string, int> execute_with_quimb(const std::string& code, const int
 ```
 
 You can now run the above examples with the `-shots 2048` command line arguments to observe results that contain that many shots. 
+
+## <a id="openqasm"></a> OpenQasm Compatible Backends
+Any backend can be integrated in a relatively straightforward manner if that backend 
+accepts an OpenQasm string as input. For instance, imagine a backend that takes as input a `qiskit.QuantumCircuit`. We can 
+easily interface the `Accelerator` backends with APIs like this via the AIDE-QC source-to-source translation capabilities. Let's take a look:
+```cpp
+void MyAccelerator::execute(std::shared_ptr<AcceleratorBuffer> buffer, const std::shared_ptr<CompositeInstruction> circuit) {
+  // Get the Staq OpenQasm Compiler
+  auto staq = xacc::getCompiler("staq");
+
+  // Translate the circuit to OpenQasm
+  auto openqasm_str = staq->translate(circuit);
+
+  // Execute with some function that accepts openqasm
+  // This could be any OpenQasm compatible API
+  auto results = execute_openqasm_api(openqasm_str);
+
+  // Add the results to the buffer
+  for (auto [bits, count] : bit_strings_counts) {
+      buffer->appendMeasurement(bits, count);
+  }
+}
+```
+We leave the details of this OpenQasm-compatible backend API opaque for the purposes of this demonstration, but `execute_openqasm_api()` may for example, take the OpenQasm code string and use it to construct a `qiskit.QuantumCircuit` and use that to execute with the `qiskit` infrastructure. Of course, this is just an example, the above code should enable integration with any backend that accepts OpenQasm as input. 
