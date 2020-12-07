@@ -1,5 +1,5 @@
 ---
-title: "Implement a new Circuit Synthesis Strategy"
+title: "Add a New Circuit Synthesis Strategy"
 date: 2019-11-29T15:26:15Z
 draft: false
 weight: 15
@@ -9,6 +9,7 @@ Here we describe how developers can extend the AIDE-QC stack with support for a 
 We define circuit synthesis at the black-box level: a unitary matrix goes in and a list of one and two 
 qubit gates come out. 
 
+## <a id="background"></a> Background
 To understand the class architecture for circuit synthesis strategies, it is important to understand the 
 internal intermediate representation that AIDE-QC leverages for compiled quantum kernels. AIDE-QC builds upon 
 the XACC intermediate representation, which exposes `Instruction` and `CompositeInstruction` abstract classes that 
@@ -27,7 +28,7 @@ a valid and strategy-specific implementation of `expand`. Of note - the compiler
 key with corresponding `Eigen::MatrixXcd` value for circuit synthesis strategies coming from the use of `decompose {}(...)` in 
 C++ or `with decompose(...) as mat_var:` in Python. 
 
-## Create Custom Circuit Synthesis Plugin
+## <a id="create-synth"></a> Create Custom Circuit Synthesis Plugin
 We start by creating a directory and the necessary files for the creation of a new circuit synthesis plugin
 ```sh
 mkdir my_circ_synth && cd my_circ_synth
