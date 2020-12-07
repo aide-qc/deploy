@@ -1,0 +1,380 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Add a New Quantum Backend - AIDE-QC</title><meta name=description content="Advancing Integrated Development Environments for Quantum Computing"><meta name=generator content="Hugo 0.76.5"><link href=https://aide-qc.github.io/deployindex.xml rel=alternate type=application/rss+xml><link rel=canonical href=https://aide-qc.github.io/deploy/developers/implement_accelerator/><link rel=stylesheet href=https://aide-qc.github.io/deploy/css/theme.css><script src=https://use.fontawesome.com/releases/v5.0.6/js/all.js></script><link rel=stylesheet href=https://aide-qc.github.io/deploy/css/chroma.min.css><script src=https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js></script><script src=https://cdn.jsdelivr.net/npm/jquery.easing@1.4.1/jquery.easing.min.js></script><script src=https://aide-qc.github.io/deploy/js/bundle.js></script><style>:root{}</style></head><body><div class=container><header><h1><div><img src=https://aide-qc.github.io/deploy/aide_qc_logo_v3.png width=40px align=absmiddle>
+AIDE-QC</div></h1><p class=description>Advancing Integrated Development Environments for Quantum Computing</p></header><div class=global-menu><nav><ul><li class=parent><a href>Community<i class="fas fa-angle-right"></i></a><ul class=sub-menu><li class=child><a href=https://aideqc.slack.com>AIDE-QC Slack</a></li><li class=child><a href=https://xacc-dev.slack.com>XACC/QCOR Slack</a></li></ul></li><li class=parent><a href=https://github.com/aide-qc>Source<i class="fas fa-angle-right"></i></a><ul class=sub-menu><li class=child><a href=https://ornl-qci.github.io/qcor-api-docs/>QCOR Doxygen</a></li><li class=child><a href=https://ornl-qci.github.io/xacc-api-docs/>XACC Doxygen</a></li><li class=child><a href=https://github.com/aide-qc/qcor>QCOR</a></li><li class=child><a href=https://github.com/aide-qc/xacc>XACC</a></li></ul></li><li><a href=https://github.com/aide-qc/aide-qc/issues>Bugs</a></li><li><a href=http://aide-qc.org>Project Page</a></li></ul></nav></div><div class=content-container><main><h1>Add a New Quantum Backend</h1><p>Here we detail how one might inject a new simulator or physical backend into the AIDE-QC software stack. The process for doing this is
+via the implementation of a new <code>xacc::Accelerator</code> sub-class, and its contribution to the stack as a new plugin library.</p><h2 id=a-idbackgrounda-background><a id=background></a>Background&nbsp;<a class=headline-hash href=#a-idbackgrounda-background>¶</a></h2><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=k>class</span> <span class=nc>Accelerator</span> <span class=o>:</span> <span class=k>public</span> <span class=n>Identifiable</span> <span class=p>{</span>
+<span class=k>public</span><span class=o>:</span>
+  <span class=k>virtual</span> <span class=kt>void</span> <span class=n>initialize</span><span class=p>(</span><span class=k>const</span> <span class=n>HeterogeneousMap</span> <span class=o>&amp;</span><span class=n>params</span> <span class=o>=</span> <span class=p>{})</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+  <span class=k>virtual</span> <span class=kt>void</span> <span class=nf>updateConfiguration</span><span class=p>(</span><span class=k>const</span> <span class=n>HeterogeneousMap</span> <span class=o>&amp;</span><span class=n>config</span><span class=p>)</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+  <span class=k>virtual</span> <span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>vector</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>string</span><span class=o>&gt;</span> <span class=n>configurationKeys</span><span class=p>()</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+  <span class=k>virtual</span> <span class=n>HeterogeneousMap</span> <span class=nf>getProperties</span><span class=p>();</span>
+  <span class=k>virtual</span> <span class=n>std</span><span class=o>::</span><span class=n>vector</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>pair</span><span class=o>&lt;</span><span class=kt>int</span><span class=p>,</span> <span class=kt>int</span><span class=o>&gt;&gt;</span> <span class=n>getConnectivity</span><span class=p>();</span>
+
+  <span class=c1>// Execute a single program. All results persisted to the buffer
+</span><span class=c1></span>  <span class=k>virtual</span> <span class=kt>void</span>
+  <span class=nf>execute</span><span class=p>(</span><span class=n>std</span><span class=o>::</span><span class=n>shared_ptr</span><span class=o>&lt;</span><span class=n>AcceleratorBuffer</span><span class=o>&gt;</span> <span class=n>buffer</span><span class=p>,</span>
+          <span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>shared_ptr</span><span class=o>&lt;</span><span class=n>CompositeInstruction</span><span class=o>&gt;</span> 
+             <span class=n>CompositeInstruction</span><span class=p>)</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+
+  <span class=c1>// Execute a vector of programs. A new buffer
+</span><span class=c1></span>  <span class=c1>// is expected to be appended as a child of the provided buffer.
+</span><span class=c1></span>  <span class=k>virtual</span> <span class=kt>void</span> <span class=nf>execute</span><span class=p>(</span><span class=n>std</span><span class=o>::</span><span class=n>shared_ptr</span><span class=o>&lt;</span><span class=n>AcceleratorBuffer</span><span class=o>&gt;</span> <span class=n>buffer</span><span class=p>,</span>
+          <span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>vector</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>shared_ptr</span><span class=o>&lt;</span><span class=n>CompositeInstruction</span><span class=o>&gt;&gt;</span>
+             <span class=n>CompositeInstructions</span><span class=p>)</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</code></pre></div><p>The <code>Accelerator</code> class structure is shown above. All <code>Accelerators</code> expose a mechanism for one-time initialization.
+The <code>initialize</code> method takes as input an optional <code>HeterogeneousMap</code> which enables initial user
+configuration of the <code>Accelerator</code>. Examples of input here include <code>shots</code> and <code>backend</code> (which physical backend to
+run on, i.e. <code>ibmq_vigo</code> for the <code>ibm</code> <code>Accelerator</code>). Users can also update any initialization parameters
+via the <code>updateConfiguration</code> method. Implementations should expose which input keys they expect via
+the <code>configurationKeys()</code> method. Next, <code>Accelerator</code> enables one to retrieve any pertinent properties from
+the backend the implementation delegates to. This is useful for users to gain access to error rates and other
+physical backend information. <code>Accelerator</code> exposes a mechanism for providing the backend processor physical
+qubit connectivity as a list or vector of edges.</p><p>Critically, <code>Accelerator</code> exposes a mechanism for execution of <code>CompositeInstructions</code>. <code>execute</code> takes as input
+an <code>AcceleratorBuffer</code> and the quantum circuit encoded as a <code>CompositeInstrucion</code>. The goal of <code>execute</code> implementations
+is to map the <code>CompositeInstruction</code> to the input required by the backend (map the IR to native gates, map those native gates to the format required by the backend API), affect execution of that circuit, and retrieve execution results and persist them to the input buffer. <code>Accelerator</code> also exposes an <code>execute</code> method that will execute a vector of <code>CompositeInstructions</code>.</p><p>The ability to map <code>CompositeInstructions</code> to the unique input format of the targeted backend is critical to the implementation of <code>execute</code> on <code>Accelerator</code> sub-types. To make this efficient, we have provided a means to walk the IR tree and <em><em>visit</em></em> each concrete node (which is itself an <code>Instruction</code>, with concrete implementations for the various quantum gates). Most <code>Accelerators</code> will make use of this in the following way:</p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=kt>void</span> <span class=n>MyAccelerator</span><span class=o>::</span><span class=n>execute</span><span class=p>(</span><span class=n>std</span><span class=o>::</span><span class=n>shared_ptr</span><span class=o>&lt;</span><span class=n>AcceleratorBuffer</span><span class=o>&gt;</span><span class=p>,</span> <span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>shared_ptr</span><span class=o>&lt;</span><span class=n>CompositeInstruction</span><span class=o>&gt;</span> <span class=n>circuit</span><span class=p>)</span> <span class=p>{</span>
+
+  <span class=c1>// Create an instance of your custom instruction visitory
+</span><span class=c1></span>  <span class=k>auto</span> <span class=n>my_visitor</span> <span class=o>=</span> <span class=n>std</span><span class=o>::</span><span class=n>make_shared</span><span class=o>&lt;</span><span class=n>MyCustomInstructionVisitor</span><span class=o>&gt;</span><span class=p>();</span>
+
+  <span class=c1>// Pre-order tree traversal
+</span><span class=c1></span>  <span class=n>InstructionIterator</span> <span class=nf>iter</span><span class=p>(</span><span class=n>circuit</span><span class=p>);</span>
+  <span class=k>while</span><span class=p>(</span><span class=n>iter</span><span class=p>.</span><span class=n>hasNext</span><span class=p>())</span> <span class=p>{</span>
+      <span class=k>auto</span> <span class=n>instruction</span> <span class=o>=</span> <span class=n>iter</span><span class=p>.</span><span class=n>next</span><span class=p>();</span>
+
+      <span class=c1>// Visit the Instruction
+</span><span class=c1></span>      <span class=n>instruction</span><span class=o>-&gt;</span><span class=n>accept</span><span class=p>(</span><span class=n>my_visitor</span><span class=p>);</span>
+  <span class=p>}</span>
+
+  <span class=k>auto</span> <span class=n>backend_circ_format</span> <span class=o>=</span> <span class=n>my_visitor</span><span class=o>-&gt;</span><span class=n>getMyFormat</span><span class=p>();</span>
+
+  <span class=c1>// Now execute via backend API...
+</span><span class=c1></span>
+<span class=p>}</span>
+</code></pre></div><p>Developers are free to implement an <code>InstructionVisitor</code> in any way they see fit, as long as they implement the pertinent <code>Instruction</code> <code>visit(...)</code> calls</p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=k>class</span> <span class=nc>MyCustomInstructionVisitor</span> <span class=o>:</span> <span class=k>public</span> <span class=n>AllGateVisitor</span> <span class=p>{</span>
+<span class=k>protected</span><span class=o>:</span>
+   <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=n>my_backend_circ_format_str</span> <span class=o>=</span> <span class=s>&#34;&#34;</span><span class=p>;</span>
+<span class=k>public</span><span class=o>:</span>
+   <span class=kt>void</span> <span class=n>visit</span><span class=p>(</span><span class=n>Hadamard</span><span class=o>&amp;</span> <span class=n>h</span><span class=p>)</span> <span class=k>override</span> <span class=p>{</span>
+       <span class=c1>// build up my_backend_circ_format_str for Hadamard
+</span><span class=c1></span>       <span class=p>....</span>
+   <span class=p>}</span>
+   <span class=kt>void</span> <span class=nf>visit</span><span class=p>(</span><span class=n>CNOT</span><span class=o>&amp;</span> <span class=n>cnot</span><span class=p>)</span> <span class=k>override</span> <span class=p>{</span>
+       <span class=c1>// build up my_backend_circ_format_str for Hadamard
+</span><span class=c1></span>       <span class=p>....</span>
+   <span class=p>}</span>
+   <span class=p>...</span>
+   <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=n>getMyFormat</span><span class=p>()</span> <span class=p>{</span><span class=k>return</span> <span class=n>my_backend_circ_format_str</span><span class=p>;}</span>
+<span class=p>}</span>
+</code></pre></div><p>As an example, imagine your backend required or exposed a submission API that took an OpenQasm string as input. You could implement an <code>InstructionVisitor</code> that
+visited concrete <code>Instruction</code> nodes and built up a string on the class that contained the visited circuit as an OpenQasm code string. You would then expose a
+method for retrieving that string after walking the tree, and could use it in the submission API for your backend.</p><p>After mapping the incoming <code>CompositeInstruction</code> to the correct submission format, the next goal for <code>execute</code> is to affect execution on the backend and retrieve execution results. The results should be persisted to the input <code>AcceleratorBuffer</code> so that upstream users can retrieve them, these are usually just
+bitstrings and corresponding counts.</p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp>  <span class=c1>// Continuing the execute impl from above
+</span><span class=c1></span>  <span class=k>auto</span> <span class=n>backend_circ_format</span> <span class=o>=</span> <span class=n>my_visitor</span><span class=o>-&gt;</span><span class=n>getMyFormat</span><span class=p>();</span>
+
+  <span class=c1>// Now execute via backend API...
+</span><span class=c1></span>  <span class=k>auto</span> <span class=n>bit_strings_counts</span> <span class=o>=</span> <span class=n>execute_on_actual_backend</span><span class=p>(</span><span class=n>backend_circ_format</span><span class=p>);</span>
+
+  <span class=c1>// Add the results to the buffer
+</span><span class=c1></span>  <span class=k>for</span> <span class=p>(</span><span class=k>auto</span> <span class=p>[</span><span class=n>bits</span><span class=p>,</span> <span class=n>count</span><span class=p>]</span> <span class=o>:</span> <span class=n>bit_strings_counts</span><span class=p>)</span> <span class=p>{</span>
+      <span class=n>buffer</span><span class=o>-&gt;</span><span class=n>appendMeasurement</span><span class=p>(</span><span class=n>bits</span><span class=p>,</span> <span class=n>count</span><span class=p>);</span>
+  <span class=p>}</span>
+
+  <span class=c1>// All done!
+</span><span class=c1></span>
+  <span class=k>return</span><span class=p>;</span>
+<span class=p>}</span>
+</code></pre></div><h2 id=a-idquimba-concrete-example---quimb-integration><a id=quimb></a>Concrete Example - Quimb Integration&nbsp;<a class=headline-hash href=#a-idquimba-concrete-example---quimb-integration>¶</a></h2><p>To illustrate the concepts presented in the previous section, here we provide a concrete demonstration
+of injecting a new quantum backend into the AIDE-QC stack. Specifically, we&rsquo;ll demonstrate
+how to add a new simulation capability to the stack - the quantum circuit simulation module from the
+<a href=https://quimb.readthedocs.io/en/latest/tensor-circuit.html>Quimb</a>
+library. This provides an interesting test
+case in that it will require a new <code>Accelerator</code> subtype, an <code>InstructionVisitor</code> to map <code>CompositeInstructions</code> to
+the required Quimb input, and a mechanism for executing the Pythonic Quimb simulation from C++.</p><p>We start out by creating the files necessary to build and install a new plugin for the AIDE-QC stack.</p><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>mkdir quimb_accelerator <span class=o>&amp;&amp;</span> <span class=nb>cd</span> quimb_accelerator 
+touch CMakeLists.txt quimb_accelerator.<span class=o>{</span>hpp,cpp<span class=o>}</span> manifest.json
+</code></pre></div><p>First, let&rsquo;s populate the <code>quimb_accelerator.*</code> source files with the necessary <code>Accelerator</code> sub-type boilerplate</p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=cp>#pragma once
+</span><span class=cp></span>
+<span class=cp>#include</span> <span class=cpf>&#34;Accelerator.hpp&#34;</span><span class=cp>
+</span><span class=cp></span>
+<span class=k>namespace</span> <span class=n>xacc</span> <span class=p>{</span>
+<span class=k>class</span> <span class=nc>QuimbAccelerator</span> <span class=o>:</span> <span class=k>public</span> <span class=n>Accelerator</span> <span class=p>{</span> 
+ <span class=k>protected</span><span class=o>:</span>
+  <span class=n>std</span><span class=o>::</span><span class=n>map</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>string</span><span class=p>,</span> <span class=kt>int</span><span class=o>&gt;</span> <span class=n>execute_with_quimb</span><span class=p>(</span><span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=o>&amp;</span><span class=n>code</span><span class=p>,</span>
+                                                <span class=k>const</span> <span class=kt>int</span> <span class=n>n_qubits</span><span class=p>);</span>
+ <span class=k>public</span><span class=o>:</span>
+  <span class=kt>void</span> <span class=n>initialize</span><span class=p>(</span><span class=k>const</span> <span class=n>HeterogeneousMap</span> <span class=o>&amp;</span><span class=n>params</span> <span class=o>=</span> <span class=p>{})</span> <span class=k>override</span><span class=p>;</span>
+  <span class=kt>void</span> <span class=nf>updateConfiguration</span><span class=p>(</span><span class=k>const</span> <span class=n>HeterogeneousMap</span> <span class=o>&amp;</span><span class=n>config</span><span class=p>)</span> <span class=k>override</span><span class=p>;</span>
+  <span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>vector</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>string</span><span class=o>&gt;</span> <span class=n>configurationKeys</span><span class=p>()</span> <span class=k>override</span><span class=p>;</span>
+  <span class=n>HeterogeneousMap</span> <span class=nf>getProperties</span><span class=p>()</span> <span class=k>override</span><span class=p>;</span>
+
+  <span class=c1>// Execute a single program. All results persisted to the buffer
+</span><span class=c1></span>  <span class=kt>void</span> <span class=nf>execute</span><span class=p>(</span><span class=n>std</span><span class=o>::</span><span class=n>shared_ptr</span><span class=o>&lt;</span><span class=n>AcceleratorBuffer</span><span class=o>&gt;</span> <span class=n>buffer</span><span class=p>,</span>
+               <span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>shared_ptr</span><span class=o>&lt;</span><span class=n>CompositeInstruction</span><span class=o>&gt;</span> <span class=n>circuit</span><span class=p>)</span>
+      <span class=k>override</span><span class=p>;</span>
+
+  <span class=c1>// Execute a vector of programs. A new buffer
+</span><span class=c1></span>  <span class=c1>// is expected to be appended as a child of the provided buffer.
+</span><span class=c1></span>  <span class=kt>void</span> <span class=nf>execute</span><span class=p>(</span><span class=n>std</span><span class=o>::</span><span class=n>shared_ptr</span><span class=o>&lt;</span><span class=n>AcceleratorBuffer</span><span class=o>&gt;</span> <span class=n>buffer</span><span class=p>,</span>
+               <span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>vector</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>shared_ptr</span><span class=o>&lt;</span><span class=n>CompositeInstruction</span><span class=o>&gt;&gt;</span>
+                   <span class=n>circuits</span><span class=p>)</span> <span class=k>override</span><span class=p>;</span>
+
+  <span class=c1>// Give it a unique name and description
+</span><span class=c1></span>  <span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=n>name</span><span class=p>()</span> <span class=k>const</span> <span class=k>override</span> <span class=p>{</span> <span class=k>return</span> <span class=s>&#34;quimb&#34;</span><span class=p>;</span> <span class=p>}</span>
+  <span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=n>description</span><span class=p>()</span> <span class=k>const</span> <span class=k>override</span> <span class=p>{</span> <span class=k>return</span> <span class=s>&#34;This is a demo!&#34;</span><span class=p>;</span> <span class=p>}</span>
+<span class=p>};</span>
+<span class=p>}</span>  <span class=c1>// namespace xacc
+</span></code></pre></div><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=cp>#include</span> <span class=cpf>&#34;quimb_accelerator.hpp&#34;</span><span class=cp>
+</span><span class=cp>#include</span> <span class=cpf>&#34;xacc_plugin.hpp&#34;</span><span class=cp>
+</span><span class=cp></span>
+<span class=k>namespace</span> <span class=n>xacc</span> <span class=p>{</span>
+
+<span class=kt>void</span> <span class=n>QuimbAccelerator</span><span class=o>::</span><span class=n>initialize</span><span class=p>(</span><span class=k>const</span> <span class=n>HeterogeneousMap</span> <span class=o>&amp;</span><span class=n>params</span><span class=p>)</span> <span class=p>{</span>
+  <span class=c1>// do nothing for now
+</span><span class=c1></span><span class=p>}</span>
+<span class=kt>void</span> <span class=n>QuimbAccelerator</span><span class=o>::</span><span class=n>updateConfiguration</span><span class=p>(</span><span class=k>const</span> <span class=n>HeterogeneousMap</span> <span class=o>&amp;</span><span class=n>config</span><span class=p>)</span> <span class=p>{</span>
+  <span class=c1>// do nothing for now
+</span><span class=c1></span><span class=p>}</span>
+<span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>vector</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>string</span><span class=o>&gt;</span> <span class=n>QuimbAccelerator</span><span class=o>::</span><span class=n>configurationKeys</span><span class=p>()</span> <span class=p>{</span>
+  <span class=c1>// nothing for now
+</span><span class=c1></span>  <span class=k>return</span> <span class=p>{};</span>
+<span class=p>}</span>
+
+<span class=n>HeterogeneousMap</span> <span class=n>QuimbAccelerator</span><span class=o>::</span><span class=n>getProperties</span><span class=p>()</span> <span class=p>{</span>
+  <span class=n>HeterogeneousMap</span> <span class=n>m</span><span class=p>;</span>
+  <span class=k>return</span> <span class=n>m</span><span class=p>;</span>
+<span class=p>}</span>
+<span class=kt>void</span> <span class=n>QuimbAccelerator</span><span class=o>::</span><span class=n>execute</span><span class=p>(</span>
+    <span class=n>std</span><span class=o>::</span><span class=n>shared_ptr</span><span class=o>&lt;</span><span class=n>AcceleratorBuffer</span><span class=o>&gt;</span> <span class=n>buffer</span><span class=p>,</span>
+    <span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>vector</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>shared_ptr</span><span class=o>&lt;</span><span class=n>CompositeInstruction</span><span class=o>&gt;&gt;</span>
+        <span class=n>circuits</span><span class=p>)</span> <span class=p>{</span>
+  <span class=c1>// handle this later
+</span><span class=c1></span><span class=p>}</span>
+
+<span class=kt>void</span> <span class=n>QuimbAccelerator</span><span class=o>::</span><span class=n>execute</span><span class=p>(</span>
+    <span class=n>std</span><span class=o>::</span><span class=n>shared_ptr</span><span class=o>&lt;</span><span class=n>AcceleratorBuffer</span><span class=o>&gt;</span> <span class=n>buffer</span><span class=p>,</span>
+    <span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>shared_ptr</span><span class=o>&lt;</span><span class=n>CompositeInstruction</span><span class=o>&gt;</span> <span class=n>circuit</span><span class=p>)</span> <span class=p>{}</span>
+
+
+<span class=p>}</span>  <span class=c1>// namespace xacc
+</span><span class=c1></span><span class=n>REGISTER_ACCELERATOR</span><span class=p>(</span><span class=n>xacc</span><span class=o>::</span><span class=n>QuimbAccelerator</span><span class=p>)</span>
+</code></pre></div><p>In <code>quimb_accelerator.hpp</code>, we declare the <code>QuimbAccelerator</code> sub-class of <code>Accelerator</code>, and give it the unique name <code>quimb</code>. In the implementation file, we start on <code>initialize</code>, <code>updateConfiguration</code>, <code>configurationKeys</code> and <code>getProperties</code> but leave them empty for now. We will handle the <code>execute</code> single <code>CompositeInstruction</code> method first. Critically, we include <code>xacc_plugin.hpp</code> and end the file with a registration macro that registers the new <code>Accelerator</code> with AIDE-QC - this ensures the new <code>Accelerator</code> can be used in the AIDE-QC stack.</p><p>Next, we turn our attention to the <code>CMake</code> build system - <code>CMakeLists.txt</code> and <code>manifest.json</code>. The plugin must define a <code>manifest.json</code> file to encode information about the plugin name and description. We populate the file with the following</p><div class=highlight><pre class=chroma><code class=language-json data-lang=json><span class=p>{</span>
+    <span class=nt>&#34;bundle.symbolic_name&#34;</span> <span class=p>:</span> <span class=s2>&#34;quimb_accelerator&#34;</span><span class=p>,</span>
+    <span class=nt>&#34;bundle.activator&#34;</span> <span class=p>:</span> <span class=kc>true</span><span class=p>,</span>
+    <span class=nt>&#34;bundle.name&#34;</span> <span class=p>:</span> <span class=s2>&#34;Bindings for Quimb&#34;</span><span class=p>,</span>
+    <span class=nt>&#34;bundle.description&#34;</span> <span class=p>:</span> <span class=s2>&#34;Cool Description Here.&#34;</span>
+  <span class=p>}</span>
+</code></pre></div><p>Now we populate the <code>CMakeLists.txt</code> file with typical <code>CMake</code> boilerplate project calls, plus additional code to correctly build our plugin and install to the appropriate plugin folder location:</p><div class=highlight><pre class=chroma><code class=language-cmake data-lang=cmake><span class=c># Boilerplate CMake calls to setup the project
+</span><span class=c></span><span class=nb>cmake_minimum_required</span><span class=p>(</span><span class=s>VERSION</span> <span class=s>3.12</span> <span class=s>FATAL_ERROR</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>project</span><span class=p>(</span><span class=s>quimb_accelerator</span> <span class=s>VERSION</span> <span class=s>1.0.0</span> <span class=s>LANGUAGES</span> <span class=s>CXX</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>set</span><span class=p>(</span><span class=s>CMAKE_STANDARD_REQUIRED</span> <span class=s>ON</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>set</span><span class=p>(</span><span class=s>CMAKE_CXX_STANDARD</span> <span class=s>17</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>set</span><span class=p>(</span><span class=s>CMAKE_EXPORT_COMPILE_COMMANDS</span> <span class=s>TRUE</span><span class=p>)</span><span class=err>
+</span><span class=err>
+</span><span class=err></span><span class=c># Find XACC, provides underlying plugin system
+</span><span class=c></span><span class=nb>find_package</span><span class=p>(</span><span class=s>XACC</span> <span class=s>REQUIRED</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=c># Find Python includes and library
+</span><span class=c></span><span class=nb>find_package</span><span class=p>(</span><span class=s>Python</span> <span class=s>COMPONENTS</span> <span class=s>Interpreter</span> <span class=s>Development</span> <span class=s>REQUIRED</span><span class=p>)</span><span class=err>
+</span><span class=err>
+</span><span class=err></span><span class=nb>set</span><span class=p>(</span><span class=s>LIBRARY_NAME</span> <span class=s>quimb-accelerator</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>file</span><span class=p>(</span><span class=s>GLOB</span> <span class=s>SRC</span> <span class=s>quimb_accelerator.cpp</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>usfunctiongetresourcesource</span><span class=p>(</span><span class=s>TARGET</span> <span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span> <span class=s>OUT</span> <span class=s>SRC</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>usfunctiongeneratebundleinit</span><span class=p>(</span><span class=s>TARGET</span> <span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span> <span class=s>OUT</span> <span class=s>SRC</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>add_library</span><span class=p>(</span><span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span> <span class=s>SHARED</span> <span class=o>${</span><span class=nv>SRC</span><span class=o>}</span><span class=p>)</span><span class=err>
+</span><span class=err>
+</span><span class=err></span><span class=nb>target_include_directories</span><span class=p>(</span><span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span> <span class=s>PUBLIC</span> <span class=s>.</span> <span class=o>${</span><span class=nv>Python_INCLUDE_DIRS</span><span class=o>}</span>
+                                    <span class=o>${</span><span class=nv>XACC_ROOT</span><span class=o>}</span><span class=s>/include/pybind11/include</span><span class=p>)</span><span class=err>
+</span><span class=err>
+</span><span class=err></span><span class=c># _bundle_name must be == manifest.json bundle.symbolic_name !!!
+</span><span class=c></span><span class=nb>set</span><span class=p>(</span><span class=s>_bundle_name</span> <span class=s>quimb_accelerator</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>set_target_properties</span><span class=p>(</span><span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span>
+                      <span class=s>PROPERTIES</span> <span class=s>COMPILE_DEFINITIONS</span>
+                                 <span class=s>US_BUNDLE_NAME=</span><span class=o>${</span><span class=nv>_bundle_name</span><span class=o>}</span>
+                                 <span class=s>US_BUNDLE_NAME</span> <span class=o>${</span><span class=nv>_bundle_name</span><span class=o>}</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>usfunctionembedresources</span><span class=p>(</span><span class=s>TARGET</span> <span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span> 
+                         <span class=s>WORKING_DIRECTORY</span> <span class=o>${</span><span class=nv>CMAKE_CURRENT_SOURCE_DIR</span><span class=o>}</span>
+                         <span class=s>FILES</span> <span class=s>manifest.json</span><span class=p>)</span><span class=err>
+</span><span class=err>
+</span><span class=err></span><span class=c># Link library with XACC
+</span><span class=c></span><span class=nb>target_link_libraries</span><span class=p>(</span><span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span> <span class=s>PUBLIC</span> <span class=s>xacc::xacc</span> <span class=s>xacc::quantum_gate</span> <span class=s>Python::Python</span><span class=p>)</span><span class=err>
+</span><span class=err>
+</span><span class=err></span><span class=c># Configure RPATH
+</span><span class=c></span><span class=nb>if</span><span class=p>(</span><span class=s>APPLE</span><span class=p>)</span><span class=err>
+</span><span class=err></span>  <span class=nb>set_target_properties</span><span class=p>(</span><span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span> <span class=s>PROPERTIES</span> <span class=s>INSTALL_RPATH</span> 
+                            <span class=s2>&#34;${XACC_ROOT}/lib&#34;</span><span class=p>)</span><span class=err>
+</span><span class=err></span>  <span class=nb>set_target_properties</span><span class=p>(</span><span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span> <span class=s>PROPERTIES</span> <span class=s>LINK_FLAGS</span> 
+                            <span class=s2>&#34;-undefined dynamic_lookup&#34;</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>else</span><span class=p>()</span><span class=err>
+</span><span class=err></span>  <span class=nb>set_target_properties</span><span class=p>(</span><span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span> <span class=s>PROPERTIES</span> <span class=s>INSTALL_RPATH</span> 
+                        <span class=s2>&#34;${XACC_ROOT}/lib&#34;</span><span class=p>)</span><span class=err>
+</span><span class=err></span>  <span class=nb>set_target_properties</span><span class=p>(</span><span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span> <span class=s>PROPERTIES</span> <span class=s>LINK_FLAGS</span> <span class=s2>&#34;-shared&#34;</span><span class=p>)</span><span class=err>
+</span><span class=err></span><span class=nb>endif</span><span class=p>()</span><span class=err>
+</span><span class=err>
+</span><span class=err></span><span class=c># Install to Plugins directory
+</span><span class=c></span><span class=nb>install</span><span class=p>(</span><span class=s>TARGETS</span> <span class=o>${</span><span class=nv>LIBRARY_NAME</span><span class=o>}</span> <span class=s>DESTINATION</span> <span class=o>${</span><span class=nv>XACC_ROOT</span><span class=o>}</span><span class=s>/plugins</span><span class=p>)</span><span class=err>
+</span></code></pre></div><p>The above CMake code is pretty much ubiquitous across all XACC plugin builds. The first crucial part is <code>find_package(XACC)</code> which can be configured or customized with the <code>cmake .. -DXACC_DIR=/path/to/xacc</code> flag. Next we create a shared library containing the compiled <code>quimb_accelerator</code> code, and configure it as a plugin with appropriate <code>usfunction*</code> calls (from the underlying <code>CppMicroServices</code> infrastructure). We link the library to the <code>xacc::xacc</code> target, configure the <code>RPATH</code> such that it can link to the install <code>lib/</code> directory, and install to the plugin storage directory. Since we plan
+to delegate to Python, we <code>find_package(Python)</code> and include the Python headers and link to the Python target. Moreover, since we plan to create a new <code>AllGateVisitor</code> we also need to link to the <code>xacc::quantum_gate</code> target.</p><p>To build this we run (from the top-level of the project directory)</p><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>mkdir build <span class=o>&amp;&amp;</span> <span class=nb>cd</span> build 
+cmake .. -G Ninja -DXACC_DIR<span class=o>=</span><span class=k>$(</span>qcor -xacc-install<span class=k>)</span>
+cmake --build . --target install
+</code></pre></div><p>Now that we have a project that builds and installs, let&rsquo;s turn our attention to implementing <code>QuimbAccelerator::execute</code>. We note that in Quimb, one can create a quantum circuit using a list of tuples</p><div class=highlight><pre class=chroma><code class=language-python data-lang=python><span class=n>qc</span> <span class=o>=</span> <span class=n>qtn</span><span class=o>.</span><span class=n>Circuit</span><span class=p>(</span><span class=mi>3</span><span class=p>)</span>
+<span class=n>gates</span> <span class=o>=</span> <span class=p>[</span>
+    <span class=p>(</span><span class=s1>&#39;H&#39;</span><span class=p>,</span> <span class=mi>0</span><span class=p>),</span>
+    <span class=p>(</span><span class=s1>&#39;H&#39;</span><span class=p>,</span> <span class=mi>1</span><span class=p>),</span>
+    <span class=p>(</span><span class=s1>&#39;CNOT&#39;</span><span class=p>,</span> <span class=mi>1</span><span class=p>,</span> <span class=mi>2</span><span class=p>),</span>
+    <span class=p>(</span><span class=s1>&#39;CNOT&#39;</span><span class=p>,</span> <span class=mi>0</span><span class=p>,</span> <span class=mi>2</span><span class=p>),</span>
+    <span class=p>(</span><span class=s1>&#39;H&#39;</span><span class=p>,</span> <span class=mi>0</span><span class=p>),</span>
+    <span class=p>(</span><span class=s1>&#39;H&#39;</span><span class=p>,</span> <span class=mi>1</span><span class=p>),</span>
+    <span class=p>(</span><span class=s1>&#39;H&#39;</span><span class=p>,</span> <span class=mi>2</span><span class=p>),</span>
+<span class=p>]</span>
+<span class=n>qc</span><span class=o>.</span><span class=n>apply_gates</span><span class=p>(</span><span class=n>gates</span><span class=p>)</span>
+</code></pre></div><p>So our implementation strategy will be to create a new <code>InstructionVisitor</code> that will map <code>CompositeInstructions</code> to a
+python source string that resembles the code above. We begin by adding a <code>QuimbInstructionVisitor</code> to the <code>quimb_accelerator.hpp</code> file after the <code>QuimbAccelerator</code> declaration.</p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=c1>// Add these 2 lines to top of the file
+</span><span class=c1></span><span class=cp>#include</span> <span class=cpf>&#34;AllGateVisitor.hpp&#34;</span><span class=cp>
+</span><span class=cp></span><span class=k>using</span> <span class=k>namespace</span> <span class=n>xacc</span><span class=o>::</span><span class=n>quantum</span><span class=p>;</span>
+
+<span class=p>...</span> <span class=n>Accelerator</span> <span class=n>code</span> <span class=p>...</span>
+
+<span class=k>class</span> <span class=nc>QuimbInstructionVisitor</span> <span class=o>:</span> <span class=k>public</span> <span class=n>AllGateVisitor</span> <span class=p>{</span>
+<span class=k>protected</span><span class=o>:</span>
+  <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=n>quimb_py_str</span> <span class=o>=</span> <span class=s>&#34;gates = [</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>;</span>
+<span class=k>public</span><span class=o>:</span>
+  <span class=kt>void</span> <span class=n>visit</span><span class=p>(</span><span class=n>Hadamard</span><span class=o>&amp;</span> <span class=n>h</span><span class=p>)</span> <span class=k>override</span> <span class=p>{</span>
+      <span class=n>quimb_py_str</span> <span class=o>+=</span> <span class=s>&#34;   (&#39;H&#39;, &#34;</span> <span class=o>+</span> <span class=n>std</span><span class=o>::</span><span class=n>to_string</span><span class=p>(</span><span class=n>h</span><span class=p>.</span><span class=n>bits</span><span class=p>()[</span><span class=mi>0</span><span class=p>])</span> <span class=o>+</span> <span class=s>&#34;),</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>;</span>
+  <span class=p>}</span>
+  <span class=kt>void</span> <span class=nf>visit</span><span class=p>(</span><span class=n>CNOT</span><span class=o>&amp;</span> <span class=n>cnot</span><span class=p>)</span> <span class=k>override</span> <span class=p>{</span>
+      <span class=n>quimb_py_str</span> <span class=o>+=</span> <span class=s>&#34;   (&#39;CNOT&#39;, &#34;</span> <span class=o>+</span> <span class=n>std</span><span class=o>::</span><span class=n>to_string</span><span class=p>(</span><span class=n>cnot</span><span class=p>.</span><span class=n>bits</span><span class=p>()[</span><span class=mi>0</span><span class=p>])</span> <span class=o>+</span> <span class=s>&#34;, &#34;</span> <span class=o>+</span> <span class=n>std</span><span class=o>::</span><span class=n>to_string</span><span class=p>(</span><span class=n>cnot</span><span class=p>.</span><span class=n>bits</span><span class=p>()[</span><span class=mi>1</span><span class=p>])</span> <span class=o>+</span> <span class=s>&#34;),</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>;</span>
+  <span class=p>}</span>
+  <span class=p>...</span> <span class=n>other</span> <span class=n>visit</span> <span class=n>methods</span> <span class=p>...</span>
+
+  <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=n>getQuimbCode</span><span class=p>()</span> <span class=p>{</span>
+      <span class=n>quimb_py_str</span> <span class=o>+=</span> <span class=s>&#34;]&#34;</span><span class=p>;</span>
+      <span class=k>return</span> <span class=n>quimb_py_str</span><span class=p>;</span>
+  <span class=p>}</span>
+<span class=p>};</span>
+</code></pre></div><p>Now we can update the <code>execute</code> method to follow the pattern detailed above.</p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=kt>void</span> <span class=n>QuimbAccelerator</span><span class=o>::</span><span class=n>execute</span><span class=p>(</span>
+    <span class=n>std</span><span class=o>::</span><span class=n>shared_ptr</span><span class=o>&lt;</span><span class=n>AcceleratorBuffer</span><span class=o>&gt;</span> <span class=n>buffer</span><span class=p>,</span>
+    <span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>shared_ptr</span><span class=o>&lt;</span><span class=n>CompositeInstruction</span><span class=o>&gt;</span> <span class=n>circuit</span><span class=p>)</span> <span class=p>{</span>
+
+  <span class=k>auto</span> <span class=n>visitor</span> <span class=o>=</span> <span class=n>std</span><span class=o>::</span><span class=n>make_shared</span><span class=o>&lt;</span><span class=n>QuimbInstructionVisitor</span><span class=o>&gt;</span><span class=p>();</span>
+
+  <span class=c1>// Pre-order tree traversal
+</span><span class=c1></span>  <span class=n>InstructionIterator</span> <span class=nf>iter</span><span class=p>(</span><span class=n>circuit</span><span class=p>);</span>
+  <span class=k>while</span><span class=p>(</span><span class=n>iter</span><span class=p>.</span><span class=n>hasNext</span><span class=p>())</span> <span class=p>{</span>
+      <span class=k>auto</span> <span class=n>instruction</span> <span class=o>=</span> <span class=n>iter</span><span class=p>.</span><span class=n>next</span><span class=p>();</span>
+      <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=n>instruction</span><span class=o>-&gt;</span><span class=n>isComposite</span><span class=p>())</span> <span class=p>{</span>
+        <span class=c1>// Visit the Instruction
+</span><span class=c1></span>        <span class=n>instruction</span><span class=o>-&gt;</span><span class=n>accept</span><span class=p>(</span><span class=n>visitor</span><span class=p>);</span>
+      <span class=p>}</span>
+  <span class=p>}</span>
+
+  <span class=k>auto</span> <span class=n>quimb_code</span> <span class=o>=</span> <span class=n>visitor</span><span class=o>-&gt;</span><span class=n>getQuimbCode</span><span class=p>();</span>
+
+  <span class=k>auto</span> <span class=n>bit_strings_counts</span> <span class=o>=</span> <span class=n>execute_with_quimb</span><span class=p>(</span><span class=n>quimb_code</span><span class=p>,</span> <span class=n>buffer</span><span class=o>-&gt;</span><span class=n>size</span><span class=p>());</span>
+
+  <span class=c1>// Add the results to the buffer
+</span><span class=c1></span>  <span class=k>for</span> <span class=p>(</span><span class=k>auto</span> <span class=p>[</span><span class=n>bits</span><span class=p>,</span> <span class=n>count</span><span class=p>]</span> <span class=o>:</span> <span class=n>bit_strings_counts</span><span class=p>)</span> <span class=p>{</span>
+      <span class=n>buffer</span><span class=o>-&gt;</span><span class=n>appendMeasurement</span><span class=p>(</span><span class=n>bits</span><span class=p>,</span> <span class=n>count</span><span class=p>);</span>
+  <span class=p>}</span>
+
+  <span class=k>return</span><span class=p>;</span>
+<span class=p>}</span>
+</code></pre></div><p>The above code illustrates the initial pattern discussed at the beginning of this article. We walk the IR tree, visit
+each node which constructs the data required as input by the Quimb simulator, executes the simulator and adds the results
+to the buffer. Now we look into what this execution actually looks like, how is <code>execute_with_quimb</code> implemented? The
+AIDE-QC stack provides
+<a href=https://github.com/pybind/pybind11>pybind11</a>
+as part of the install so that developers can create plugins that are interoperable with Python. Specifically, we&rsquo;ll use the embedded interpreter provided by <code>pybind11</code>. To do so, we must update the <code>quimb_accelerator.hpp</code> header to keep track of the
+<a href=https://pybind11.readthedocs.io/en/stable/advanced/embedding.html>py::scoped_interpreter_guard</a></p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=p>...</span>
+
+<span class=cp>#include</span> <span class=cpf>&lt;pybind11/stl.h&gt;</span><span class=cp>
+</span><span class=cp>#include</span> <span class=cpf>&lt;pybind11/stl_bind.h&gt;</span><span class=cp>
+</span><span class=cp>#include</span> <span class=cpf>&lt;pybind11/embed.h&gt;</span><span class=cp>
+</span><span class=cp></span><span class=k>namespace</span> <span class=n>py</span> <span class=o>=</span> <span class=n>pybind11</span><span class=p>;</span>
+
+<span class=k>class</span> <span class=nc>QuimbAccelerator</span> <span class=o>:</span> <span class=k>public</span> <span class=n>Accelerator</span> <span class=p>{</span>
+ <span class=k>protected</span><span class=o>:</span>
+  <span class=n>std</span><span class=o>::</span><span class=n>shared_ptr</span><span class=o>&lt;</span><span class=n>py</span><span class=o>::</span><span class=n>scoped_interpreter</span><span class=o>&gt;</span> <span class=n>guard</span><span class=p>;</span>
+  <span class=n>std</span><span class=o>::</span><span class=n>map</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>string</span><span class=p>,</span> <span class=kt>int</span><span class=o>&gt;</span> <span class=n>execute_with_quimb</span><span class=p>(</span><span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=o>&amp;</span><span class=n>code</span><span class=p>,</span>
+                                                <span class=k>const</span> <span class=kt>int</span> <span class=n>n_qubits</span><span class=p>);</span>
+<span class=p>...</span>
+</code></pre></div><p>Let&rsquo;s look at our <code>execute_with_quimb</code> method implementation</p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=n>std</span><span class=o>::</span><span class=n>map</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>string</span><span class=p>,</span> <span class=kt>int</span><span class=o>&gt;</span> <span class=n>execute_with_quimb</span><span class=p>(</span><span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>string</span><span class=o>&amp;</span> <span class=n>code</span><span class=p>,</span> <span class=k>const</span> <span class=kt>int</span> <span class=n>n_qubits</span><span class=p>)</span> <span class=p>{</span>
+  <span class=k>if</span> <span class=p>(</span><span class=o>!</span><span class=n>guard</span> <span class=o>&amp;&amp;</span> <span class=o>!</span><span class=n>Py_IsInitialized</span><span class=p>())</span> <span class=p>{</span>
+    <span class=n>guard</span> <span class=o>=</span> <span class=n>std</span><span class=o>::</span><span class=n>make_shared</span><span class=o>&lt;</span><span class=n>py</span><span class=o>::</span><span class=n>scoped_interpreter</span><span class=o>&gt;</span><span class=p>();</span>
+  <span class=p>}</span>
+
+  <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=n>py_code</span> <span class=o>=</span> <span class=s>&#34;from quimb.tensor import Circuit</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>;</span>
+  <span class=n>py_code</span> <span class=o>+=</span> <span class=s>&#34;from collections import Counter</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>;</span>
+  <span class=n>py_code</span> <span class=o>+=</span> <span class=n>code</span><span class=p>;</span>
+  <span class=n>py_code</span> <span class=o>+=</span> <span class=s>&#34;</span><span class=se>\n</span><span class=s>qc = Circuit(&#34;</span> <span class=o>+</span> <span class=n>std</span><span class=o>::</span><span class=n>to_string</span><span class=p>(</span><span class=n>n_qubits</span><span class=p>)</span> <span class=o>+</span> <span class=s>&#34;)</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>;</span>
+  <span class=n>py_code</span> <span class=o>+=</span> <span class=s>&#34;qc.apply_gates(gates)</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>;</span>
+  <span class=n>py_code</span> <span class=o>+=</span> <span class=s>&#34;bit_strings = []</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>;</span>
+  <span class=n>py_code</span> <span class=o>+=</span> <span class=s>&#34;for b in qc.sample(&#34;</span> <span class=o>+</span> <span class=n>std</span><span class=o>::</span><span class=n>to_string</span><span class=p>(</span><span class=mi>1024</span><span class=p>)</span> <span class=o>+</span> <span class=s>&#34;):</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>;</span>
+  <span class=n>py_code</span> <span class=o>+=</span> <span class=s>&#34;    bit_strings.append(b)</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>;</span>
+  <span class=n>py_code</span> <span class=o>+=</span> <span class=s>&#34;counts = Counter(bit_strings)</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>;</span>
+
+  <span class=k>auto</span> <span class=n>locals</span> <span class=o>=</span> <span class=n>py</span><span class=o>::</span><span class=n>dict</span><span class=p>();</span>
+  <span class=k>try</span> <span class=p>{</span>
+    <span class=n>py</span><span class=o>::</span><span class=n>exec</span><span class=p>(</span><span class=n>py_code</span><span class=p>,</span> <span class=n>py</span><span class=o>::</span><span class=n>globals</span><span class=p>(),</span> <span class=n>locals</span><span class=p>);</span>
+  <span class=p>}</span> <span class=k>catch</span> <span class=p>(</span><span class=n>std</span><span class=o>::</span><span class=n>exception</span> <span class=o>&amp;</span><span class=n>e</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>std</span><span class=o>::</span><span class=n>stringstream</span> <span class=n>ss</span><span class=p>;</span>
+    <span class=n>ss</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;Quimb Exec Error:</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>;</span>
+    <span class=n>ss</span> <span class=o>&lt;&lt;</span> <span class=n>e</span><span class=p>.</span><span class=n>what</span><span class=p>();</span>
+    <span class=n>xacc</span><span class=o>::</span><span class=n>error</span><span class=p>(</span><span class=n>ss</span><span class=p>.</span><span class=n>str</span><span class=p>());</span>
+  <span class=p>}</span>
+
+  <span class=k>return</span> <span class=n>locals</span><span class=p>[</span><span class=s>&#34;counts&#34;</span><span class=p>].</span><span class=n>cast</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>map</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>string</span><span class=p>,</span> <span class=kt>int</span><span class=o>&gt;&gt;</span><span class=p>();</span>
+<span class=p>}</span>
+</code></pre></div><p>This method starts by checking if the python interpreter has been initialized, and if not, we allocate the
+<code>scoped_interpreter</code>. The next segment attempts to build up some Quimb Python source code that will
+incorporate the code generated by the <code>QuimbInstructionVisitor</code> to create a circuit, sample from that
+resultant wavefunction represented internally as a tensor network, and allocate a dictionary of measurement counts.
+We execute the code with <code>py::exec()</code> with a locally allocated <code>locals</code> dictionary, which we use to get
+the <code>counts</code> back as a <code>map&lt;std::string, int></code>. The function ends by returning this map, which is then used to
+persist the execution results to the buffer at the end of the <code>execute()</code> method.</p><p>Build and install the above updates with</p><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh><span class=nb>cd</span> build 
+make -j4 install
+</code></pre></div><p>We can now test this out with <code>qcor</code> via C++ or Python</p><table><tr><th>Quimb Test in C++</th><th>Quimb Test in Python</th></tr><tr><td><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=n>__qpu__</span> <span class=kt>void</span> <span class=nf>bell</span><span class=p>(</span><span class=n>qreg</span> <span class=n>q</span><span class=p>)</span> <span class=p>{</span>
+  <span class=n>H</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>]);</span>
+  <span class=n>CX</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>],</span> <span class=n>q</span><span class=p>[</span><span class=mi>1</span><span class=p>]);</span>
+  <span class=n>Measure</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>]);</span>
+  <span class=n>Measure</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>1</span><span class=p>]);</span>
+<span class=p>}</span>
+
+<span class=kt>int</span> <span class=nf>main</span><span class=p>(</span><span class=kt>int</span> <span class=n>argc</span><span class=p>,</span> <span class=kt>char</span> <span class=o>**</span><span class=n>argv</span><span class=p>)</span> <span class=p>{</span>
+  <span class=k>auto</span> <span class=n>q</span> <span class=o>=</span> <span class=n>qalloc</span><span class=p>(</span><span class=mi>2</span><span class=p>);</span>
+  <span class=n>bell</span><span class=p>(</span><span class=n>q</span><span class=p>);</span>
+  <span class=n>q</span><span class=p>.</span><span class=n>print</span><span class=p>();</span>
+<span class=p>}</span>
+</code></pre></div><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>qcor -qpu quimb bell.cpp <span class=p>;</span> ./a.out
+</code></pre></div></td><td><div class=highlight><pre class=chroma><code class=language-python data-lang=python><span class=kn>from</span> <span class=nn>qcor</span> <span class=kn>import</span> <span class=n>qjit</span><span class=p>,</span> <span class=n>qalloc</span><span class=p>,</span> <span class=n>qreg</span>
+
+<span class=nd>@qjit</span>
+<span class=k>def</span> <span class=nf>bell</span><span class=p>(</span><span class=n>q</span> <span class=p>:</span> <span class=n>qreg</span><span class=p>):</span>
+    <span class=n>H</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>])</span>
+    <span class=n>CX</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>],</span> <span class=n>q</span><span class=p>[</span><span class=mi>1</span><span class=p>])</span>
+    <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=n>q</span><span class=o>.</span><span class=n>size</span><span class=p>()):</span>
+        <span class=n>Measure</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=p>])</span>
+
+<span class=n>q</span> <span class=o>=</span> <span class=n>qalloc</span><span class=p>(</span><span class=mi>2</span><span class=p>)</span>
+<span class=n>bell</span><span class=p>(</span><span class=n>q</span><span class=p>)</span>
+<span class=n>q</span><span class=o>.</span><span class=k>print</span><span class=p>()</span>
+</code></pre></div><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>python3 bell.py -qpu quimb
+</code></pre></div></td></tr></table><p>Finally, let&rsquo;s see how to take user input via the <code>initialize</code> method. Above we have hardcode the number of shots to 1024. Let&rsquo;s see if we can accept that as input. To do so, we add a <code>int shots</code> member to the <code>QuimbAccelerator</code> and default it to 1024.</p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=p>...</span>
+<span class=k>class</span> <span class=nc>QuimbAccelerator</span> <span class=o>:</span> <span class=k>public</span> <span class=n>Accelerator</span> <span class=p>{</span>
+ <span class=k>protected</span><span class=o>:</span>
+  <span class=kt>int</span> <span class=n>shots</span> <span class=o>=</span> <span class=mi>1024</span><span class=p>;</span>
+  <span class=n>std</span><span class=o>::</span><span class=n>shared_ptr</span><span class=o>&lt;</span><span class=n>py</span><span class=o>::</span><span class=n>scoped_interpreter</span><span class=o>&gt;</span> <span class=n>guard</span><span class=p>;</span>
+  <span class=n>std</span><span class=o>::</span><span class=n>map</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>string</span><span class=p>,</span> <span class=kt>int</span><span class=o>&gt;</span> <span class=n>execute_with_quimb</span><span class=p>(</span><span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>string</span> <span class=o>&amp;</span><span class=n>code</span><span class=p>,</span>
+                                                <span class=k>const</span> <span class=kt>int</span> <span class=n>n_qubits</span><span class=p>);</span>
+<span class=p>...</span>
+</code></pre></div><p>Next, we implement <code>initialize</code> to check for a <code>shots</code> key in the input parameters, and set it if it is found.</p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=kt>void</span> <span class=n>QuimbAccelerator</span><span class=o>::</span><span class=n>initialize</span><span class=p>(</span><span class=k>const</span> <span class=n>HeterogeneousMap</span> <span class=o>&amp;</span><span class=n>params</span><span class=p>)</span> <span class=p>{</span>
+  <span class=k>if</span> <span class=p>(</span><span class=n>params</span><span class=p>.</span><span class=n>keyExists</span><span class=o>&lt;</span><span class=kt>int</span><span class=o>&gt;</span><span class=p>(</span><span class=s>&#34;shots&#34;</span><span class=p>))</span> <span class=p>{</span>
+      <span class=n>shots</span> <span class=o>=</span> <span class=n>params</span><span class=p>.</span><span class=n>get</span><span class=o>&lt;</span><span class=kt>int</span><span class=o>&gt;</span><span class=p>(</span><span class=s>&#34;shots&#34;</span><span class=p>);</span>
+  <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>Now we can update <code>execute_with_quimb</code> to use this <code>shots</code> protected member</p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=n>std</span><span class=o>::</span><span class=n>map</span><span class=o>&lt;</span><span class=n>std</span><span class=o>::</span><span class=n>string</span><span class=p>,</span> <span class=kt>int</span><span class=o>&gt;</span> <span class=n>execute_with_quimb</span><span class=p>(</span><span class=k>const</span> <span class=n>std</span><span class=o>::</span><span class=n>string</span><span class=o>&amp;</span> <span class=n>code</span><span class=p>,</span> <span class=k>const</span> <span class=kt>int</span> <span class=n>n_qubits</span><span class=p>)</span> <span class=p>{</span>
+  <span class=p>...</span>
+  
+  <span class=n>py_code</span> <span class=o>+=</span> <span class=s>&#34;bit_strings = []</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>;</span>
+  <span class=n>py_code</span> <span class=o>+=</span> <span class=s>&#34;for b in qc.sample(&#34;</span> <span class=o>+</span> <span class=n>std</span><span class=o>::</span><span class=n>to_string</span><span class=p>(</span><span class=n>shots</span><span class=p>)</span> <span class=o>+</span> <span class=s>&#34;):</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>;</span>
+  <span class=n>py_code</span> <span class=o>+=</span> <span class=s>&#34;    bit_strings.append(b)</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>;</span>
+  
+  <span class=p>...</span>
+<span class=p>}</span>
+</code></pre></div><p>You can now run the above examples with the <code>-shots 2048</code> command line arguments to observe results that contain that many shots.</p><div class=edit-meta><br><a href=https://github.com/aide-qc/deploy//edit/master/website/content/developers/implement_accelerator.md class=edit-page><i class="fas fa-pen-square"></i>Edit on GitHub</a></div><nav class=pagination><a class="nav nav-prev" href=/deploy/developers/implement_qsim_workflow/ title="Add a New QSim Workflow"><i class="fas fa-arrow-left" aria-hidden=true></i>Prev - Add a New QSim Workflow</a>
+<a class="nav nav-next" href=/deploy/developers/implement_plugin_embedded_python/ title="C++ ===> Python Plugin">Next - C++ ===> Python Plugin <i class="fas fa-arrow-right" aria-hidden=true></i></a></nav><footer><p class=powered>Powered by <a href=https://gohugo.io>Hugo</a>. Theme by <a href=https://themes.gohugo.io/hugo-theme-techdoc/>TechDoc</a>. Designed by <a href=https://github.com/thingsym/hugo-theme-techdoc>Thingsym</a>.</p></footer></main><div class=sidebar><nav class=slide-menu><ul><li><a href=https://aide-qc.github.io/deploy>Home</a></li><li class=has-sub-menu><a href=/deploy/background/>Background<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=/deploy/background/qcor/>QCOR C++ Compiler and JIT Engine</a></li><li><a href=/deploy/background/xacc/>XACC Quantum Programming Framework</a></li><li><a href=/deploy/background/project/></a></li></ul></li><li class="parent has-sub-menu"><a href=/deploy/developers/>Developer Guide<span class="mark opened">-</span></a><ul class=sub-menu><li><a href=/deploy/developers/implement_circuit_synthesis/>Add a New Circuit Synthesis Strategy</a></li><li><a href=/deploy/developers/implement_optimizer/>Add a New Optimizer</a></li><li><a href=/deploy/developers/implement_qsim_workflow/>Add a New QSim Workflow</a></li><li class=active><a href=/deploy/developers/implement_accelerator/>Add a New Quantum Backend</a></li><li><a href=/deploy/developers/implement_plugin_embedded_python/>C++ ===> Python Plugin</a></li><li><a href=/deploy/developers/clang_syntax/></a></li></ul></li><li class=has-sub-menu><a href=/deploy/getting_started/>Getting Started<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=/deploy/getting_started/Faq/>Frequently Asked Questions</a></li><li><a href=/deploy/getting_started/build_from_source/>Build Everything from Source</a></li></ul></li><li class=has-sub-menu><a href=/deploy/users/>User Guide<span class="mark closed">+</span></a><ul class=sub-menu><li><a href=/deploy/users/hello_world/>Hello World</a></li><li><a href=/deploy/users/operators/>Operators</a></li><li><a href=/deploy/users/pass_manager/>Pass Manager</a></li><li><a href=/deploy/users/qjit/>Quantum JIT (QJIT)</a></li><li><a href=/deploy/users/quantum_kernels/>Quantum Kernels</a></li><li><a href=/deploy/users/qsim/>Quantum Simulation (QSim)</a></li><li><a href=/deploy/users/remote_qpu_creds/>Remote QPU Credentials</a></li><li><a href=/deploy/users/tnqvm/>Tensor Network Quantum Virtual Machine</a></li><li><a href=/deploy/users/using_optimizer/>Using an Optimizer</a></li><li><a href=/deploy/users/variational/>Variational Algorithms</a></li></ul></li></ul></nav><div class=sidebar-footer></div></div></div><a href=# id=backtothetop-fixed class=backtothetop data-backtothetop-duration=600 data-backtothetop-easing=easeOutQuart data-backtothetop-fixed-fadein=1000 data-backtothetop-fixed-fadeout=1000 data-backtothetop-fixed-bottom=10 data-backtothetop-fixed-right=20><span class="fa-layers fa-fw"><i class="fas fa-circle"></i><i class="fas fa-arrow-circle-up"></i></span></a></div></body></html>
