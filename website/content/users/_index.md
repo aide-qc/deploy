@@ -49,7 +49,6 @@ The user guide pages are listed below, with pertinent sub-sections called out fo
 * [Use in C++](qjit)
 * [Pythonic QJIT](qjit/#pyqjit)
     * [Advanced Variational Argument Translation](qjit/#pyqjit_translate)
-    * [Circuit Synthesis](qjit/#circsynth)
 
 [Quantum Simulation (QSim) Library](qsim)
 * [Overview](qsim/#overview)

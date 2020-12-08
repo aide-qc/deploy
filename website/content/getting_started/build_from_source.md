@@ -4,8 +4,16 @@ date: 2019-11-29T15:26:15Z
 draft: false
 weight: 15
 ---
+## Table of Contents
+* [Install Dependencies](#deps)
+* [XACC and QCOR on Ubuntu](#xqubuntu)
+* [XACC and QCOR on Mac OS X and Linux x86_64 with Homebrew](#xqbrew)
+* [Build the LLVM Clang SyntaxHandler Fork](#llvmcsp)
 
-For the adventurous out there, or if your system does not support the above prebuilt binary instructions, you can build the AIDE-QC components from source. First, run the package installer commands for your system to get all requisite dependencies:
+For the adventurous out there, or if your system does not support the above prebuilt binary instructions, you can build the AIDE-QC components from source.
+
+## <a id="deps"></a> Install Dependencies
+Run the package installer commands for your system to get all requisite dependencies:
 
 <table>
 <tr>
@@ -89,7 +97,7 @@ brew install gcc@10 python3 cmake openssl curl ninja llvm-csp
 
 The following instructions assume that you have run the above commands for your OS to ensure all requisite dependencies are available. 
 
-### XACC and QCOR on Ubuntu
+## <a id="xqubuntu"></a> XACC and QCOR on Ubuntu
 To build and install `xacc`, run the following:
 ```sh
 git clone --recursive https://github.com/aide-qc/xacc 
@@ -143,7 +151,7 @@ int main() {
 ./a.out
 ```
 
-### XACC and QCOR on Mac OS X and Linux x86_64 with Homebrew (not Ubuntu)
+## <a id="xqbrew"></a> XACC and QCOR on Mac OS X and Linux x86_64 with Homebrew (not Ubuntu)
 Make sure that you use `g++-10`, `gcc-10` explicitly in your `cmake` calls (they can be found with `brew --prefix gcc@10`). To build `xacc`
 ```sh
 git clone --recursive https://github.com/aide-qc/xacc
@@ -202,7 +210,8 @@ int main() {
 ./a.out
 ```
 
-## Build the LLVM-CSP Fork
+
+## <a id="llvmcsp"></a> Build the LLVM-CSP Fork
 > **_NOTE:_** This is a long build and not recommended for most users. We have binaries built and distributed with `apt-get` and Homebrew, these should be your first choice. The following is mainly for book-keeping and due diligence.
 
 If you would like to build a custom install of our LLVM fork containing the Clang `SyntaxHandler`, run the following:
