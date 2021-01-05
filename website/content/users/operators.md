@@ -157,7 +157,7 @@ def ansatz(q : qreg, x : List[float]):
 # Create the problem model, provide the state 
 # prep circuit, Hamiltonian and note how many variational parameters 
 num_params = 2
-problemModel = qsim.ModelBuilder.createModel(ansatz, H_tapered, num_params)
+problemModel = qsim.ModelFactory.createModel(ansatz, H_tapered, num_params)
 
 # Create the VQE workflow
 workflow = qsim.getWorkflow('vqe')
