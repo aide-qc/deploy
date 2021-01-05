@@ -100,7 +100,7 @@ Tapered:
 <span class=c1># Create the problem model, provide the state </span>
 <span class=c1># prep circuit, Hamiltonian and note how many variational parameters </span>
 <span class=n>num_params</span> <span class=o>=</span> <span class=mi>2</span>
-<span class=n>problemModel</span> <span class=o>=</span> <span class=n>qsim</span><span class=o>.</span><span class=n>ModelBuilder</span><span class=o>.</span><span class=n>createModel</span><span class=p>(</span><span class=n>ansatz</span><span class=p>,</span> <span class=n>H_tapered</span><span class=p>,</span> <span class=n>num_params</span><span class=p>)</span>
+<span class=n>problemModel</span> <span class=o>=</span> <span class=n>qsim</span><span class=o>.</span><span class=n>ModelFactory</span><span class=o>.</span><span class=n>createModel</span><span class=p>(</span><span class=n>ansatz</span><span class=p>,</span> <span class=n>H_tapered</span><span class=p>,</span> <span class=n>num_params</span><span class=p>)</span>
 
 <span class=c1># Create the VQE workflow</span>
 <span class=n>workflow</span> <span class=o>=</span> <span class=n>qsim</span><span class=o>.</span><span class=n>getWorkflow</span><span class=p>(</span><span class=s1>&#39;vqe&#39;</span><span class=p>)</span>
