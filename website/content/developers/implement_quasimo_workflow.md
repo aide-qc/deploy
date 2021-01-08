@@ -1,14 +1,14 @@
 ---
-title: "Add a New QSim Workflow"
+title: "Add a New QuaSiMo Workflow"
 date: 2019-11-29T15:26:15Z
 draft: false
 weight: 15
 ---
 
-QSim is a domain-specific library for quantum simulation in the AIDE-QC software stack. 
-The key extension point of QSim is its `QuantumSimulationWorkflow` interface, which is essentially the simulation driver for different protocols/procedures. Please refer to this [page](/deploy/users/qsim/) for more information about QSim and its components. 
+QuaSiMo is a domain-specific library for quantum simulation in the AIDE-QC software stack. 
+The key extension point of QuaSiMo is its `QuantumSimulationWorkflow` interface, which is essentially the simulation driver for different protocols/procedures. Please refer to this [page](/deploy/users/quasimo/) for more information about QuaSiMo and its components. 
 
-Besides its built-in workflow implementations (e.g. `vqe`, `qaoa`, etc.), users/developers may want to implement a new workflow (as a plugin) and contribute to the AIDE-QC stack. This section will provide a step-by-step guide on how to create a new QSim workflow. For simplicity, we use the VQE algorithm as an example, but please note that QSim already has a built-in implementation for VQE.
+Besides its built-in workflow implementations (e.g. `vqe`, `qaoa`, etc.), users/developers may want to implement a new workflow (as a plugin) and contribute to the AIDE-QC stack. This section will provide a step-by-step guide on how to create a new QuaSiMo workflow. For simplicity, we use the VQE algorithm as an example, but please note that QuaSiMo already has a built-in implementation for VQE.
 
 ## <a id="create-workflow"></a> Create a New QuantumSimulationWorkflow 
 
@@ -31,7 +31,7 @@ public:
 };
 ```
 
-Similar to [creating a new `Optimizer`](/deploy/developers/implement_optimizer/), to create a new QSim workflow, one need to subclass `QuantumSimulationWorkflow` and provide a concrete implementation.
+Similar to [creating a new `Optimizer`](/deploy/developers/implement_optimizer/), to create a new QuaSiMo workflow, one need to subclass `QuantumSimulationWorkflow` and provide a concrete implementation.
 
 Specifically, we need to provide a `name` and `description` string (`Identifiable` interface) and implement the `initialize` and `execute` methods of the `QuantumSimulationWorkflow` interface. Generally-speaking, `initialize` is where we parse any user-provided configuration parameters that the workflow supports, and `execute` is where we run the workflow procedure. This may include constructing quantum circuits, evaluating those circuits to estimate operator expectation values, classical processing and/or optimization, etc.
 
@@ -97,7 +97,7 @@ Similarly, one may preset (providing default values) and parse any number of con
 
 During workflow's `execute`, one can take advantage of QCOR API's to construct the quantum circuit. In this simple VQE workflow, the ansatz circuit was provided as a QCOR kernel functor (`user_defined_ansatz`), hence, we just need to evaluate (resolving variational gate parameters) during the optimization loop.
 
-One key element of implementing workflow execution is to hook up the appropriate cost function evaluator. In that regard, QSim provides a utility function `getEvaluator` which will pick the appropriate evaluator based on user configurations, e.g., selecting the `default` (tomography-based) evaluator if none provided. 
+One key element of implementing workflow execution is to hook up the appropriate cost function evaluator. In that regard, QuaSiMo provides a utility function `getEvaluator` which will pick the appropriate evaluator based on user configurations, e.g., selecting the `default` (tomography-based) evaluator if none provided. 
 
 Workflow developers are free to *not* use the `getEvaluator` utility if the workflow doesn't need to evaluate (observe) the operator or requires custom logic in selecting the evaluator.
 
@@ -113,7 +113,7 @@ For example, the `manifest.json` should contain:
 {
   "bundle.symbolic_name" : "my_vqe_workflow",
   "bundle.activator" : true,
-  "bundle.name" : "QSim VQE Workflow Implementation",
+  "bundle.name" : "QuaSiMo VQE Workflow Implementation",
   "bundle.description" : ""
 }
 
@@ -131,7 +131,7 @@ usfunctiongeneratebundleinit(TARGET ${LIBRARY_NAME} OUT SRC)
 set(_bundle_name my_vqe_workflow)
 add_library(${LIBRARY_NAME} SHARED ${SRC})
 
-target_link_libraries(${LIBRARY_NAME} PUBLIC qcor qcor-qsim qcor-quantum-simulation)
+target_link_libraries(${LIBRARY_NAME} PUBLIC qcor qcor-quasimo qcor-quantum-simulation)
 target_include_directories(${LIBRARY_NAME} PUBLIC ${XACC_ROOT}/include/qcor)
 xacc_configure_library_rpath(${LIBRARY_NAME})
 
@@ -167,17 +167,17 @@ This is a typical `CMakeLists.txt` for QCOR/XACC plugins. As usual, please make 
 
 Also, `target_link_libraries` and `target_include_directories` should be modified if one needs to use additional libraries.
 
-Lastly, one needs to register the new workflow plugin so that users can retrieve the new workflow via the QSim workflow registry (via QSim `getWorkflow` function).
+Lastly, one needs to register the new workflow plugin so that users can retrieve the new workflow via the QuaSiMo workflow registry (via QuaSiMo `getWorkflow` function).
 
 In your implementation (`.cpp`) file, simply add the followings:  
 
 ```cpp
 #include "xacc_plugin.hpp"
 namespace qcor {
-REGISTER_PLUGIN(qsim::VqeWorkflow, qsim::QuantumSimulationWorkflow)
+REGISTER_PLUGIN(QuaSiMo::VqeWorkflow, QuaSiMo::QuantumSimulationWorkflow)
 }
 ```
 
-This will inject the necessary code to register your new VQE workflow plugin as a `QuantumSimulationWorkflow` interface implementation. Hence, QSim users can retrieve this workflow via the custom `my-vqe` name that we specified. 
+This will inject the necessary code to register your new VQE workflow plugin as a `QuantumSimulationWorkflow` interface implementation. Hence, QuaSiMo users can retrieve this workflow via the custom `my-vqe` name that we specified. 
 
-Congratulations! You have completed a new QSim workflow that will be available to all QSim users (C++ and Python). 
+Congratulations! You have completed a new QuaSiMo workflow that will be available to all QuaSiMo users (C++ and Python). 
