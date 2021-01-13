@@ -1,13 +1,13 @@
-Package: clang-syntax-handler
-Version: 10.0.0git
+Package: aideqc-llvm
+Version: 12.0.0git
 Architecture: amd64
-Maintainer: Alex McCaskey
-Installed-Size: 427682
-Filename: ./LLVM-10.0.0git-Linux.deb
-Size: 75211792
-MD5sum: d9653a29f06456cc64984cb1fe015e6e
-SHA1: 6a3bd602cbc12b056092c4788b6643fbe4d3af01
-SHA256: f8dd480f0527eed67a108bae28f584d699ea6c91dc45bd4512a63edb62ba809e
+Maintainer: McCaskey
+Installed-Size: 681838
+Filename: ./LLVM-12.0.0git-Linux.deb
+Size: 110415746
+MD5sum: d692a0c225b7c80e4690d77655feeca6
+SHA1: f968c881412df1e20af132d6812e537c285ccb27
+SHA256: 9821286ffa1cf5b6b50e897d6f1f55c75d8e8dfc42093cc6b69eeb7d0b6b1079
 Section: devel
 Priority: optional
 Description: LLVM built using CMake
