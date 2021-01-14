@@ -1,13 +1,12 @@
 FROM ubuntu:18.04
 
-run apt-get update && apt-get install -y wget gnupg && wget -qO- https://aide-qc.github.io/deploy/xacc/debian/bionic/PUBLIC-KEY.gpg | apt-key add - \
-    && echo "deb https://aide-qc.github.io/deploy/xacc/debian/bionic ./" > /etc/apt/sources.list.d/xacc-bionic.list \
-    && echo "deb https://aide-qc.github.io/deploy/clang_syntax_handler/debian/bionic ./" > /etc/apt/sources.list.d/clang-syntax-handler-bionic.list \
+run apt-get update && apt-get install -y wget gnupg lsb-release && wget -qO- https://aide-qc.github.io/deploy/aide_qc/debian/PUBLIC-KEY.gpg | apt-key add - \
+    && wget -qO- "https://aide-qc.github.io/deploy/aide_qc/debian/$(lsb_release -cs)/aide-qc.list" | tee -a /etc/apt/sources.list.d/aide-qc.list \
     && apt-get update && apt-get install -y xacc aideqc-llvm \
     && ln -sf /usr/local/aideqc/llvm/bin/llvm-config /usr/bin/ 
 
 run apt-get install -y git ninja-build && git clone https://github.com/ornl-qci/qcor \
-   && cd qcor && mkdir build && cd build \
-   && cmake .. -G Ninja -DQCOR_CPACK_DEB_PLATFORM=bionic -DXACC_DIR=/usr/local/xacc -DMLIR_DIR=/usr/local/aideqc/llvm -DCMAKE_INSTALL_PREFIX=/usr/local/xacc \
-   && cmake  --build . --target install \ 
-   && cpack 
+    && cd qcor && mkdir build && cd build \
+    && CC=gcc-8 CXX=g++-8 cmake .. -G Ninja -DQCOR_CPACK_DEB_PLATFORM=bionic -DXACC_DIR=/usr/local/aideqc/qcor -DMLIR_DIR=/usr/local/aideqc/llvm/lib/cmake/mlir -DCMAKE_INSTALL_PREFIX=/usr/local/aideqc/qcor \
+    && cmake  --build . --target install \ 
+    && cpack 
