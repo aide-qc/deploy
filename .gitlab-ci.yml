@@ -18,23 +18,23 @@ deploy build_site:
     - export n_changes=$(git diff --cached --numstat | wc -l)
     - if [ "$n_changes" -gt "0" ]; then git commit -m "updating aide-qc software docs page" && git push -f aideqcdeploy HEAD:master && git remote remove aideqcdeploy ; else echo "Ran the else statement, no files to upload." ; fi
 
-docker run_docker_deploy_xacc_bionic:
-  stage: deploy
-  only:
-   - schedules
-  script:
-  - cd docker/xacc/debian/bionic && sh build.sh 
-  - docker system prune -f
-  - docker rmi -f xacc/bionic 
+# docker run_docker_deploy_xacc_bionic:
+#   stage: deploy
+#   only:
+#    - schedules
+#   script:
+#   - cd docker/xacc/debian/bionic && sh build.sh 
+#   - docker system prune -f
+#   - docker rmi -f xacc/bionic 
 
-docker run_docker_deploy_xacc_focal:
-  stage: deploy
-  only:
-   - schedules
-  script:
-  - cd docker/xacc/debian/focal && sh build.sh
-  - docker system prune -f
-  - docker rmi -f xacc/focal 
+# docker run_docker_deploy_xacc_focal:
+#   stage: deploy
+#   only:
+#    - schedules
+#   script:
+#   - cd docker/xacc/debian/focal && sh build.sh
+#   - docker system prune -f
+#   - docker rmi -f xacc/focal 
 
 docker run_docker_deploy_qcor_bionic:
   stage: deploy
