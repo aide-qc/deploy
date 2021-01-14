@@ -3,7 +3,7 @@ FROM ubuntu:20.04
 RUN apt-get update && apt-get install -y wget gnupg ca-certificates lsb-release \
     && wget -qO- https://aide-qc.github.io/deploy/aide_qc/debian/PUBLIC-KEY.gpg | apt-key add - \
     && wget -qO- "https://aide-qc.github.io/deploy/aide_qc/debian/$(lsb_release -cs)/aide-qc.list" | tee -a /etc/apt/sources.list.d/aide-qc.list \
-    && apt-get update && apt-get install -y xacc clang-syntax-handler \
+    && apt-get update && apt-get install -y xacc aideqc-llvm \
     && ln -sf /usr/local/xacc/llvm/bin/llvm-config /usr/bin/ 
 
 RUN apt-get install -y git ninja-build && git clone https://github.com/ornl-qci/qcor \
