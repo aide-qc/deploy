@@ -8,6 +8,6 @@ run apt-get update && apt-get install -y wget gnupg && wget -qO- https://aide-qc
 
 run apt-get install -y git ninja-build && git clone https://github.com/ornl-qci/qcor \
    && cd qcor && mkdir build && cd build \
-   && cmake .. -G Ninja -DQCOR_CPACK_DEB_PLATFORM=bionic -DXACC_DIR=/usr/local/xacc -DCMAKE_INSTALL_PREFIX=/usr/local/xacc \
+   && cmake .. -G Ninja -DQCOR_CPACK_DEB_PLATFORM=bionic -DXACC_DIR=/usr/local/xacc -DMLIR_DIR=/usr/local/aideqc/llvm -DCMAKE_INSTALL_PREFIX=/usr/local/xacc \
    && cmake  --build . --target install \ 
    && cpack 
