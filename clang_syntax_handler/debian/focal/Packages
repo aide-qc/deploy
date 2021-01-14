@@ -1,13 +1,13 @@
 Package: aideqc-llvm
 Version: 12.0.0git
 Architecture: amd64
-Maintainer: McCaskey
-Installed-Size: 681838
+Maintainer: Alex McCaskey
+Installed-Size: 571193
 Filename: ./LLVM-12.0.0git-Linux.deb
-Size: 110415746
-MD5sum: d692a0c225b7c80e4690d77655feeca6
-SHA1: f968c881412df1e20af132d6812e537c285ccb27
-SHA256: 9821286ffa1cf5b6b50e897d6f1f55c75d8e8dfc42093cc6b69eeb7d0b6b1079
+Size: 94789332
+MD5sum: 999daf8c82297fab9c913e53bd3d25b9
+SHA1: b5f08d461a5c2f6f43972ad2f34413d1ab60b0e3
+SHA256: 9d627c882c3531056d1c3033ce046140accf11a37398d6bc5346fe82969e79ec
 Section: devel
 Priority: optional
 Description: LLVM built using CMake
