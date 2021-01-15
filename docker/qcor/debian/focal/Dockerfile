@@ -1,6 +1,6 @@
 FROM ubuntu:20.04
 
-run apt-get update && apt-get install -y wget gnupg lsb-release ninja-build && wget -qO- https://aide-qc.github.io/deploy/aide_qc/debian/PUBLIC-KEY.gpg | apt-key add - \
+run apt-get update && apt-get install -y wget gnupg lsb-release ninja-build git && wget -qO- https://aide-qc.github.io/deploy/aide_qc/debian/PUBLIC-KEY.gpg | apt-key add - \
     && wget -qO- "https://aide-qc.github.io/deploy/aide_qc/debian/$(lsb_release -cs)/aide-qc.list" | tee -a /etc/apt/sources.list.d/aide-qc.list \
     && apt-get update && apt-get install -y xacc aideqc-llvm \
     && ln -sf /usr/local/aideqc/llvm/bin/llvm-config /usr/bin/ 
