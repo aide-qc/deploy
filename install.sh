@@ -109,10 +109,10 @@ if [ "$DISTRO" == "Ubuntu" ]; then
           echo ""
           echo ""
           echo "Your XACC and QCOR install location is "
-          echo "/usr/local/xacc"
+          echo "/usr/local/aideqc/qcor"
           echo ""
           echo "To use the Python API, please run the following (and add to your .bashrc)"
-          echo "export PYTHONPATH=$PYTHONPATH:/usr/local/xacc"
+          echo "export PYTHONPATH=$PYTHONPATH:/usr/local/aideqc/qcor"
           exit 0
        else
           echo "Could not install via apt-get, will try Homebrew."
