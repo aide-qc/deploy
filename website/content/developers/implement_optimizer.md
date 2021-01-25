@@ -21,7 +21,7 @@ We describe optimization via an extensible `Optimizer` class. The essential stru
 class Identifiable {
 public:
    virtual const std::string name() const = 0;
-   const std::string description() const = 0;
+   virtual const std::string description() const = 0;
 };
 
 // Useful typedef for Functors that can be optimized
