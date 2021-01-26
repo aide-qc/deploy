@@ -11,9 +11,9 @@ if [ "$1" == "-qcs" ]; then
     
     # pull down llvm and xacc deb packages
     wget https://raw.githubusercontent.com/aide-qc/deploy/master/xacc/debian/focal/xacc-1.0.0.deb    
-    wget https://raw.githubusercontent.com/aide-qc/deploy/master/clang_syntax_handler/debian/focal/LLVM-10.0.0git-Linux.deb
+    wget https://raw.githubusercontent.com/aide-qc/deploy/master/clang_syntax_handler/debian/focal/LLVM-12.0.0git-Linux.deb
     dpkg -x xacc-1.0.0.deb $HOME/.aideqc_install 
-    dpkg -x LLVM-10.0.0git-Linux.deb $HOME/.aideqc_install 
+    dpkg -x LLVM-12.0.0git-Linux.deb $HOME/.aideqc_install 
     
     python3 -m pip install cmake ipopo --user 
     export MY_CWD=$PWD
@@ -47,14 +47,15 @@ if [ "$1" == "-qcs" ]; then
 
     # qcs
     cd .. && mkdir build && cd build
-    CC=gcc CXX=g++ cmake .. -DXACC_DIR=~/.aideqc_install/usr/local/xacc -DBOOST_ROOT=$HOME/.boost
+    CC=gcc CXX=g++ cmake .. -DXACC_DIR=~/.aideqc_install/usr/local/aideqc/xacc -DBOOST_ROOT=$HOME/.boost
     make -j4 install
     
     cd $MY_CWD && rm -rf xacc
     git clone https://github.com/ornl-qci/qcor
     cd qcor && mkdir build && cd build
-    CC=gcc CXX=g++ cmake .. -DLLVM_ROOT=$HOME/.aideqc_install/usr/local/xacc/llvm \
-                            -DXACC_DIR=$HOME/.aideqc_install/usr/local/xacc \
+    CC=gcc CXX=g++ cmake .. -DLLVM_ROOT=$HOME/.aideqc_install/usr/local/aideqc/llvm \
+                            -DXACC_DIR=$HOME/.aideqc_install/usr/local/aideqc/xacc \
+                            -DMLIR_DIR=$HOME/.aideqc_install/usr/local/aideqc/llvm/lib/cmake/mlir \
                             -DCMAKE_CXX_FLAGS="-D__STDC_FORMAT_MACROS" \
                             -DCMAKE_INSTALL_PREFIX=$HOME/.qcor
     make -j4 install
