@@ -20,6 +20,6 @@ weight: 10
 * [Background](implement_circuit_synthesis/#background)
 * [Create Custom Circuit Synthesis Plugin](implement_circuit_synthesis/#create-synth)
 
-[Add a New QSim workflow](implement_qsim_workflow)
-* [Create a New QuantumSimulationWorkflow](implement_qsim_workflow/#create-workflow)
-* [Build and Install](implement_qsim_workflow/#build-workflow)
+[Add a New QuaSiMo workflow](implement_quasimo_workflow)
+* [Create a New QuantumSimulationWorkflow](implement_quasimo_workflow/#create-workflow)
+* [Build and Install](implement_quasimo_workflow/#build-workflow)
