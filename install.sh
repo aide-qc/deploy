@@ -19,27 +19,23 @@ if [ "$1" == "-qcs" ]; then
     git clone https://github.com/ornl-qci/qcor
     cd qcor && mkdir build && cd build
     CC=gcc CXX=g++ cmake .. -DLLVM_ROOT=$HOME/.aideqc_install/usr/local/aideqc/llvm \
-                            -DXACC_DIR=$HOME/.aideqc_install/usr/local/aideqc/xacc \
+                            -DXACC_DIR=$HOME/.aideqc_install/usr/local/aideqc/qcor \
                             -DMLIR_DIR=$HOME/.aideqc_install/usr/local/aideqc/llvm/lib/cmake/mlir \
-                            -DCMAKE_CXX_FLAGS="-D__STDC_FORMAT_MACROS" \
-                            -DCMAKE_INSTALL_PREFIX=$HOME/.qcor
+                            -DCMAKE_CXX_FLAGS="-D__STDC_FORMAT_MACROS" 
     make -j4 install
     cd ../../ && rm -rf qcor *.deb 
     
     echo ""
     echo "AIDE-QC installed on Rigetti QCS."
     echo ""
-    echo "Your XACC install location is "
-    echo "$HOME/.aideqc_install/usr/local/aideqc"
-    echo ""
     echo "Your QCOR install location is "
-    echo "$HOME/.qcor"
+    echo "$HOME/.aideqc_install/usr/local/aideqc/qcor"
     echo ""
     echo "Export your PATH to include the qcor binary executable location:"
-    echo "export PATH=\$PATH:$HOME/.qcor/bin"
+    echo "export PATH=\$PATH:$HOME/.aideqc_install/usr/local/aideqc/qcor/bin"
     echo ""
     echo "To use the Python API, please run the following (and add to your .bashrc or .bash_profile)"
-    echo "export PYTHONPATH=\$PYTHONPATH:$HOME/.aideqc_install/usr/local/aideqc:$HOME/.qcor"
+    echo "export PYTHONPATH=\$PYTHONPATH:$HOME/.aideqc_install/usr/local/aideqc/qcor"
     echo ""
     exit 0
 fi
