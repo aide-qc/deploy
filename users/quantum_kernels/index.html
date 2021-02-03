@@ -5,15 +5,15 @@ AIDE-QC</div></h1><p class=description>Advancing Integrated Development Environm
 </code></pre></div></td><td><div class=highlight><pre class=chroma><code class=language-python data-lang=python><span class=nd>@qjit</span>
 <span class=k>def</span> <span class=nf>kernel</span><span class=p>(</span><span class=n>q</span> <span class=p>:</span> <span class=n>qreg</span><span class=p>,</span> <span class=n>args</span><span class=o>...</span><span class=p>):</span>
     <span class=o>...</span> <span class=n>Pythonic</span> <span class=n>qDSL</span> <span class=o>...</span> 
-</code></pre></div></td></tr></table><p>In C++, we require users annotate quantum kernel functions with <code>__qpu__</code>. This annotations is actually a preprocessor definition that expands to <code>[[clang::syntax(qcor)]]</code> to interface the kernel with the
+</code></pre></div></td></tr></table><p>In C++, we require users annotate quantum kernel functions with <code>__qpu__</code>. This annotation is actually a preprocessor definition that expands to <code>[[clang::syntax(qcor)]]</code> to interface the kernel with the
 <a href=/deploy/developers/clang_syntax/>Clang Syntax Handler</a>
-infrastructure. This ensures proper processing of the quantum DSL within the kernel function body and maps it to appropriate <code>qcor</code> runtime API calls. These kernels must take a <code>qreg</code> (quantum register) instances a function argument to operate the quantum code on. After that, kernels can take any further function arguments that parameterize the quantum computation.</p><p>In Python, we require users annotate quantum kernel functions with the <code>@qjit</code> decorator. This decorator gives us the ability to analyze the quantum kernel function body and just-in-time compile it using the <code>qcor</code>
-<a href=/deploy/>QJIT</a>
+infrastructure. This ensures proper processing of the quantum DSL within the kernel function body and maps it to appropriate <code>qcor</code> runtime API calls. These kernels must take a <code>qreg</code> (quantum register) function argument to operate the quantum code on. After that, kernels can take any further function arguments that parameterize the quantum computation.</p><p>In Python, we require users annotate quantum kernel functions with the <code>@qjit</code> decorator. This decorator gives us the ability to analyze the quantum kernel function body and just-in-time compile it using the <code>qcor</code>
+<a href=/deploy/users/qjit/>QJIT</a>
 infrastructure (which further delegates to the
 <a href=/deploy/developers/clang_syntax/>Clang Syntax Handler</a>
 and the
 <a href=https://llvm.org/docs/tutorial/BuildingAJIT1.html>LLVM JIT Engine</a>
-). These functions must also take a <code>qreg</code> that the kernel function body operates on, and can take any further arguments to parameterize the quantum code. However, note that in Python, programmers must provide the correct type hint for the function argument. This helps our infrastructure not have to perform argument type inference when mapping to C++ and the <code>QJIT</code> infrastructure.</p><p>The AIDE-QC programming model adheres extra functionality to quantum kernels. Specifically, given a quantum kernel, programmers should be able to produce controlled and adjoint versions of the kernel, as well as print or query structural information about the kernel. Given a kernel <code>foo</code>, one should be able to leverage <code>foo::ctrl(...)</code> in C++, or <code>foo.ctrl(...)</code> in Python. Similarly for the <code>adjoint</code> or reverse of a kernel. Quantum kernels should also enable printing to a stream, and querying the number of instructions, depth, etc. Here is an example of using <code>ctrl</code>, <code>adoint</code>, and other kernel query functions:</p><table><tr><th>C++ Extra Kernel Functionality</th><th>Pythonic Quantum Kernel Structure</th></tr><tr><td><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=n>__qpu__</span> <span class=kt>void</span> <span class=nf>oracle</span><span class=p>(</span><span class=n>qreg</span> <span class=n>q</span><span class=p>)</span> <span class=p>{</span>
+). These functions must also take a <code>qreg</code> that the kernel function body operates on, and can take any further arguments to parameterize the quantum code. However, note that in Python, programmers <strong>must</strong> provide the correct type hint for the function argument. This helps our infrastructure not have to perform argument type inference when mapping to C++ and the <code>QJIT</code> infrastructure.</p><p>The AIDE-QC programming model adheres extra functionality to quantum kernels. Specifically, given a quantum kernel, programmers should be able to produce controlled and adjoint versions of the kernel, as well as print or query structural information about the kernel. Given a kernel <code>foo</code>, one should be able to leverage <code>foo::ctrl(...)</code> in C++, or <code>foo.ctrl(...)</code> in Python. Similarly for the <code>adjoint</code> or reverse of a kernel. Quantum kernels should also enable printing to a stream, and querying the number of instructions, depth, etc. Here is an example of using <code>ctrl</code>, <code>adoint</code>, and other kernel query functions:</p><table><tr><th>Kernel Feature</th><th>C++ Extra Kernel Functionality</th><th>Pythonic Extra Kernel Functionality</th></tr><tr><th>Controlled</th><td><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=n>__qpu__</span> <span class=kt>void</span> <span class=nf>oracle</span><span class=p>(</span><span class=n>qreg</span> <span class=n>q</span><span class=p>)</span> <span class=p>{</span>
    <span class=kt>int</span> <span class=n>bitIdx</span> <span class=o>=</span> <span class=n>q</span><span class=p>.</span><span class=n>size</span><span class=p>()</span> <span class=o>-</span> <span class=mi>1</span><span class=p>;</span>
    <span class=n>T</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=n>bitIdx</span><span class=p>]);</span>
 <span class=p>}</span>
@@ -22,7 +22,7 @@ and the
   <span class=p>...</span>
   <span class=k>for</span> <span class=p>(</span><span class=k>auto</span> <span class=n>i</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>bitPrecision</span><span class=p>;</span> <span class=n>i</span><span class=o>++</span><span class=p>)</span> <span class=p>{</span>
     <span class=k>for</span> <span class=p>(</span><span class=kt>int</span> <span class=n>j</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span> <span class=n>j</span> <span class=o>&lt;</span> <span class=p>(</span><span class=mi>1</span> <span class=o>&lt;&lt;</span> <span class=n>i</span><span class=p>);</span> <span class=n>j</span><span class=o>++</span> <span class=p>)</span> <span class=p>{</span>
-        <span class=n>oracle</span><span class=o>::</span><span class=n>ctrl</span><span class=p>(</span><span class=n>i</span><span class=p>,</span> <span class=n>q</span><span class=p>);</span>
+        <span class=n>oracle</span><span class=o>::</span><span class=n>ctrl</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=p>],</span> <span class=n>q</span><span class=p>);</span>
     <span class=p>}</span>
   <span class=p>}</span>
   <span class=p>...</span>
@@ -37,11 +37,11 @@ and the
     <span class=o>...</span>
     <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=n>bitPrecision</span><span class=p>):</span>
         <span class=k>for</span> <span class=n>j</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=mi>1</span><span class=o>&lt;&lt;</span><span class=n>i</span><span class=p>):</span>
-            <span class=n>oracle</span><span class=o>.</span><span class=n>ctrl</span><span class=p>(</span><span class=n>i</span><span class=p>,</span> <span class=n>q</span><span class=p>)</span>
+            <span class=n>oracle</span><span class=o>.</span><span class=n>ctrl</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=p>],</span> <span class=n>q</span><span class=p>)</span>
     <span class=o>...</span>
 
 
-</code></pre></div></td></tr><tr><td><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=n>__qpu__</span> <span class=kt>void</span> <span class=nf>measure_all</span><span class=p>(</span><span class=n>qreg</span> <span class=n>q</span><span class=p>)</span> <span class=p>{</span>
+</code></pre></div></td></tr><tr><th>Adjoint</th><td><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=n>__qpu__</span> <span class=kt>void</span> <span class=nf>measure_all</span><span class=p>(</span><span class=n>qreg</span> <span class=n>q</span><span class=p>)</span> <span class=p>{</span>
   <span class=k>for</span> <span class=p>(</span><span class=kt>int</span> <span class=nl>i</span> <span class=p>:</span> <span class=n>range</span><span class=p>(</span><span class=n>q</span><span class=p>.</span><span class=n>size</span><span class=p>())</span> <span class=p>{</span>
     <span class=n>Measure</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=p>]);</span>
   <span class=p>}</span>
@@ -75,14 +75,34 @@ and the
     <span class=n>quantum_kernel</span><span class=o>.</span><span class=n>adjoint</span><span class=p>(</span><span class=n>q</span><span class=p>,</span> <span class=n>x</span><span class=p>)</span>
     <span class=n>measure_qbits</span><span class=p>(</span><span class=n>q</span><span class=p>)</span>
 <span class=p>}</span>
-</code></pre></div></td></tr><tr><td><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=n>__qpu__</span> <span class=kt>void</span> <span class=nf>kernel</span><span class=p>(</span><span class=n>qreg</span> <span class=n>q</span><span class=p>,</span> <span class=kt>double</span> <span class=n>x</span><span class=p>)</span> <span class=p>{</span>
+</code></pre></div></td></tr><tr><th>Map to Unitary Matrix</th><td><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=n>__qpu__</span> <span class=kt>void</span> <span class=nf>kernel</span><span class=p>(</span><span class=n>qreg</span> <span class=n>q</span><span class=p>,</span> <span class=kt>double</span> <span class=n>x</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>X</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>]);</span>
+    <span class=n>Ry</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span> <span class=n>x</span><span class=p>);</span>
+    <span class=n>CX</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>]);</span>
+<span class=p>}</span>
+
+<span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+  <span class=k>auto</span> <span class=n>q</span> <span class=o>=</span> <span class=n>qalloc</span><span class=p>(</span><span class=mi>2</span><span class=p>);</span>
+  <span class=k>auto</span> <span class=n>matrix_view</span> <span class=o>=</span> <span class=n>kernel</span><span class=o>::</span><span class=n>as_unitary_matrix</span><span class=p>(</span><span class=n>q</span><span class=p>,</span> <span class=mf>.59</span><span class=p>);</span>
+<span class=p>}</span>
+</code></pre></div></td><td><div class=highlight><pre class=chroma><code class=language-python data-lang=python>
+<span class=nd>@qjit</span>
+<span class=k>def</span> <span class=nf>kernel</span><span class=p>(</span><span class=n>q</span> <span class=p>:</span> <span class=n>qreg</span><span class=p>,</span> <span class=n>x</span> <span class=p>:</span> <span class=nb>float</span><span class=p>):</span>
+    <span class=n>X</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>])</span>
+    <span class=n>Ry</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span> <span class=n>x</span><span class=p>)</span>
+    <span class=n>CX</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>])</span>
+
+<span class=n>q</span> <span class=o>=</span> <span class=n>qalloc</span><span class=p>(</span><span class=mi>2</span><span class=p>)</span>
+<span class=n>matrix_view</span> <span class=o>=</span> <span class=n>kernel</span><span class=o>.</span><span class=n>as_unitary_matrix</span><span class=p>(</span><span class=n>q</span><span class=p>,</span> <span class=o>.</span><span class=mi>59</span><span class=p>)</span>
+
+</code></pre></div></td></tr><tr><th>Print to QASM-like string, query other info</th><td><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=n>__qpu__</span> <span class=kt>void</span> <span class=nf>kernel</span><span class=p>(</span><span class=n>qreg</span> <span class=n>q</span><span class=p>,</span> <span class=kt>double</span> <span class=n>x</span><span class=p>)</span> <span class=p>{</span>
     <span class=n>X</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>]);</span>
     <span class=n>Ry</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span> <span class=n>x</span><span class=p>);</span>
     <span class=n>CX</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>]);</span>
 <span class=p>}</span>
 <span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
     <span class=k>auto</span> <span class=n>q</span> <span class=o>=</span> <span class=n>qalloc</span><span class=p>(</span><span class=mi>2</span><span class=p>);</span>
-    <span class=n>kernel</span><span class=o>::</span><span class=n>print_kernel</span><span class=p>(</span><span class=n>std</span><span class=o>::</span><span class=n>cout</span><span class=p>,</span> <span class=n>q</span><span class=p>,</span> <span class=mf>2.2</span><span class=p>);</span>
+    <span class=n>kernel</span><span class=o>::</span><span class=n>print_kernel</span><span class=p>(</span><span class=n>q</span><span class=p>,</span> <span class=mf>2.2</span><span class=p>);</span>
     <span class=k>auto</span> <span class=n>n_inst</span> <span class=o>=</span> <span class=n>kernel</span><span class=o>::</span><span class=n>n_instructions</span><span class=p>(</span><span class=n>q</span><span class=p>,</span> <span class=mf>2.2</span><span class=p>);</span>
 <span class=p>}</span>
 </code></pre></div></td><td><div class=highlight><pre class=chroma><code class=language-python data-lang=python><span class=nd>@qjit</span>
@@ -95,6 +115,52 @@ and the
 <span class=n>kernel</span><span class=o>.</span><span class=n>print_kernel</span><span class=p>(</span><span class=n>q</span><span class=p>,</span> <span class=mf>2.2</span><span class=p>)</span>
 <span class=n>n_inst</span> <span class=o>=</span> <span class=n>kernel</span><span class=o>.</span><span class=n>n_instructions</span><span class=p>(</span><span class=n>q</span><span class=p>,</span> <span class=mf>2.2</span><span class=p>)</span>
 
+</code></pre></div></td></tr><tr><th>Observe Operators - &lt psi(x) | H | psi(x) &gt</th><td><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=n>__qpu__</span> <span class=kt>void</span> <span class=nf>kernel</span><span class=p>(</span><span class=n>qreg</span> <span class=n>q</span><span class=p>,</span> <span class=kt>double</span> <span class=n>x</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>X</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>]);</span>
+    <span class=n>Ry</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span> <span class=n>x</span><span class=p>);</span>
+    <span class=n>CX</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>]);</span>
+<span class=p>}</span>
+
+<span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+  <span class=k>auto</span> <span class=n>q</span> <span class=o>=</span> <span class=n>qalloc</span><span class=p>(</span><span class=mi>2</span><span class=p>);</span>
+  <span class=k>auto</span> <span class=n>H</span> <span class=o>=</span> <span class=n>X</span><span class=p>(</span><span class=mi>0</span><span class=p>)</span> <span class=o>+</span> <span class=n>Z</span><span class=p>(</span><span class=mi>0</span><span class=p>);</span>
+
+  <span class=c1>// Compute &lt;psi(x) | H | psi(x)&gt;
+</span><span class=c1></span>  <span class=k>auto</span> <span class=n>avg_H</span> <span class=o>=</span> <span class=n>kernel</span><span class=o>::</span><span class=n>observe</span><span class=p>(</span><span class=n>H</span><span class=p>,</span> <span class=n>q</span><span class=p>,</span> <span class=mf>.59</span><span class=p>);</span>
+<span class=p>}</span>
+</code></pre></div></td><td><div class=highlight><pre class=chroma><code class=language-python data-lang=python>
+<span class=nd>@qjit</span>
+<span class=k>def</span> <span class=nf>kernel</span><span class=p>(</span><span class=n>q</span> <span class=p>:</span> <span class=n>qreg</span><span class=p>,</span> <span class=n>x</span> <span class=p>:</span> <span class=nb>float</span><span class=p>):</span>
+    <span class=n>X</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>])</span>
+    <span class=n>Ry</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span> <span class=n>x</span><span class=p>)</span>
+    <span class=n>CX</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>])</span>
+
+<span class=n>q</span> <span class=o>=</span> <span class=n>qalloc</span><span class=p>(</span><span class=mi>2</span><span class=p>)</span>
+<span class=n>H</span> <span class=o>=</span> <span class=n>X</span><span class=p>(</span><span class=mi>0</span><span class=p>)</span> <span class=o>+</span> <span class=n>Z</span><span class=p>(</span><span class=mi>0</span><span class=p>)</span>
+
+<span class=c1># Compute &lt;psi(x) | H | psi(x)&gt;</span>
+<span class=n>avg_H</span> <span class=o>=</span> <span class=n>kernel</span><span class=o>.</span><span class=n>observe</span><span class=p>(</span><span class=n>H</span><span class=p>,</span> <span class=n>q</span><span class=p>,</span> <span class=o>.</span><span class=mi>59</span><span class=p>)</span>
+
+</code></pre></div></td></tr><tr><th>Map to OpenQASM</th><td><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=n>__qpu__</span> <span class=kt>void</span> <span class=nf>kernel</span><span class=p>(</span><span class=n>qreg</span> <span class=n>q</span><span class=p>,</span> <span class=kt>double</span> <span class=n>x</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>X</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>]);</span>
+    <span class=n>Ry</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span> <span class=n>x</span><span class=p>);</span>
+    <span class=n>CX</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>]);</span>
+<span class=p>}</span>
+
+<span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+  <span class=k>auto</span> <span class=n>q</span> <span class=o>=</span> <span class=n>qalloc</span><span class=p>(</span><span class=mi>2</span><span class=p>);</span>
+  <span class=k>auto</span> <span class=n>openqasm_str</span> <span class=o>=</span> <span class=n>kernel</span><span class=o>::</span><span class=n>openqasm</span><span class=p>(</span><span class=n>q</span><span class=p>,</span> <span class=mf>.59</span><span class=p>);</span>
+<span class=p>}</span>
+</code></pre></div></td><td><div class=highlight><pre class=chroma><code class=language-python data-lang=python><span class=nd>@qjit</span>
+<span class=k>def</span> <span class=nf>kernel</span><span class=p>(</span><span class=n>q</span> <span class=p>:</span> <span class=n>qreg</span><span class=p>,</span> <span class=n>x</span> <span class=p>:</span> <span class=nb>float</span><span class=p>):</span>
+    <span class=n>X</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>])</span>
+    <span class=n>Ry</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span> <span class=n>x</span><span class=p>)</span>
+    <span class=n>CX</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>])</span>
+
+<span class=n>q</span> <span class=o>=</span> <span class=n>qalloc</span><span class=p>(</span><span class=mi>2</span><span class=p>)</span>
+<span class=n>openqasm_str</span> <span class=o>=</span> <span class=n>kernel</span><span class=o>.</span><span class=n>openqasm</span><span class=p>(</span><span class=n>q</span><span class=p>,</span> <span class=o>.</span><span class=mi>59</span><span class=p>)</span>
+<span class=c1># Integration with other frameworks...</span>
+<span class=n>circ</span> <span class=o>=</span> <span class=n>qiskit</span><span class=o>.</span><span class=n>QuantumCircuit</span><span class=o>.</span><span class=n>from_qasm_str</span><span class=p>(</span><span class=n>openqasm_str</span><span class=p>)</span>
 </code></pre></div></td></tr></table><p>Now we turn our attention to the different ways one might write quantum kernel function bodies, i.e. the current set of low-level and high-level quantum DSLs that we support in the AIDE-QC programming stack.</p><h2 id=a-idxasma-xasm><a id=xasm></a>XASM&nbsp;<a class=headline-hash href=#a-idxasma-xasm>¶</a></h2><p>The default language in C++ for quantum kernels is based on the XACC XASM quantum assembly language. This language provides a source-level representation of the internal XACC quantum intermediate representation (IR). Out of all the quantum languages supported by AIDE-QC, the XASM language supports the most classical C++ control flow mechanisms (<code>for</code>, <code>if</code>, etc.). It also allows mixing certain classical statements that help in constructing the quantum kernel most efficiently, such as simple variable assignment and use. This language supports most one and two qubit gate instructions, and rotation gates can be parameterized by incoming kernel arguments.</p><p>Let&rsquo;s turn our attention to some examples. First we look at an IBM-style
 <a href=https://www.nature.com/articles/nature23879>hardware efficient ansatz</a>
 to demonstrate the utility of existing C++ control flow intermixed with quantum instructions.</p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=n>__qpu__</span> <span class=kt>void</span> <span class=nf>hwe</span><span class=p>(</span><span class=n>qreg</span> <span class=n>q</span><span class=p>,</span> <span class=n>std</span><span class=o>::</span><span class=n>vector</span><span class=o>&lt;</span><span class=kt>double</span><span class=o>&gt;</span> <span class=n>x</span><span class=p>,</span> <span class=k>const</span> <span class=kt>int</span> <span class=n>layers</span><span class=p>,</span>

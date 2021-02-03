@@ -6,12 +6,10 @@ a simple GHZ state quantum kernel that can run on any of the available QPUs that
 with the AIDE-QC stack.</p><p>Let&rsquo;s start of in C++. We start by describing a quantum kernel - a C++ function, annotated with <code>__qpu__</code> whose
 function body contains some quantum code.</p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=n>__qpu__</span> <span class=kt>void</span> <span class=nf>ghz</span><span class=p>(</span><span class=n>qreg</span> <span class=n>q</span><span class=p>)</span> <span class=p>{</span>
     <span class=n>H</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>]);</span>
-    <span class=k>for</span> <span class=p>(</span><span class=kt>int</span> <span class=nl>i</span> <span class=p>:</span> <span class=n>range</span><span class=p>(</span><span class=n>q</span><span class=p>.</span><span class=n>size</span><span class=p>()</span><span class=o>-</span><span class=mi>1</span><span class=p>))</span> <span class=p>{</span>
+    <span class=k>for</span> <span class=p>(</span><span class=kt>int</span> <span class=nl>i</span> <span class=p>:</span> <span class=n>range</span><span class=p>(</span><span class=n>q</span><span class=p>.</span><span class=n>size</span><span class=p>()</span><span class=o>-</span><span class=mi>1</span><span class=p>))</span>
         <span class=n>CX</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=p>],</span> <span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=o>+</span><span class=mi>1</span><span class=p>]);</span>
-    <span class=p>}</span>
-    <span class=k>for</span> <span class=p>(</span><span class=k>auto</span> <span class=nl>i</span> <span class=p>:</span> <span class=n>range</span><span class=p>(</span><span class=n>q</span><span class=p>.</span><span class=n>size</span><span class=p>()))</span> <span class=p>{</span>
+    <span class=k>for</span> <span class=p>(</span><span class=k>auto</span> <span class=nl>i</span> <span class=p>:</span> <span class=n>range</span><span class=p>(</span><span class=n>q</span><span class=p>.</span><span class=n>size</span><span class=p>()))</span> 
         <span class=n>Measure</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=p>]);</span>
-    <span class=p>}</span>
 <span class=p>}</span>
 <span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
     <span class=c1>// Allocate some qubits
@@ -20,7 +18,7 @@ function body contains some quantum code.</p><div class=highlight><pre class=chr
 </span><span class=c1></span>    <span class=n>ghz</span><span class=p>(</span><span class=n>q</span><span class=p>);</span>
     <span class=c1>// Show the resultant counts
 </span><span class=c1></span>    <span class=k>for</span> <span class=p>(</span><span class=k>auto</span> <span class=p>[</span><span class=n>bits</span><span class=p>,</span> <span class=n>counts</span><span class=p>]</span> <span class=o>:</span> <span class=n>q</span><span class=p>.</span><span class=n>counts</span><span class=p>())</span> <span class=p>{</span>
-        <span class=n>std</span><span class=o>::</span><span class=n>cout</span> <span class=o>&lt;&lt;</span> <span class=n>bits</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;: &#34;</span> <span class=o>&lt;&lt;</span> <span class=n>counts</span> <span class=o>&lt;&lt;</span> <span class=s>&#34;</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>;</span>
+        <span class=n>print</span><span class=p>(</span><span class=n>bits</span><span class=p>,</span> <span class=s>&#34;: &#34;</span><span class=p>,</span> <span class=n>counts</span><span class=p>);</span>
     <span class=p>}</span>
 <span class=p>}</span>
 </code></pre></div><div class=highlight><pre class=chroma><code class=language-sh data-lang=sh>qcor -qpu qpp -shots <span class=m>1024</span> -o ghz.x ghz.cpp
