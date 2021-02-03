@@ -60,10 +60,9 @@ counts = q.counts()
 for bits, count : counts.items():
     print(bits, ':', count)
 
-
 ```
 ```sh
-python3 bell.py -qpu tnqvm -shots 1024
+python3 bell.py -qpu qcs:Aspen-8 -shots 1024
 
 ``` 
 </td>

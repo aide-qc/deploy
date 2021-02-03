@@ -32,17 +32,21 @@ def kernel(q : qreg, args...):
 </tr>
 </table>
 
-In C++, we require users annotate quantum kernel functions with `__qpu__`. This annotations is actually a preprocessor definition that expands to `[[clang::syntax(qcor)]]` to interface the kernel with the [Clang Syntax Handler](../developers/clang_syntax) infrastructure. This ensures proper processing of the quantum DSL within the kernel function body and maps it to appropriate `qcor` runtime API calls. These kernels must take a `qreg` (quantum register) instances a function argument to operate the quantum code on. After that, kernels can take any further function arguments that parameterize the quantum computation. 
+In C++, we require users annotate quantum kernel functions with `__qpu__`. This annotation is actually a preprocessor definition that expands to `[[clang::syntax(qcor)]]` to interface the kernel with the [Clang Syntax Handler](../developers/clang_syntax) infrastructure. This ensures proper processing of the quantum DSL within the kernel function body and maps it to appropriate `qcor` runtime API calls. These kernels must take a `qreg` (quantum register) function argument to operate the quantum code on. After that, kernels can take any further function arguments that parameterize the quantum computation. 
 
-In Python, we require users annotate quantum kernel functions with the `@qjit` decorator. This decorator gives us the ability to analyze the quantum kernel function body and just-in-time compile it using the `qcor` [QJIT]() infrastructure (which further delegates to the [Clang Syntax Handler](../developers/clang_syntax) and the [LLVM JIT Engine](https://llvm.org/docs/tutorial/BuildingAJIT1.html)). These functions must also take a `qreg` that the kernel function body operates on, and can take any further arguments to parameterize the quantum code. However, note that in Python, programmers must provide the correct type hint for the function argument. This helps our infrastructure not have to perform argument type inference when mapping to C++ and the `QJIT` infrastructure. 
+In Python, we require users annotate quantum kernel functions with the `@qjit` decorator. This decorator gives us the ability to analyze the quantum kernel function body and just-in-time compile it using the `qcor` [QJIT](qjit) infrastructure (which further delegates to the [Clang Syntax Handler](../developers/clang_syntax) and the [LLVM JIT Engine](https://llvm.org/docs/tutorial/BuildingAJIT1.html)). These functions must also take a `qreg` that the kernel function body operates on, and can take any further arguments to parameterize the quantum code. However, note that in Python, programmers **must** provide the correct type hint for the function argument. This helps our infrastructure not have to perform argument type inference when mapping to C++ and the `QJIT` infrastructure. 
 
 The AIDE-QC programming model adheres extra functionality to quantum kernels. Specifically, given a quantum kernel, programmers should be able to produce controlled and adjoint versions of the kernel, as well as print or query structural information about the kernel. Given a kernel `foo`, one should be able to leverage `foo::ctrl(...)` in C++, or `foo.ctrl(...)` in Python. Similarly for the `adjoint` or reverse of a kernel. Quantum kernels should also enable printing to a stream, and querying the number of instructions, depth, etc. Here is an example of using `ctrl`, `adoint`, and other kernel query functions:
 <table>
 <tr>
+<th>Kernel Feature</th>
 <th>C++ Extra Kernel Functionality</th>
-<th>Pythonic Quantum Kernel Structure</th>
+<th>Pythonic Extra Kernel Functionality</th>
 </tr>
 <tr>
+<th>
+Controlled  
+</th>
 <td>
 
 ```cpp
@@ -55,7 +59,7 @@ __qpu__ void qpe(qreg q) {
   ...
   for (auto i = 0; i < bitPrecision; i++) {
     for (int j = 0; j < (1 << i); j++ ) {
-        oracle::ctrl(i, q);
+        oracle::ctrl(q[i], q);
     }
   }
   ...
@@ -75,7 +79,7 @@ def qpe(q : qreg):
     ...
     for i in range(bitPrecision):
         for j in range(1<<i):
-            oracle.ctrl(i, q)
+            oracle.ctrl(q[i], q)
     ...
 
 
@@ -83,6 +87,9 @@ def qpe(q : qreg):
 </td>
 </tr>
 <tr>
+<th>
+Adjoint
+</th>
 <td>
 
 ```cpp
@@ -129,6 +136,44 @@ def do_nothing(q : qreg, x : float):
 </td>
 </tr>
 <tr>
+<th>
+Map to Unitary Matrix
+</th>
+<td>
+
+```cpp
+__qpu__ void kernel(qreg q, double x) {
+    X(q[0]);
+    Ry(q[1], x);
+    CX(q[1],q[0]);
+}
+
+int main() {
+  auto q = qalloc(2);
+  auto matrix_view = kernel::as_unitary_matrix(q, .59);
+}
+```
+</td>
+<td>
+
+```python
+
+@qjit
+def kernel(q : qreg, x : float):
+    X(q[0])
+    Ry(q[1], x)
+    CX(q[1],q[0])
+
+q = qalloc(2)
+matrix_view = kernel.as_unitary_matrix(q, .59)
+
+```
+</td>
+</tr>
+<tr>
+<th>
+Print to QASM-like string, query other info
+</th>
 <td>
 
 ```cpp
@@ -139,7 +184,7 @@ __qpu__ void kernel(qreg q, double x) {
 }
 int main() {
     auto q = qalloc(2);
-    kernel::print_kernel(std::cout, q, 2.2);
+    kernel::print_kernel(q, 2.2);
     auto n_inst = kernel::n_instructions(q, 2.2);
 }
 ```
@@ -157,6 +202,82 @@ q = qalloc(2)
 kernel.print_kernel(q, 2.2)
 n_inst = kernel.n_instructions(q, 2.2)
 
+```
+</td>
+</tr>
+<tr>
+<th>
+Observe Operators - &lt psi(x) | H | psi(x) &gt
+</th>
+<td>
+
+```cpp
+__qpu__ void kernel(qreg q, double x) {
+    X(q[0]);
+    Ry(q[1], x);
+    CX(q[1],q[0]);
+}
+
+int main() {
+  auto q = qalloc(2);
+  auto H = X(0) + Z(0);
+
+  // Compute <psi(x) | H | psi(x)>
+  auto avg_H = kernel::observe(H, q, .59);
+}
+```
+</td>
+<td>
+
+```python
+
+@qjit
+def kernel(q : qreg, x : float):
+    X(q[0])
+    Ry(q[1], x)
+    CX(q[1],q[0])
+
+q = qalloc(2)
+H = X(0) + Z(0)
+
+# Compute <psi(x) | H | psi(x)>
+avg_H = kernel.observe(H, q, .59)
+
+```
+</td>
+</tr>
+<tr>
+<th>
+Map to OpenQASM
+</th>
+<td>
+
+```cpp
+__qpu__ void kernel(qreg q, double x) {
+    X(q[0]);
+    Ry(q[1], x);
+    CX(q[1],q[0]);
+}
+
+int main() {
+  auto q = qalloc(2);
+  auto openqasm_str = kernel::openqasm(q, .59);
+}
+```
+</td>
+<td>
+
+```python
+@qjit
+def kernel(q : qreg, x : float):
+    X(q[0])
+    Ry(q[1], x)
+    CX(q[1],q[0])
+
+q = qalloc(2)
+openqasm_str = kernel.openqasm(q, .59)
+# Integration with other frameworks...
+circ = qiskit.QuantumCircuit.from_qasm_str(openqasm_str)
 ```
 </td>
 </tr>

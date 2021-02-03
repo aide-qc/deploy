@@ -16,12 +16,10 @@ function body contains some quantum code.
 ```cpp
 __qpu__ void ghz(qreg q) {
     H(q[0]);
-    for (int i : range(q.size()-1)) {
+    for (int i : range(q.size()-1))
         CX(q[i], q[i+1]);
-    }
-    for (auto i : range(q.size())) {
+    for (auto i : range(q.size())) 
         Measure(q[i]);
-    }
 }
 int main() {
     // Allocate some qubits
@@ -30,7 +28,7 @@ int main() {
     ghz(q);
     // Show the resultant counts
     for (auto [bits, counts] : q.counts()) {
-        std::cout << bits << ": " << counts << "\n";
+        print(bits, ": ", counts);
     }
 }
 ```

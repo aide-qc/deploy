@@ -39,7 +39,7 @@ python3 -m pip install cmake --user
 wget -qO- https://aide-qc.github.io/deploy/aide_qc/debian/PUBLIC-KEY.gpg | sudo apt-key add -
 wget -qO- "https://aide-qc.github.io/deploy/aide_qc/debian/$(lsb_release -cs)/aide-qc.list" | sudo tee -a /etc/apt/sources.list.d/aide-qc.list
 sudo apt-get update
-sudo apt-get install -y clang-syntax-handler
+sudo apt-get install -y aideqc-llvm
 # Point defaults to GCC 9
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 50
 sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 50
@@ -64,7 +64,7 @@ python3 -m pip install cmake --user
 wget -qO- https://aide-qc.github.io/deploy/aide_qc/debian/PUBLIC-KEY.gpg | sudo apt-key add -
 wget -qO- "https://aide-qc.github.io/deploy/aide_qc/debian/$(lsb_release -cs)/aide-qc.list" | sudo tee -a /etc/apt/sources.list.d/aide-qc.list
 sudo apt-get update
-sudo apt-get install -y clang-syntax-handler
+sudo apt-get install -y aideqc-llvm
 ``` 
 </td>
 </tr>
@@ -88,7 +88,7 @@ sudo dnf update -y && sudo dnf install gcc gcc-c++ lapack-devel
 # Install deps, turn off dependents check
 export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=false
 brew tap aide-qc/deploy
-brew install gcc@10 python3 cmake openssl curl ninja llvm-csp
+brew install python3 cmake openssl curl ninja llvm-csp
 
 ``` 
 </td>
@@ -122,7 +122,7 @@ Next, build and install `qcor`:
 (if in xacc/build) cd ../../
 git clone https://github.com/aide-qc/qcor
 cd qcor && mkdir build && cd build
-cmake .. -G Ninja -DLLVM_ROOT=/usr/local/xacc/llvm 
+cmake .. -G Ninja -DLLVM_ROOT=/usr/local/aideqc/llvm 
     # Optional flags
     -DQCOR_BUILD_TESTS=TRUE
     -DCMAKE_INSTALL_PREFIX=/desired/path/to/install
@@ -152,12 +152,12 @@ int main() {
 ```
 
 ## <a id="xqbrew"></a> XACC and QCOR on Mac OS X and Linux x86_64 with Homebrew (not Ubuntu)
-Make sure that you use `g++-10`, `gcc-10` explicitly in your `cmake` calls (they can be found with `brew --prefix gcc@10`). To build `xacc`
+To build `xacc`
 ```sh
 git clone --recursive https://github.com/aide-qc/xacc
 cd xacc && mkdir build && cd build 
 # Need to point build to Homebrew installed OpenSSL and Curl libs
-cmake .. -DCMAKE_CXX_COMPILER=g++-10 -DCMAKE_C_COMPILER=gcc-10 -DOPENSSL_ROOT_DIR=$(brew --prefix openssl) -DCMAKE_PREFIX_PATH=$(brew --prefix curl) -G Ninja
+cmake .. -DOPENSSL_ROOT_DIR=$(brew --prefix openssl) -DCMAKE_PREFIX_PATH=$(brew --prefix curl) -G Ninja
    # Optional flags
    -DXACC_BUILD_TESTS=TRUE
    -DCMAKE_INSTALL_PREFIX=/desired/path/to/install
@@ -177,11 +177,10 @@ Next, build and install `qcor`:
 (if in xacc/build) cd ../../
 git clone https://github.com/aide-qc/qcor
 cd qcor && mkdir build && cd build
-cmake .. -G Ninja -DCMAKE_CXX_COMPILER=g++-10 -DCMAKE_C_COMPILER=gcc-10 \
+cmake .. -G Ninja \
          -DLLVM_ROOT=$(brew --prefix llvm-csp) \
-         # Pass the next 2 flags on Mac OS X only
-         -DQCOR_EXTRA_HEADERS="$(brew --prefix)/opt/gcc@10/include/c++/10.2.0;$(brew --prefix)/opt/gcc@10/include/c++/10.2.0/$(gcc-10 -dumpmachine)" \
-         -DGCC_STDCXX_PATH=$(brew --prefix)/opt/gcc@10/lib/gcc/10
+         # Pass the next flags on Mac OS X only
+         -DQCOR_EXTRA_HEADERS="/Library/Developer/CommandLineTools/usr/include/c++/v1;/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk" 
     # Optional flags
     -DQCOR_BUILD_TESTS=TRUE
     -DCMAKE_INSTALL_PREFIX=/desired/path/to/install
@@ -222,9 +221,7 @@ cmake ../llvm -G Ninja -DBUILD_SHARED_LIBS=ON \
       -DCMAKE_BUILD_TYPE=Release \
       -DLLVM_TARGETS_TO_BUILD=X86 \
       -DLLVM_ENABLE_DUMP=ON \
-      -DLLVM_ENABLE_PROJECTS=clang \
-      -DCMAKE_CXX_COMPILER=g++-10 \
-      -DCMAKE_C_COMPILER=gcc-10 \
+      -DLLVM_ENABLE_PROJECTS="clang;mlir" \
       -DCMAKE_INSTALL_PREFIX=$HOME/.llvm
 cmake --build . --target install
 ```
