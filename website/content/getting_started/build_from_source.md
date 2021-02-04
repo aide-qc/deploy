@@ -215,7 +215,7 @@ int main() {
 
 If you would like to build a custom install of our LLVM fork containing the Clang `SyntaxHandler`, run the following:
 ```sh
-git clone https://github.com/hfinkel/llvm-project-csp llvm
+git clone https://github.com/ornl-qci/llvm-project-csp llvm
 cd llvm && mkdir build && cd build
 cmake ../llvm -G Ninja -DBUILD_SHARED_LIBS=ON \
       -DCMAKE_BUILD_TYPE=Release \
