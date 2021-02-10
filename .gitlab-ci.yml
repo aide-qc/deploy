@@ -1,12 +1,11 @@
 stages:
   - deploy
   - build-site
+  - docker-deploy
 
 deploy build_site:
     stage: build-site
     only:
-    - master
-    except:
     - schedules
     script:
     - cd website && hugo --minify -d ../public && cd ..
@@ -53,3 +52,14 @@ docker run_docker_deploy_qcor_focal:
   - cd docker/qcor/debian/focal && sh build.sh 
   - docker system prune -f 
   - docker rmi -f qcor/bionic 
+
+docker run_docker_deploy:
+  stage: docker-deploy
+  only:
+   - schedules
+  script:
+  - cd docker/deploy/dev && docker build -t qcor/qcor . --no-cache
+  - echo "$REGISTRY_PASSWORD" | docker login -u qcor --password-stdin
+  - docker push qcor/qcor
+  - docker system prune -f
+  - docker rmi -f qcor/qcor 
