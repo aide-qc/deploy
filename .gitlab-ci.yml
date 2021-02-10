@@ -22,7 +22,7 @@ docker run_docker_deploy_combined_bionic:
   only:
    - schedules
   script:
-  - cd docker/combined/bionic && sh build.sh 
+  - cd docker/combined/bionic && sh build.sh $AIDEQC_ACCESS_TOKEN
   - docker system prune -f
   - docker rmi -f combined/bionic 
 
@@ -31,7 +31,7 @@ docker run_docker_deploy_combined_focal:
   only:
    - schedules
   script:
-  - cd docker/combined/focal && sh build.sh
+  - cd docker/combined/focal && sh build.sh $AIDEQC_ACCESS_TOKEN
   - docker system prune -f
   - docker rmi -f combined/focal 
 

@@ -2,6 +2,8 @@
 
 set -e
 
+export AIDEQC_ACCESS_TOKEN=$1
+
 # Build the deb via Docker
 docker build -t combined/bionic . --no-cache
 docker run -d -P -it --name bionicqcor combined/bionic
