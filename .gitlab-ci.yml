@@ -12,7 +12,7 @@ deploy build_site:
     - git config remote.aideqcdeploy.url >&- || git remote add -t master aideqcdeploy https://amccaskey:$AIDEQC_ACCESS_TOKEN@github.com/aide-qc/deploy
     - cp -r public/* . && rm -rf public 
     - git status
-    - git pull
+    - git pull origin master
     - git add background categories css developers getting_started js tags users *.html *.xml *.png 
     - git status
     - export n_changes=$(git diff --cached --numstat | wc -l)
