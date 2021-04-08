@@ -53,6 +53,7 @@ cmake .. -G Ninja -DLLVM_ROOT<span class=o>=</span>/usr/local/aideqc/llvm
     -DQCOR_BUILD_TESTS<span class=o>=</span>TRUE
     -DCMAKE_INSTALL_PREFIX<span class=o>=</span>/desired/path/to/install
     -DXACC_DIR<span class=o>=</span>/path/to/xacc/install <span class=o>(</span><span class=k>if</span> not <span class=nv>$HOME</span>/.xacc<span class=o>)</span>
+    -DMLIR_DIR<span class=o>=</span>/path/to/mlir/install/lib/cmake/mlir <span class=o>(</span><span class=k>if</span> lib/cmake/mlir not in LLVM_ROOT<span class=o>)</span>
 
 <span class=c1># Build and install to $HOME/.xacc (if CMAKE_INSTALL_PREFIX not specified)</span>
 cmake --build . --target install
@@ -90,6 +91,7 @@ cmake .. -G Ninja <span class=se>\
     -DQCOR_BUILD_TESTS<span class=o>=</span>TRUE
     -DCMAKE_INSTALL_PREFIX<span class=o>=</span>/desired/path/to/install
     -DXACC_DIR<span class=o>=</span>/path/to/xacc/install <span class=o>(</span><span class=k>if</span> not <span class=nv>$HOME</span>/.xacc<span class=o>)</span>
+    -DMLIR_DIR<span class=o>=</span>/path/to/mlir/install/lib/cmake/mlir <span class=o>(</span><span class=k>if</span> lib/cmake/mlir not in LLVM_ROOT<span class=o>)</span>
 
 <span class=c1># Build and install to $HOME/.xacc (if CMAKE_INSTALL_PREFIX not specified)</span>
 cmake --build . --target install
