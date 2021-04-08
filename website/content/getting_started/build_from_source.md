@@ -127,6 +127,7 @@ cmake .. -G Ninja -DLLVM_ROOT=/usr/local/aideqc/llvm
     -DQCOR_BUILD_TESTS=TRUE
     -DCMAKE_INSTALL_PREFIX=/desired/path/to/install
     -DXACC_DIR=/path/to/xacc/install (if not $HOME/.xacc)
+    -DMLIR_DIR=/path/to/mlir/install/lib/cmake/mlir (if lib/cmake/mlir not in LLVM_ROOT)
 
 # Build and install to $HOME/.xacc (if CMAKE_INSTALL_PREFIX not specified)
 cmake --build . --target install
@@ -185,6 +186,7 @@ cmake .. -G Ninja \
     -DQCOR_BUILD_TESTS=TRUE
     -DCMAKE_INSTALL_PREFIX=/desired/path/to/install
     -DXACC_DIR=/path/to/xacc/install (if not $HOME/.xacc)
+    -DMLIR_DIR=/path/to/mlir/install/lib/cmake/mlir (if lib/cmake/mlir not in LLVM_ROOT)
 
 # Build and install to $HOME/.xacc (if CMAKE_INSTALL_PREFIX not specified)
 cmake --build . --target install
