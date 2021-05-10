@@ -15,11 +15,12 @@ Let's start of in C++. We start by describing a quantum kernel - a C++ function,
 function body contains some quantum code. 
 ```cpp
 __qpu__ void ghz(qreg q) {
-    H(q[0]);
+    // hadamard on first qubit
+    H(q.head()); 
+    // CNOTs on (i,i+1) pairs
     for (int i : range(q.size()-1))
-        CX(q[i], q[i+1]);
-    for (auto i : range(q.size())) 
-        Measure(q[i]);
+        X::ctrl(q[i], q[i+1]);
+    Measure(q);
 }
 int main() {
     // Allocate some qubits
@@ -82,9 +83,8 @@ from qcor import qjit, qalloc, qreg
 def ghz(q : qreg):
     H(q[0])
     for i in range(q.size()-1):
-        CX(q[i], q[i+1])
-    for i in range(q.size()):
-        Measure(q[i])
+        X.ctrl(q[i], q[i+1])
+    Measure(q)
 
 q = qalloc(5)
 ghz(q)
