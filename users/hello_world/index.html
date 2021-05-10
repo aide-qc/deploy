@@ -5,11 +5,12 @@ example that attempts to demonstrate that model. Specifically, we will show how 
 a simple GHZ state quantum kernel that can run on any of the available QPUs that are integrated
 with the AIDE-QC stack.</p><p>Let&rsquo;s start of in C++. We start by describing a quantum kernel - a C++ function, annotated with <code>__qpu__</code> whose
 function body contains some quantum code.</p><div class=highlight><pre class=chroma><code class=language-cpp data-lang=cpp><span class=n>__qpu__</span> <span class=kt>void</span> <span class=nf>ghz</span><span class=p>(</span><span class=n>qreg</span> <span class=n>q</span><span class=p>)</span> <span class=p>{</span>
-    <span class=n>H</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>]);</span>
-    <span class=k>for</span> <span class=p>(</span><span class=kt>int</span> <span class=nl>i</span> <span class=p>:</span> <span class=n>range</span><span class=p>(</span><span class=n>q</span><span class=p>.</span><span class=n>size</span><span class=p>()</span><span class=o>-</span><span class=mi>1</span><span class=p>))</span>
-        <span class=n>CX</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=p>],</span> <span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=o>+</span><span class=mi>1</span><span class=p>]);</span>
-    <span class=k>for</span> <span class=p>(</span><span class=k>auto</span> <span class=nl>i</span> <span class=p>:</span> <span class=n>range</span><span class=p>(</span><span class=n>q</span><span class=p>.</span><span class=n>size</span><span class=p>()))</span> 
-        <span class=n>Measure</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=p>]);</span>
+    <span class=c1>// hadamard on first qubit
+</span><span class=c1></span>    <span class=n>H</span><span class=p>(</span><span class=n>q</span><span class=p>.</span><span class=n>head</span><span class=p>());</span> 
+    <span class=c1>// CNOTs on (i,i+1) pairs
+</span><span class=c1></span>    <span class=k>for</span> <span class=p>(</span><span class=kt>int</span> <span class=nl>i</span> <span class=p>:</span> <span class=n>range</span><span class=p>(</span><span class=n>q</span><span class=p>.</span><span class=n>size</span><span class=p>()</span><span class=o>-</span><span class=mi>1</span><span class=p>))</span>
+        <span class=n>X</span><span class=o>::</span><span class=n>ctrl</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=p>],</span> <span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=o>+</span><span class=mi>1</span><span class=p>]);</span>
+    <span class=n>Measure</span><span class=p>(</span><span class=n>q</span><span class=p>);</span>
 <span class=p>}</span>
 <span class=kt>int</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
     <span class=c1>// Allocate some qubits
@@ -66,9 +67,8 @@ IBM Job 5fa04ee1d3b8d80013995877 Status: COMPLETED.
 <span class=k>def</span> <span class=nf>ghz</span><span class=p>(</span><span class=n>q</span> <span class=p>:</span> <span class=n>qreg</span><span class=p>):</span>
     <span class=n>H</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=mi>0</span><span class=p>])</span>
     <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=n>q</span><span class=o>.</span><span class=n>size</span><span class=p>()</span><span class=o>-</span><span class=mi>1</span><span class=p>):</span>
-        <span class=n>CX</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=p>],</span> <span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=o>+</span><span class=mi>1</span><span class=p>])</span>
-    <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=nb>range</span><span class=p>(</span><span class=n>q</span><span class=o>.</span><span class=n>size</span><span class=p>()):</span>
-        <span class=n>Measure</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=p>])</span>
+        <span class=n>X</span><span class=o>.</span><span class=n>ctrl</span><span class=p>(</span><span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=p>],</span> <span class=n>q</span><span class=p>[</span><span class=n>i</span><span class=o>+</span><span class=mi>1</span><span class=p>])</span>
+    <span class=n>Measure</span><span class=p>(</span><span class=n>q</span><span class=p>)</span>
 
 <span class=n>q</span> <span class=o>=</span> <span class=n>qalloc</span><span class=p>(</span><span class=mi>5</span><span class=p>)</span>
 <span class=n>ghz</span><span class=p>(</span><span class=n>q</span><span class=p>)</span>
