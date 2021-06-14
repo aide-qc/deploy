@@ -36,13 +36,15 @@ docker run_docker_deploy_combined_focal:
   - docker system prune -f
   - docker rmi -f combined/focal 
 
-docker run_docker_deploy:
+docker run_aide_qc_docker_deploy:
   stage: docker-deploy
   only:
    - schedules
   script:
-  - cd docker/deploy/dev && docker build -t qcor/qcor . --no-cache
+  - git clone --recursive https://github.com/aide-qc/aide-qc && cd aide-qc
+  - docker pull qcor/code-server-base:latest
+  - cd code-server && docker build -t qcor/code-server -f ci/release-image/Dockerfile_aide_qc . --no-cache
   - echo "$REGISTRY_PASSWORD" | docker login -u qcor --password-stdin
-  - docker push qcor/qcor
+  - docker push qcor/code-server
   - docker system prune -f
-  - docker rmi -f qcor/qcor 
+  - docker rmi -f qcor/code-server 
