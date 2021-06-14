@@ -3,7 +3,7 @@ set -e
 git clone https://github.com/aide-qc/aide-qc $HOME/.aideqc_tmp
 cd $HOME/.aideqc_tmp
 python3 -m pip install --user . 
-if  [ -x "$(command -v aide-qc)" ]; then
+if ! [ -x "$(command -v aide-qc)" ]; then
    export p=$(python3 -m site --user-base)/bin
    echo ""
    echo "Install location ($p) is not on your PATH."
