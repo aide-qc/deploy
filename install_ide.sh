@@ -1,8 +1,13 @@
 #!/bin/bash
 set -e
-git clone https://github.com/aide-qc/aide-qc $HOME/.aideqc_tmp
+
+echo "Installing aide-qc..."
+mkdir -p $HOME/.aideqc_logs/
+
+git clone --quiet https://github.com/aide-qc/aide-qc $HOME/.aideqc_tmp >/dev/null 
 cd $HOME/.aideqc_tmp
-python3 -m pip install --user . 
+python3 -m pip install --quiet --user . 
+echo "Installation successful."
 if ! [ -x "$(command -v aide-qc)" ]; then
    export p=$(python3 -m site --user-base)/bin
    echo ""
