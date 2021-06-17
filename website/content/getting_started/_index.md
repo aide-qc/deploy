@@ -5,20 +5,35 @@ draft: false
 weight: 10
 ---
 
-There are a few ways to get started with the AIDE-QC stack. The easiest way is to install the pre-built binaries. As of this writing, we provide installers based on Homebrew and the Debian `apt-get` installer.
-
-The second way to get AIDE-QC on your system is to install directly from source. This way is of course more difficult and takes more time, but provides a wide array of customization for your install. 
+There are a few ways to get started with the AIDE-QC stack: the prebuilt Docker-based browser IDE, the binary package installations, and building everything from source. 
 
 > **_NOTE:_** ***If any of the below instructions do not work for you, please file a bug at [AIDE-QC Issues](https://github.com/aide-qc/aide-qc/issues) with a detailed explanation of the failure you observed.***
 
+## Install the aide-qc command line tool
+We provide a command line utility (`aide-qc`) that enables one to quickly spin up 
+a web-based IDE pre-packaged with the AIDE-QC software stack, as well as demonstrative examples. This tool requires a valid Docker installation on your local machine. To install Docker, please see [Docker Desktop for Windows/Mac](https://www.docker.com/products/docker-desktop) or [Docker for Linux](https://docs.docker.com/engine/install/). 
+
+To install the `aide-qc` tool, run the following from your local terminal. 
+```sh
+/bin/bash -c "$(curl -fsSL https://aide-qc.github.io/deploy/install_ide.sh)"
+```
+Once you have `aide-qc`, install the latest IDE and start a new instance via
+```sh
+aide-qc --install
+aide-qc --start my_first_quantum_ide
+```
+This will open a browser-based IDE with the AIDE-QC software stack ready for use. 
+
+For more details on the `aide-qc` command line tool, click [here](users/aide-qc-clt.md).
+
 ## Install AIDE-QC
-To install AIDE-QC, run the following command from your local terminal (will require `sudo` credentials):
+To install the AIDE-QC binaries, run the following command from your local terminal (will require `sudo` credentials):
 ```sh
 /bin/bash -c "$(curl -fsSL https://aide-qc.github.io/deploy/install.sh)"
 ```
-> **_NOTE:_** ***You may need to evaluate your $HOME/.bashrc (or .bash_profile on MacOS) in order to configure your install. If `brew list` fails, run `source ~/.bashrc` or `source ~/.bash_profile`.***
+> **_NOTE:_** ***You may need to evaluate your $HOME/.bashrc (or .bash_profile on MacOS) in order to configure your install. E.g., if `brew list` fails, run `source ~/.bashrc` or `source ~/.bash_profile`.***
 
-This will install the AIDE-QC software stack. You will have the `qcor` compiler, the underlying `xacc` framework, as well as pertinent Python bindings. If you are going to use the Python API, you'll need to export your `PYTHONPATH`
+This will install the AIDE-QC software stack, including the `qcor` compiler, the underlying `xacc` framework, as well as pertinent Python bindings. If you are going to use the Python API, you may need to export your `PYTHONPATH`
 ```sh
 export PYTHONPATH=$(qcor -pythonpath):$PYTHONPATH
 ```
@@ -78,4 +93,5 @@ Results
 {'00': 548, '11': 476}
 ```
 
+## Build from Souce
 If the above binary installs do not work for your system, checkout how to [build from source](getting_started/build_from_source.md).
