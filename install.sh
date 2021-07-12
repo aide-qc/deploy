@@ -133,6 +133,7 @@ fi
 brew tap aide-qc/deploy
 brew install qcor
 python3 -m pip install --user ipopo cmake 
+qcor -rebuild-pch
 echo "AIDE-QC installed via Homebrew."
 echo ""
 echo ""
