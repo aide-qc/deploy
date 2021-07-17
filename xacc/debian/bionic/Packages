@@ -5,10 +5,10 @@ Maintainer: mccaskeyaj@ornl.gov
 Installed-Size: 224223
 Depends: gcc-8, g++-8, libblas-dev, liblapack-dev, python3, python3-pip, libpython3-dev, libcurl4-openssl-dev, libssl-dev
 Filename: ./xacc-1.0.0.deb
-Size: 51872884
-MD5sum: 2997e75d5580c4bd59d2ec62ab71280c
-SHA1: b69f1262a54c812c2f72a7a93e31aa9d483447ef
-SHA256: 3d6b29800824e8cb61c7ad89c932f5f242eb4e6fada603665d0ebf0a261c713e
+Size: 51872496
+MD5sum: 2f89c18f3832b6267ddcf0f31d36a0e5
+SHA1: cac2e2aaef6db1fef0aed7e694bce2d2b3d17b04
+SHA256: 41a27821a3952237f75d3542294df247b9c3ce7c2e3add368a34bfa170a97d4f
 Section: base
 Priority: optional
 Description: xacc provides a service-oriented architecture enabling the programming, compilation, and execution of quantum code on quantum co-processors.
