@@ -10,7 +10,7 @@ publishdate: 2018-11-23T15:26:15Z
     <td><b style="font-size:30px">Getting Started</b></td>
  </tr>
  <tr>
-    <td width="1000">
+ <td width="1000">
 AIDE-QC is a next-generation software stack enabling heterogeneous quantum-classical programming, compilation, 
 and execution on both near-term and future fault-tolerant quantum computers. Our approach treats quantum computers 
 as co-processors and puts forward single-source C++ and Pythonic programming models for quantum code expression and 
@@ -149,7 +149,7 @@ int main(int argc, char** argv) {
 <tr>
 <td >
 To start, we look at the circuit above and notice a sub-circuit called out as `amplification`. It has a very specific structure - a 
-patturn of Hadamard and X gates on all qubits, followed by a multi-qubit control-Z operation, and ended with another Hadamard/X broadcast operation. AIDE-QC and QCOR 
+pattern of Hadamard and X gates on all qubits, followed by a multi-qubit control-Z operation, and ended with another Hadamard/X broadcast operation. AIDE-QC and QCOR 
 express this common pattern (so-called compute-action-uncompute) via a special compute {...} action {...} syntax. Note here also that qubit and sub-qreg extraction 
 is possible on a provided qreg, and all single-qubit gates can be controlled on one or many qubits. 
 </td>
@@ -168,7 +168,7 @@ to the general grover call. Our oracle in this example marks states |101> and |0
 
 ```sh
 # Compile with qcor, target any quantum coprocessor
-$ qcor -qpu ibm:ibmq_vigo -shots 8192 bell.cpp
+$ qcor -qpu ibm:ibmq_vigo -shots 8192 run_grover.cpp
 # Execute the binary
 $ ./a.out
 ```

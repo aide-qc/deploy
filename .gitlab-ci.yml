@@ -8,6 +8,8 @@ deploy build_site:
     only:
     - master
     script:
+    - git clone https://github.com/ornl-qci/qcor_spec 
+    - cp -r qcor_spec/markdown/* website/content/lang_spec/
     - cd website && hugo --minify -d ../public && cd ..
     - git config remote.aideqcdeploy.url >&- || git remote add -t master aideqcdeploy https://amccaskey:$AIDEQC_ACCESS_TOKEN@github.com/aide-qc/deploy
     - cp -r public/* . && rm -rf public 
