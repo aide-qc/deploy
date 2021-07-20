@@ -18,7 +18,7 @@ disablePathToLower = true
 [Params]
 
     # Souce Code repository section
-    description = "Advancing Integrated Development Environments for Quantum Computing"
+    description = "Advanced Integrated Development Environment for Quantum Computing"
     # Update menubar link too.
     # TODO(jpienaar): Find a way that doesn't duplicate it or
     # require redirect.
@@ -117,5 +117,9 @@ disablePathToLower = true
 [markup]
   [markup.goldmark]
     [markup.goldmark.renderer]
-      hardWraps = false
+      hardWraps = true
       unsafe = true
+    [markup.tableOfContents]
+        startLevel = 2
+        endLevel = 6
+        ordered = false
