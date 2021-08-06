@@ -43,10 +43,9 @@ docker run_aide_qc_docker_deploy:
   only:
    - schedules
   script:
-  - git clone --recursive https://github.com/aide-qc/aide-qc && cd aide-qc
-  - docker pull qcor/code-server-base:latest
-  - cd code-server && docker build -t qcor/code-server -f ci/release-image/Dockerfile_aide_qc . --no-cache
+  - git clone https://github.com/aide-qc/aide-qc && cd aide-qc
+  - cd docker/alpine && docker build -t qcor/aide-qc . --no-cache
   - echo "$REGISTRY_PASSWORD" | docker login -u qcor --password-stdin
-  - docker push qcor/code-server
+  - docker push qcor/aide-qc
   - docker system prune -f
-  - docker rmi -f qcor/code-server 
+  - docker rmi -f qcor/aide-qc
