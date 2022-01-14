@@ -5,10 +5,10 @@ Maintainer: mccaskeyaj@ornl.gov
 Installed-Size: 119409
 Depends: xacc, aideqc-llvm
 Filename: ./qcor-1.0.0.deb
-Size: 31996998
-MD5sum: 3c501bfaf98bffa4efde5b159e78b063
-SHA1: 2df2ed73a3255e7539a3076791c68108857082e3
-SHA256: 9658d46f595662430337f3d3ad37de739f5bd4cf52e24b665f79f8c7f6b56021
+Size: 31996920
+MD5sum: f8d8aa345153c6f2ec1f402315d129db
+SHA1: ceb9919ea2d7735a97e3f17a240d92a3d6a77e61
+SHA256: 072f1bce0c42f06030e9028f283dbefa04d3dcc146a636aab09647d56312d81d
 Section: base
 Priority: optional
 Description: qcor is a c++ compiler for heterogenous quantum-classical computing
